@@ -1,0 +1,92 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Credit Card Notification API
+  description: API for handling credit card notifications
+servers:
+- url: http://localhost:3000
+paths:
+  /credit-card-due-reminder:
+    post:
+      parameters:
+      - name: credit_card_id
+        in: body
+        schema:
+          type: integer
+        description: Credit Card ID
+      responses:
+        '200':
+          description: automated notification has been sent
+  /overdue-balance-alert:
+    post:
+      parameters:
+      - name: credit_card_id
+        in: body
+        schema:
+          type: integer
+        description: Credit Card ID
+      responses:
+        '200':
+          description: overdue balance alert has been generated
+  /collection-notification:
+    post:
+      parameters:
+      - name: credit_card_id
+        in: body
+        schema:
+          type: integer
+        description: Credit Card ID
+      responses:
+        '200':
+          description: collection notification has been sent
+  /payment-plan-proposal:
+    post:
+      parameters:
+      - name: credit_card_id
+        in: body
+        schema:
+          type: integer
+        description: Credit Card ID
+      responses:
+        '200':
+          description: payment plan proposal has been sent
+  /collection-agency:
+    post:
+      parameters:
+      - name: credit_card_id
+        in: body
+        schema:
+          type: integer
+        description: Credit Card ID
+      responses:
+        '200':
+          description: collection agency has been notified
+  /legal-action-initiation:
+    post:
+      parameters:
+      - name: credit_card_id
+        in: body
+        schema:
+          type: integer
+        description: Credit Card ID
+      responses:
+        '200':
+          description: legal action initiation documentation has been sent
+  /view-full-card-details:
+    get:
+      responses:
+        '403':
+          description: full card details are not accessible
+  /view-notifications:
+    get:
+      responses:
+        '200':
+          description: The notifications should be easily readable and correctly displayed
+      - name: nonexistent-endpoint
+        in: body
+        schema:
+          type: integer
+        description: nonexistent-endpoint
+      responses:
+        '404':
+          description: clearly define the error

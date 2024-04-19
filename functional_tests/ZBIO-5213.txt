@@ -1,0 +1,54 @@
+Functional Test:
+
+1. Test for Credit Card Due Reminder Notification:
+    - Input: Set a near due date for mock credit card account
+    - Expected Output: An automatic notification sent to the card holder
+    - Edge Case: Check if the reminder includes last 4 digits of the card number and not the whole number
+
+2. Test for Overdue Balance Alert:
+    - Input: For the same card, skip the due date without making a payment
+    - Expected Output: An alert should be generated stating the overdue balance and potential consequences
+    - Edge Case: Check the alert includes last 4 digits of the card number and not the whole number
+
+3. Test for Collection Notification:
+    - Input: Let the account become significantly delinquent
+    - Expected Output: A collection notification should be sent to the card holder detailing amount owed and extra charges
+    - Edge Case: The card number displayed in notifications should be last 4 digits and not the whole card number
+
+4. Test for Payment Plan Proposal:
+    - Input: Mimic a scenario where card holder is unable to pay the full amount
+    - Expected Output: The lender should suggest a payment plan proposal along with reduced interest rates
+    - Edge Case: Check if the proposal includes last 4 digits of the credit card number and not the full number
+
+5. Test for Collection Agency Involvement:
+    - Input: Simulate a card holder's failure to respond to notifications and reminders
+    - Expected Output: A collection agency should be involved and provided with last 4 digits of the card number
+    - Edge Case: Check that the full card number isn't shared with the agency
+
+6. Test for Legal Action Initiation:
+    - Input: Simulate an extreme case of non-payment, where legal action becomes necessary.
+    - Expected Output: Legal documentation should include the last 4 digits of the credit card number
+    - Edge Case: In legal paperwork, only the last 4 digits of the credit card number should be included
+
+Non Functional Test:
+
+1. Test for Performance:
+    - Test if the system can handle hundreds of notifications without any delay
+
+2. Test for Security:
+    - Check if the system encrypts full card numbers and never displays them in any communication
+
+3. Test for ... User Interface:
+    - Validate if notifications display correctly and are easily readable
+
+4. Test for Error Handling:
+    - Test the systems response when there is a failure to send a notification
+
+5. Test for Compatibility:
+    - Check if the notifications display correctly on different devices and mail clients.
+
+6. Test for Interruption handling:
+    - Check the system's ability to recover and continue operation after an interruption, like power outage or system crash. 
+
+7. Test for load balancing: 
+    - Simulate a scenario where thousands of reminders and notifications are processed simultaneously and observe the behavior.
