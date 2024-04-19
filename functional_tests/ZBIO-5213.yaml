@@ -1,0 +1,190 @@
+openapi: '3.0.0'
+info:
+  title: Credit Card Notifications API
+  description: This API handles notifications related to credit card dues, overdue balance, collection notifications, payment plan proposals, collection agency involvement and legal action initiation.
+  version: '1.0.0'
+
+servers:
+  - url: 'http://localhost:3000'
+
+paths:
+
+  /credit-card-reminder:
+    post:
+      summary: Send reminder for credit card due date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                due_date:
+                  type: string
+                card_number:
+                  type: string
+              required:
+                - due_date
+                - card_number
+      responses:
+        '200':
+          description: Successfully sent the credit card due date reminder
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /overdue-alert:
+    post:
+      summary: Send overdue balance alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                due_date:
+                  type: string
+                card_number:
+                  type: string
+                outstanding_amount:
+                  type: string
+              required:
+                - due_date
+                - card_number
+                - outstanding_amount
+      responses:
+        '200':
+          description: Successfully sent the overdue balance alert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /collection-notification:
+    post:
+      summary: Send collection notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outstanding_balance:
+                  type: string
+                additional_charges:
+                  type: string
+                card_number:
+                  type: string
+              required:
+                - outstanding_balance
+                - additional_charges
+                - card_number
+      responses:
+        '200':
+          description: Successfully sent the collection notification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /payment-plan-proposal:
+    post:
+      summary: Send payment plan proposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outstanding_balance:
+                  type: string
+                payment_proposal:
+                  type: string
+                card_number:
+                  type: string
+              required:
+                - outstanding_balance
+                - payment_proposal
+                - card_number
+      responses:
+        '200':
+          description: Successfully sent the payment plan proposal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /collection-agency:
+    post:
+      summary: Involve collection agency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outstanding_balance:
+                  type: string
+                card_number:
+                  type: string
+                collection_agency:
+                  type: string
+              required:
+                - outstanding_balance
+                - card_number
+                - collection_agency
+      responses:
+        '200':
+          description: Successfully involved the collection agency
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /legal-action:
+    post:
+      summary: Initiate legal action
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                default_payment_details:
+                  type: string
+                card_number:
+                  type: string
+              required:
+                - default_payment_details
+                - card_number
+      responses:
+        '200':
+          description: Successfully initiated the legal action
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string

@@ -1,0 +1,66 @@
+Functional Test Cases:
+
+1. Credit Card Due Reminder Notification:
+   - Input: Due date, Credit Card Number
+   - Output: Notification alert with the due date and last four digits of the credit card
+   - Test Case:
+     - Verify that a due reminder notification/sms/email is sent to the credit card holder a predefined number of days before the payment due date.
+     -  Verify that the notification includes the last 4 digits of the credit card number.
+     -  Check edge case where due date is a non-business day, holiday or a weekend
+
+2. Overdue Balance Alert:
+   - Input: Due date, Outstanding amount, Credit Card Number
+   - Output: Alert message with last four digits of the credit card and overdue amount.
+   - Test Case:
+     - Verify that an overdue balance notification/sms/email is sent to the cardholder immediately the day after the due date if payment is missed.
+     - Verify that the alert contains the overdue amount and the last four digits of the credit card number.
+
+3. Collection Notification:
+   - Input: Card outstanding balance, Additional charges, Credit Card Number
+   - Output: Collection notification
+   - Test Case:
+     - Verify that a collection notification is sent to the cardholder if the account becomes significantly delinquent.
+     - Verify that the notification includes the amount owed, any additional charges and last four digits of the credit card number.
+
+4. Payment Plan Proposal:
+   - Input: Outstanding balance, Payment plan proposal, Credit Card Number
+   - Output: Payment plan proposal
+   - Test Case:
+     - Verify that if a cardholder is unable to pay the full overdue balance at once, the card issuer offers a payment plan proposal.
+     - Check the payment plan proposal includes reduced interest rates, fees and last four digits of the credit card number.
+
+5. Collection Agency Involvement:
+   - Input: Outstanding balance, Credit Card Number, Collection Agency Details
+   - Output: Collection agency involvement
+   - Test Case:
+     - Verify that if the cardholder doesn't respond to previous notifications, the card issuer involves a collection agency.
+     - Check the collection agency is provided with the last four digits of the credit card number and not the full credit card number.
+
+6. Legal Action Initiation:
+   - Input: Credit Card Number, Default payment details
+   - Output: Legal action documentation with last four digits of the credit card number.
+   - Test Case:
+     - Verify that in extreme cases of non-payment or default, the card issuer initiates legal action against the cardholder.
+     - Check any legal documentation includes the last 4 digits of the credit card number.
+
+Non Functional Test Cases
+1. Performance Testing:
+   - Verify that the system is capable of sending all these various notifications timely and without delay.
+   - Check the system’s response time when large numbers of users are receiving notifications at the same time.
+
+2. Security Testing:
+   - Check only the last four digits of the credit card number are displayed in all communications.
+   - Test that the full credit card number is never shared or displayed in plain text.
+
+3. Usability Testing:
+   - Check whether the sent notifications are easily understood by the cardholder.
+   - Verify that the last four digits of the credit card number are clearly visible and identifiable in all sent notifications.
+
+4. Compatibility Testing:
+   - Verify that all these notifications display correctly and uniformly across all type of devices (desktop, mobile, tablets etc), email clients (Gmail, Yahoo, MS Outlook, etc), and operating systems (iOS, Android, Windows, etc).
+
+5. Recovery Testing:
+   - Verify how the system recovers and resumes operation after a failure (for example network failure during notification).
+
+6. Localization Testing:
+   - Verify that notifications are sent in the language preferred by the card holder.
