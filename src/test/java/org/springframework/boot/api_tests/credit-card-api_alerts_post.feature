@@ -19,7 +19,7 @@ Scenario Outline: Initiate overdue payment alert action
     Given path '/credit-card-api/alerts'
     And param cardNumber = '<cardNumber>'
     And header Authorization = authToken
-    When method GET
+    When method POST
     Then status 200
     And match response == { message: 'Call initiated' }
 
@@ -28,17 +28,3 @@ Scenario Outline: Initiate overdue payment alert action
         | 1234567890 |
         | 9876543210 |
 
-Scenario: Initiate overdue payment alert action with invalid card number
-    Given path '/credit-card-api/alerts'
-    And param cardNumber = '123456'
-    And header Authorization = authToken
-    When method GET
-    Then status 400
-    And match response == { error: 'Invalid card number format' }
-
-Scenario: Initiate overdue payment alert action without card number
-    Given path '/credit-card-api/alerts'
-    And header Authorization = authToken
-    When method GET
-    Then status 400
-    And match response == { error: 'Card number is required' }

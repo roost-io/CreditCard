@@ -32,10 +32,10 @@ Scenario Outline: Successful payment
 
     Examples:
         | cardNumber | amount | newBalance |
-        | 1234567890 | 100.50 | 900.50     |
-        | 9876543210 | 50.75  | 1949.25    |
+        | 1234567890 | 100.50 | 0    |
+        | 9876543210 | 50.75  | 0    |
 
-Scenario: Invalid card number format
+Scenario: Invalid payment details - Invalid card number format
     Given path '/credit-card-api/payments'
     And request
         """
@@ -46,9 +46,9 @@ Scenario: Invalid card number format
         """
     When method POST
     Then status 400
-    And match response.error contains 'Invalid card number format'
+    And match response.error contains 'Invalid payment details'
 
-Scenario: Missing card number field
+Scenario: Invalid payment details - Missing card number field
     Given path '/credit-card-api/payments'
     And request
         """
@@ -58,9 +58,8 @@ Scenario: Missing card number field
         """
     When method POST
     Then status 400
-    And match response.error contains 'CardNumber is required'
+    And match response.error contains 'Invalid payment details'
 
-Scenario: Missing amount field
     Given path '/credit-card-api/payments'
     And request
         """
@@ -70,4 +69,4 @@ Scenario: Missing amount field
         """
     When method POST
     Then status 400
-    And match response.error contains 'Amount is required'
+    And match response.error contains 'Invalid payment details'

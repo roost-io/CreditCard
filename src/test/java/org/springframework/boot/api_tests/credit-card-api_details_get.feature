@@ -34,19 +34,11 @@ Scenario: Fetch credit card details with invalid card number
     And header Authorization = 'Bearer ' + authToken
     When method GET
     Then status 400
-    And match response == """
-        {
-            "error": "Invalid card number"
-        }
-        """
+    And match response == { error: 'Invalid card number' }
 
 Scenario: Fetch credit card details without authorization
     Given path '/credit-card-api/details'
     And param cardNumber = '1234567890'
     When method GET
     Then status 401
-    And match response == """
-        {
-            "error": "Access denied"
-        }
-        """
+    And match response == { error: 'Access denied' }
