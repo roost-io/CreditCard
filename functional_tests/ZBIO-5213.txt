@@ -1,51 +1,54 @@
 Functional Test Cases:
 
-1. Credit Card Due Reminder:
-    - Input: Current date, Payment due date, Last 4 digits of Credit Card
-    - Scenario: Verify that the reminder notification is sent to the user when the payment due date approaches.
-    - Expected Output: User receives notification showing the last 4 digits of their credit card number and the due date. 
+- Credit Card Due Reminder:
+    1. **Test Case 1** - Validate that the automated notification is sent to the cardholder before the payment due date.
+        - Input: The system clock should reach the pre-determined timeframe before the payment due date.
+        - Expected Output: Automated notification sent to cardholder.
+    2. **Test Case 2** - Validate that the notification includes the last 4 digits of the credit card number.
+        - Input: Automated notification.
+        - Expected Output: Notification with last 4 digits of credit card number.
+- Overdue Balance Alert:
+    1. **Test Case 1** - Validate that an alert is sent to the cardholder if the payment due date is missed.
+        - Input: The system clock should reach the day after the due date.
+        - Expected Output: Alert sent to cardholder.
+    2. **Test Case 2** - Validate that the overdue alert includes the last 4 digits of the credit card number.
+        - Input: Overdue balance alert.
+        - Expected Output: Alert with last 4 digits of credit card number.
+- Collection Notification:
+    1. **Test Case** - Validate that a notification is sent to the cardholder when the account becomes significantly delinquent.
+        - Input: System detects the account is significantly delinquent.
+        - Expected Output: Collection notification sent to cardholder.
+- Payment Plan Proposal:
+    1. **Test Case** - Validate that a proposal is sent to the cardholder when they are unable to pay the full overdue balance.
+        - Input: System detects the cardholder is unable to pay the full overdue balance.
+        - Expected Output: Payment plan proposal sent to cardholder.
+- Collection Agency Involvement:
+    1. **Test Case** - Validate that a collection agency is involved when the cardholder fails to respond to previous notifications and reminders.
+        - Input: No response from the cardholder to all previous notifications.
+        - Expected Output: Collection agency involvement notice sent to cardholder.
+- Legal Action Initiation:
+    1. **Test Case** - Validate that legal action is initiated in extreme cases of non-payment or default.
+        - Input: System detects extreme case of non-payment or default.
+        - Expected Output: Legal action initiation notice sent to cardholder.
 
-2. Overdue Balance Alert:
-    - Input: Payment Due Date, Current date, Last 4 digits of Credit Card
-    - Scenario: Verify that an alert is sent to the user if the payment due date has passed and payment is not received.
-    - Expected Output: User receives alert notification showing overdue balance, potential consequences, and last 4 digits of their credit card number.
+Non-Functional Test Cases:
 
-3. Collection Notification:
-    - Input: Delinquency Status, Outstanding Balance, Additional Charges, Last 4 digits of Credit Card
-    - Scenario: Verify that a collection notification is sent when the account has become significantly delinquent.
-    - Expected Output: User receives an official notification detailing amount owed, additional charges, and last 4 digits of their credit card number.
-
-4. Payment Plan Proposal:
-    - Input: Outstanding Balance, Payment Plan, Last 4 digits of Credit Card
-    - Scenario: Verify that a payment plan is proposed to the user when they cannot pay the full overdue balance.
-    - Expected Output: User receives a payment plan proposal outlining a structured repayment schedule with reduced interest rates or fees & last 4 digits of their credit card number.
-
-5. Collection Agency Involvement:
-    - Input: Previous Notifications, Response Status, Last 4 digits of Credit Card
-    - Scenario: Verify that a collection agency gets involved when cardholder fails to respond to previous notifications and reminders.
-    - Expected Output: Collection agency receives information including last 4 digits of card number and other required data.
-
-6. Legal Action Initiation:
-    - Input: Non-payment Status, Legal Status, Last 4 digits of Credit Card
-    - Scenario: Verify that legal action is initiated in extreme cases of non-payment or default.
-    - Expected Output: Legal documents contain the last 4 digits of credit card number and other necessary information.
-
-
-Non-functional Test Cases:
-
-1. Performance Testing:
-   - Scenario: Verify that the system should be able to handle high volumes of reminders/alerts/notifications at the same time.
-   - Expected Output: System functions correctly with no delay during high traffic times.
-
-2. Security Testing:
-    - Input: Full credit card number
-    - Scenario: Verify that full credit card number is not shown in communications or documentation. Only the last 4 digits should be visible.
-    - Expected Output: Only the last four digits of the credit card number are visible in any communication or documentation.
-
-3. Compatibility Testing:
-    - Scenario: Verify that the reminders, alerts, and notifications are rendered correctly on all supported platforms (email, mobile notifications, web browsers, etc.).
-    - Expected Output: Reminders, alerts, and notifications are correctly displayed across all supported platforms.
-
-4. Usability Testing:
-    - Scenario: Verify the clarity and understandability of the reminders, alerts, and notifications text content.
-    - Expected Output: The text content in the notifications should be understandable and clear to the users.
+- **Security**:
+    1. **Test Case** - Validate that only the last 4 digits of the credit card number are displayed in any communication or documentation.
+        - Input: Any notification or document related to the collection process.
+        - Expected Output: Only the last 4 digits of the credit card are visible.
+    2. **Test Case** - Validate that the full credit card number is never shared or displayed in a plain text.
+        - Input: Any notification or document related to the collection process.
+        - Expected Output: Full credit card number is not visible/shared.
+- **Performance**:
+    1. **Test Case** - Validate the system's capability to send notifications to a large number of cardholders simultaneously.
+        - Input: A large batch of notifications to be sent at the same moment.
+        - Expected Output: All notifications are sent successfully without any delay/error.
+- **Reliability**:
+    1. **Test Case** - Validate the system's ability to function accurately and provide expected output under stipulated conditions consistently.
+        - Input: Regular functioning of the system.
+        - Expected Output: Consistent and expected output.
+- **Usability**:
+    1. **Test Case** - Validate that all messages sent to the cardholder are clearly understandable and the steps are easy to follow (if any).
+        - Input: Any notification sent to cardholder.
+        - Expected Output: Clear message, with easy to follow instructions if applicable.

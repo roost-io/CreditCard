@@ -1,227 +1,133 @@
 openapi: 3.0.0
 info:
-  title: Credit Card Notifications and Alerts API
   version: 1.0.0
-servers:
-  - url: http://localhost:3000
+  title: CardholderNotifications API
+  description: A simple API to send notifications to the card holder
+
+servers: 
+  - url: http://api.cardholder-notifications.com
 
 paths:
+  /due-reminder:
+     post:
+       summary: Send a Due Payment Reminder
+       requestBody:
+         required: true
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Notification'
+       responses:
+         '200':
+           description: 'Payment for card XXXX is due soon'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/CardholderResponse'
 
-  /payment-reminder:
-    post:
-      operationId: paymentReminder
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - currentDate
-                - paymentDueDate
-                - cardLast4
-              properties:
-                currentDate:
-                  type: string
-                  format: date
-                paymentDueDate:
-                  type: string
-                  format: date
-                cardLast4:
-                  type: string
-                  minLength: 4
-                  maxLength: 4
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
+  /overdue-alert:
+     post:
+       summary: Send an Overdue Payment Alert
+       requestBody:
+         required: true
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Notification'
+       responses:
+         '200':
+           description: 'Payment for card XXXX is overdue'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/CardholderResponse'
 
-  /balance-alert:
-    post:
-      operationId: balanceAlert
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - paymentDueDate
-                - currentDate
-                - cardLast4
-              properties:
-                paymentDueDate:
-                  type: string
-                  format: date
-                currentDate:
-                  type: string
-                  format: date
-                cardLast4:
-                  type: string
-                  minLength: 4
-                  maxLength: 4
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-                
-  /collection-notification:
-    post:
-      operationId: collectionNotification
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - delinquencyStatus
-                - outstandingBalance
-                - additionalCharges
-                - cardLast4
-              properties:
-                delinquencyStatus:
-                  type: string
-                outstandingBalance:
-                  type: string
-                additionalCharges:
-                  type: string
-                cardLast4:
-                  type: string
-                  minLength: 4
-                  maxLength: 4
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
+  /collection-notice:
+     post:
+       summary: Send a Collection Notice
+       requestBody:
+         required: true
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Notification'
+       responses:
+         '200':
+           description: 'Account on card XXXX is significantly delinquent'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/CardholderResponse'
 
-  /payment-plan-proposal:
-    post:
-      operationId: paymentPlanProposal
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - outstandingBalance
-                - paymentPlan
-                - cardLast4
-              properties:
-                outstandingBalance:
-                  type: string
-                paymentPlan:
-                  type: object
-                  properties:
-                    installmentAmount:
-                      type: string
-                    interestRate:
-                      type: string
-                    termLength:
-                      type: string
-                cardLast4:
-                  type: string
-                  minLength: 4
-                  maxLength: 4
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
+  /payment-proposal:
+     post:
+       summary: Send a Payment Plan Proposal
+       requestBody:
+         required: true
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Notification'
+       responses:
+         '200':
+           description: 'We have a payment plan proposal for your card XXXX'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/CardholderResponse'
 
-  /collection-agency:
-    post:
-      operationId: collectionAgencyInvolvement
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - previousNotifications
-                - responseStatus
-                - cardLast4
-              properties:
-                previousNotifications:
-                  type: string
-                responseStatus:
-                  type: string
-                cardLast4:
-                  type: string
-                  minLength: 4
-                  maxLength: 4
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
+  /collection-agency-notice:
+     post:
+       summary: Send a Collection Agency Involvement Notice
+       requestBody:
+         required: true
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Notification'
+       responses:
+         '200':
+           description: 'Collection agency will be involved for card XXXX'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/CardholderResponse'
 
-  /legal-action:
-    post:
-      operationId: legalActionInitiation
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - nonPaymentStatus
-                - legalStatus
-                - cardLast4
-              properties:
-                nonPaymentStatus:
-                  type: string
-                legalStatus:
-                  type: string
-                cardLast4:
-                  type: string
-                  minLength: 4
-                  maxLength: 4
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
+  /legal-action-notice:
+     post:
+       summary: Send a Legal Action Initiation Notice
+       requestBody:
+         required: true
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Notification'
+       responses:
+         '200':
+           description: 'Legal action initiated for card XXXX due to non-payment or default'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/CardholderResponse'
 
-  /notifications:
-    get:
-      operationId: getNotifications
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-
-  /card-details:
-    get:
-      operationId: getCardDetails
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  cardNumberPartial:
-                    type: string
+components:
+  schemas:
+    Notification:
+      type: object
+      properties:
+        card_last_4_digits:
+          type: integer
+        message:
+          type: string
+          description: Message to be sent to the card holder
+    CardholderResponse:
+      type: object
+      properties:
+        card_last_4_digits:
+          type: integer
+        message:
+          type: string
+          description: Message received by the card holder
+      required:
+        - card_last_4_digits
+        - message
