@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CollectionAgencyInvolvementRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openapi-spring</a> &gt; <a href="index.source.html" class="el_package">org.openapitools.model</a> &gt; <span class="el_source">CollectionAgencyInvolvementRequest.java</span></div><h1>CollectionAgencyInvolvementRequest.java</h1><pre class="source lang-java linenums">package org.openapitools.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.*;
+import javax.annotation.Generated;
+
+/**
+ * CollectionAgencyInvolvementRequest
+ */
+
+@JsonTypeName(&quot;collectionAgencyInvolvement_request&quot;)
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;,
+		date = &quot;2024-04-19T17:24:41.195299+05:30[Asia/Kolkata]&quot;, comments = &quot;Generator version: 7.4.0&quot;)
+public class CollectionAgencyInvolvementRequest {
+
+	private String previousNotifications;
+
+	private String responseStatus;
+
+	private String cardLast4;
+
+	public CollectionAgencyInvolvementRequest() {
+<span class="fc" id="L33">		super();</span>
+<span class="fc" id="L34">	}</span>
+
+	/**
+	 * Constructor with only required parameters
+	 */
+<span class="nc" id="L39">	public CollectionAgencyInvolvementRequest(String previousNotifications, String responseStatus, String cardLast4) {</span>
+<span class="nc" id="L40">		this.previousNotifications = previousNotifications;</span>
+<span class="nc" id="L41">		this.responseStatus = responseStatus;</span>
+<span class="nc" id="L42">		this.cardLast4 = cardLast4;</span>
+<span class="nc" id="L43">	}</span>
+
+	public CollectionAgencyInvolvementRequest previousNotifications(String previousNotifications) {
+<span class="fc" id="L46">		this.previousNotifications = previousNotifications;</span>
+<span class="fc" id="L47">		return this;</span>
+	}
+
+	/**
+	 * Get previousNotifications
+	 * @return previousNotifications
+	 */
+	@NotNull
+	@Schema(name = &quot;previousNotifications&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;previousNotifications&quot;)
+	public String getPreviousNotifications() {
+<span class="fc" id="L58">		return previousNotifications;</span>
+	}
+
+	public void setPreviousNotifications(String previousNotifications) {
+<span class="fc" id="L62">		this.previousNotifications = previousNotifications;</span>
+<span class="fc" id="L63">	}</span>
+
+	public CollectionAgencyInvolvementRequest responseStatus(String responseStatus) {
+<span class="fc" id="L66">		this.responseStatus = responseStatus;</span>
+<span class="fc" id="L67">		return this;</span>
+	}
+
+	/**
+	 * Get responseStatus
+	 * @return responseStatus
+	 */
+	@NotNull
+	@Schema(name = &quot;responseStatus&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;responseStatus&quot;)
+	public String getResponseStatus() {
+<span class="fc" id="L78">		return responseStatus;</span>
+	}
+
+	public void setResponseStatus(String responseStatus) {
+<span class="fc" id="L82">		this.responseStatus = responseStatus;</span>
+<span class="fc" id="L83">	}</span>
+
+	public CollectionAgencyInvolvementRequest cardLast4(String cardLast4) {
+<span class="fc" id="L86">		this.cardLast4 = cardLast4;</span>
+<span class="fc" id="L87">		return this;</span>
+	}
+
+	/**
+	 * Get cardLast4
+	 * @return cardLast4
+	 */
+	@NotNull
+	@Size(min = 4, max = 4)
+	@Schema(name = &quot;cardLast4&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;cardLast4&quot;)
+	public String getCardLast4() {
+<span class="fc" id="L99">		return cardLast4;</span>
+	}
+
+	public void setCardLast4(String cardLast4) {
+<span class="fc" id="L103">		this.cardLast4 = cardLast4;</span>
+<span class="fc" id="L104">	}</span>
+
+	@Override
+	public boolean equals(Object o) {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">		if (this == o) {</span>
+<span class="fc" id="L109">			return true;</span>
+		}
+<span class="fc bfc" id="L111" title="All 4 branches covered.">		if (o == null || getClass() != o.getClass()) {</span>
+<span class="fc" id="L112">			return false;</span>
+		}
+<span class="fc" id="L114">		CollectionAgencyInvolvementRequest collectionAgencyInvolvementRequest = (CollectionAgencyInvolvementRequest) o;</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">		return Objects.equals(this.previousNotifications, collectionAgencyInvolvementRequest.previousNotifications)</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">				&amp;&amp; Objects.equals(this.responseStatus, collectionAgencyInvolvementRequest.responseStatus)</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">				&amp;&amp; Objects.equals(this.cardLast4, collectionAgencyInvolvementRequest.cardLast4);</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="fc" id="L122">		return Objects.hash(previousNotifications, responseStatus, cardLast4);</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="fc" id="L127">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L128">		sb.append(&quot;class CollectionAgencyInvolvementRequest {\n&quot;);</span>
+<span class="fc" id="L129">		sb.append(&quot;    previousNotifications: &quot;).append(toIndentedString(previousNotifications)).append(&quot;\n&quot;);</span>
+<span class="fc" id="L130">		sb.append(&quot;    responseStatus: &quot;).append(toIndentedString(responseStatus)).append(&quot;\n&quot;);</span>
+<span class="fc" id="L131">		sb.append(&quot;    cardLast4: &quot;).append(toIndentedString(cardLast4)).append(&quot;\n&quot;);</span>
+<span class="fc" id="L132">		sb.append(&quot;}&quot;);</span>
+<span class="fc" id="L133">		return sb.toString();</span>
+	}
+
+	/**
+	 * Convert the given object to string with each line indented by 4 spaces (except the
+	 * first line).
+	 */
+	private String toIndentedString(Object o) {
+<span class="fc bfc" id="L141" title="All 2 branches covered.">		if (o == null) {</span>
+<span class="fc" id="L142">			return &quot;null&quot;;</span>
+		}
+<span class="fc" id="L144">		return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
