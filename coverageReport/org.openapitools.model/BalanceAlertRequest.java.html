@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BalanceAlertRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openapi-spring</a> &gt; <a href="index.source.html" class="el_package">org.openapitools.model</a> &gt; <span class="el_source">BalanceAlertRequest.java</span></div><h1>BalanceAlertRequest.java</h1><pre class="source lang-java linenums">package org.openapitools.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.*;
+import javax.annotation.Generated;
+
+/**
+ * BalanceAlertRequest
+ */
+
+@JsonTypeName(&quot;balanceAlert_request&quot;)
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;,
+		date = &quot;2024-04-19T17:24:41.195299+05:30[Asia/Kolkata]&quot;, comments = &quot;Generator version: 7.4.0&quot;)
+public class BalanceAlertRequest {
+
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+	private LocalDate paymentDueDate;
+
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+	private LocalDate currentDate;
+
+	private String cardLast4;
+
+	public BalanceAlertRequest() {
+<span class="fc" id="L37">		super();</span>
+<span class="fc" id="L38">	}</span>
+
+	/**
+	 * Constructor with only required parameters
+	 */
+<span class="fc" id="L43">	public BalanceAlertRequest(LocalDate paymentDueDate, LocalDate currentDate, String cardLast4) {</span>
+<span class="fc" id="L44">		this.paymentDueDate = paymentDueDate;</span>
+<span class="fc" id="L45">		this.currentDate = currentDate;</span>
+<span class="fc" id="L46">		this.cardLast4 = cardLast4;</span>
+<span class="fc" id="L47">	}</span>
+
+	public BalanceAlertRequest paymentDueDate(LocalDate paymentDueDate) {
+<span class="fc" id="L50">		this.paymentDueDate = paymentDueDate;</span>
+<span class="fc" id="L51">		return this;</span>
+	}
+
+	/**
+	 * Get paymentDueDate
+	 * @return paymentDueDate
+	 */
+	@NotNull
+	@Valid
+	@Schema(name = &quot;paymentDueDate&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;paymentDueDate&quot;)
+	public LocalDate getPaymentDueDate() {
+<span class="fc" id="L63">		return paymentDueDate;</span>
+	}
+
+	public void setPaymentDueDate(LocalDate paymentDueDate) {
+<span class="fc" id="L67">		this.paymentDueDate = paymentDueDate;</span>
+<span class="fc" id="L68">	}</span>
+
+	public BalanceAlertRequest currentDate(LocalDate currentDate) {
+<span class="fc" id="L71">		this.currentDate = currentDate;</span>
+<span class="fc" id="L72">		return this;</span>
+	}
+
+	/**
+	 * Get currentDate
+	 * @return currentDate
+	 */
+	@NotNull
+	@Valid
+	@Schema(name = &quot;currentDate&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;currentDate&quot;)
+	public LocalDate getCurrentDate() {
+<span class="fc" id="L84">		return currentDate;</span>
+	}
+
+	public void setCurrentDate(LocalDate currentDate) {
+<span class="fc" id="L88">		this.currentDate = currentDate;</span>
+<span class="fc" id="L89">	}</span>
+
+	public BalanceAlertRequest cardLast4(String cardLast4) {
+<span class="fc" id="L92">		this.cardLast4 = cardLast4;</span>
+<span class="fc" id="L93">		return this;</span>
+	}
+
+	/**
+	 * Get cardLast4
+	 * @return cardLast4
+	 */
+	@NotNull
+	@Size(min = 4, max = 4)
+	@Schema(name = &quot;cardLast4&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;cardLast4&quot;)
+	public String getCardLast4() {
+<span class="fc" id="L105">		return cardLast4;</span>
+	}
+
+	public void setCardLast4(String cardLast4) {
+<span class="fc" id="L109">		this.cardLast4 = cardLast4;</span>
+<span class="fc" id="L110">	}</span>
+
+	@Override
+	public boolean equals(Object o) {
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		if (this == o) {</span>
+<span class="fc" id="L115">			return true;</span>
+		}
+<span class="pc bpc" id="L117" title="1 of 4 branches missed.">		if (o == null || getClass() != o.getClass()) {</span>
+<span class="fc" id="L118">			return false;</span>
+		}
+<span class="nc" id="L120">		BalanceAlertRequest balanceAlertRequest = (BalanceAlertRequest) o;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		return Objects.equals(this.paymentDueDate, balanceAlertRequest.paymentDueDate)</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				&amp;&amp; Objects.equals(this.currentDate, balanceAlertRequest.currentDate)</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				&amp;&amp; Objects.equals(this.cardLast4, balanceAlertRequest.cardLast4);</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="fc" id="L128">		return Objects.hash(paymentDueDate, currentDate, cardLast4);</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="fc" id="L133">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L134">		sb.append(&quot;class BalanceAlertRequest {\n&quot;);</span>
+<span class="fc" id="L135">		sb.append(&quot;    paymentDueDate: &quot;).append(toIndentedString(paymentDueDate)).append(&quot;\n&quot;);</span>
+<span class="fc" id="L136">		sb.append(&quot;    currentDate: &quot;).append(toIndentedString(currentDate)).append(&quot;\n&quot;);</span>
+<span class="fc" id="L137">		sb.append(&quot;    cardLast4: &quot;).append(toIndentedString(cardLast4)).append(&quot;\n&quot;);</span>
+<span class="fc" id="L138">		sb.append(&quot;}&quot;);</span>
+<span class="fc" id="L139">		return sb.toString();</span>
+	}
+
+	/**
+	 * Convert the given object to string with each line indented by 4 spaces (except the
+	 * first line).
+	 */
+	private String toIndentedString(Object o) {
+<span class="fc bfc" id="L147" title="All 2 branches covered.">		if (o == null) {</span>
+<span class="fc" id="L148">			return &quot;null&quot;;</span>
+		}
+<span class="fc" id="L150">		return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
