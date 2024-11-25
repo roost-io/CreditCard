@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CollectionNotificationRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openapi-spring</a> &gt; <a href="index.source.html" class="el_package">org.openapitools.model</a> &gt; <span class="el_source">CollectionNotificationRequest.java</span></div><h1>CollectionNotificationRequest.java</h1><pre class="source lang-java linenums">package org.openapitools.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.*;
+import javax.annotation.Generated;
+
+/**
+ * CollectionNotificationRequest
+ */
+
+@JsonTypeName(&quot;collectionNotification_request&quot;)
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;,
+		date = &quot;2024-04-19T17:24:41.195299+05:30[Asia/Kolkata]&quot;, comments = &quot;Generator version: 7.4.0&quot;)
+public class CollectionNotificationRequest {
+
+	private String delinquencyStatus;
+
+	private String outstandingBalance;
+
+	private String additionalCharges;
+
+	private String cardLast4;
+
+	public CollectionNotificationRequest() {
+<span class="nc" id="L35">		super();</span>
+<span class="nc" id="L36">	}</span>
+
+	/**
+	 * Constructor with only required parameters
+	 */
+	public CollectionNotificationRequest(String delinquencyStatus, String outstandingBalance, String additionalCharges,
+<span class="nc" id="L42">			String cardLast4) {</span>
+<span class="nc" id="L43">		this.delinquencyStatus = delinquencyStatus;</span>
+<span class="nc" id="L44">		this.outstandingBalance = outstandingBalance;</span>
+<span class="nc" id="L45">		this.additionalCharges = additionalCharges;</span>
+<span class="nc" id="L46">		this.cardLast4 = cardLast4;</span>
+<span class="nc" id="L47">	}</span>
+
+	public CollectionNotificationRequest delinquencyStatus(String delinquencyStatus) {
+<span class="nc" id="L50">		this.delinquencyStatus = delinquencyStatus;</span>
+<span class="nc" id="L51">		return this;</span>
+	}
+
+	/**
+	 * Get delinquencyStatus
+	 * @return delinquencyStatus
+	 */
+	@NotNull
+	@Schema(name = &quot;delinquencyStatus&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;delinquencyStatus&quot;)
+	public String getDelinquencyStatus() {
+<span class="nc" id="L62">		return delinquencyStatus;</span>
+	}
+
+	public void setDelinquencyStatus(String delinquencyStatus) {
+<span class="nc" id="L66">		this.delinquencyStatus = delinquencyStatus;</span>
+<span class="nc" id="L67">	}</span>
+
+	public CollectionNotificationRequest outstandingBalance(String outstandingBalance) {
+<span class="nc" id="L70">		this.outstandingBalance = outstandingBalance;</span>
+<span class="nc" id="L71">		return this;</span>
+	}
+
+	/**
+	 * Get outstandingBalance
+	 * @return outstandingBalance
+	 */
+	@NotNull
+	@Schema(name = &quot;outstandingBalance&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;outstandingBalance&quot;)
+	public String getOutstandingBalance() {
+<span class="nc" id="L82">		return outstandingBalance;</span>
+	}
+
+	public void setOutstandingBalance(String outstandingBalance) {
+<span class="nc" id="L86">		this.outstandingBalance = outstandingBalance;</span>
+<span class="nc" id="L87">	}</span>
+
+	public CollectionNotificationRequest additionalCharges(String additionalCharges) {
+<span class="nc" id="L90">		this.additionalCharges = additionalCharges;</span>
+<span class="nc" id="L91">		return this;</span>
+	}
+
+	/**
+	 * Get additionalCharges
+	 * @return additionalCharges
+	 */
+	@NotNull
+	@Schema(name = &quot;additionalCharges&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;additionalCharges&quot;)
+	public String getAdditionalCharges() {
+<span class="nc" id="L102">		return additionalCharges;</span>
+	}
+
+	public void setAdditionalCharges(String additionalCharges) {
+<span class="nc" id="L106">		this.additionalCharges = additionalCharges;</span>
+<span class="nc" id="L107">	}</span>
+
+	public CollectionNotificationRequest cardLast4(String cardLast4) {
+<span class="nc" id="L110">		this.cardLast4 = cardLast4;</span>
+<span class="nc" id="L111">		return this;</span>
+	}
+
+	/**
+	 * Get cardLast4
+	 * @return cardLast4
+	 */
+	@NotNull
+	@Size(min = 4, max = 4)
+	@Schema(name = &quot;cardLast4&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;cardLast4&quot;)
+	public String getCardLast4() {
+<span class="nc" id="L123">		return cardLast4;</span>
+	}
+
+	public void setCardLast4(String cardLast4) {
+<span class="nc" id="L127">		this.cardLast4 = cardLast4;</span>
+<span class="nc" id="L128">	}</span>
+
+	@Override
+	public boolean equals(Object o) {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (this == o) {</span>
+<span class="nc" id="L133">			return true;</span>
+		}
+<span class="nc bnc" id="L135" title="All 4 branches missed.">		if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L136">			return false;</span>
+		}
+<span class="nc" id="L138">		CollectionNotificationRequest collectionNotificationRequest = (CollectionNotificationRequest) o;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		return Objects.equals(this.delinquencyStatus, collectionNotificationRequest.delinquencyStatus)</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">				&amp;&amp; Objects.equals(this.outstandingBalance, collectionNotificationRequest.outstandingBalance)</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				&amp;&amp; Objects.equals(this.additionalCharges, collectionNotificationRequest.additionalCharges)</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				&amp;&amp; Objects.equals(this.cardLast4, collectionNotificationRequest.cardLast4);</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="nc" id="L147">		return Objects.hash(delinquencyStatus, outstandingBalance, additionalCharges, cardLast4);</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="nc" id="L152">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L153">		sb.append(&quot;class CollectionNotificationRequest {\n&quot;);</span>
+<span class="nc" id="L154">		sb.append(&quot;    delinquencyStatus: &quot;).append(toIndentedString(delinquencyStatus)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L155">		sb.append(&quot;    outstandingBalance: &quot;).append(toIndentedString(outstandingBalance)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L156">		sb.append(&quot;    additionalCharges: &quot;).append(toIndentedString(additionalCharges)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L157">		sb.append(&quot;    cardLast4: &quot;).append(toIndentedString(cardLast4)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L158">		sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L159">		return sb.toString();</span>
+	}
+
+	/**
+	 * Convert the given object to string with each line indented by 4 spaces (except the
+	 * first line).
+	 */
+	private String toIndentedString(Object o) {
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (o == null) {</span>
+<span class="nc" id="L168">			return &quot;null&quot;;</span>
+		}
+<span class="nc" id="L170">		return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
