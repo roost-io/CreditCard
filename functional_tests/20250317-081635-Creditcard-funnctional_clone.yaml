@@ -1,0 +1,187 @@
+openapi: 3.0.0
+info:
+  title: Credit Card Notification System API
+  description: API for managing credit card notifications and alerts.
+  version: 1.0.0
+servers:
+  - url: http://api.creditcard.com
+paths:
+  /notifications/due-reminder:
+    post:
+      summary: Send a due reminder notification to a cardholder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cardholderId:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date
+              required:
+                - cardholderId
+                - dueDate
+      responses:
+        '200':
+          description: Notification sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Notification sent to cardholder with card ending in 1234
+  /notifications/overdue-alert:
+    post:
+      summary: Send an overdue balance alert to a cardholder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cardholderId:
+                  type: string
+                overdueAmount:
+                  type: number
+                  format: float
+              required:
+                - cardholderId
+                - overdueAmount
+      responses:
+        '200':
+          description: Alert sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Alert sent to cardholder with card ending in 1234 detailing overdue balance
+  /notifications/collection:
+    post:
+      summary: Send a collection notification for significantly delinquent accounts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cardholderId:
+                  type: string
+                delinquentAmount:
+                  type: number
+                  format: float
+              required:
+                - cardholderId
+                - delinquentAmount
+      responses:
+        '200':
+          description: Collection notification sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Collection notification sent with card ending in 1234
+  /notifications/payment-plan:
+    post:
+      summary: Send a payment plan proposal to a cardholder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cardholderId:
+                  type: string
+                proposedPlan:
+                  type: string
+              required:
+                - cardholderId
+                - proposedPlan
+      responses:
+        '200':
+          description: Proposal sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Proposal sent with repayment schedule for card ending in 1234
+  /notifications/collection-agency:
+    post:
+      summary: Involve a collection agency for non-responsive cardholders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cardholderId:
+                  type: string
+                agencyId:
+                  type: string
+              required:
+                - cardholderId
+                - agencyId
+      responses:
+        '200':
+          description: Collection agency involved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Collection agency involved with card ending in 1234
+  /notifications/legal-action:
+    post:
+      summary: Initiate legal action for extreme cases of non-payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cardholderId:
+                  type: string
+                legalActionId:
+                  type: string
+              required:
+                - cardholderId
+                - legalActionId
+      responses:
+        '200':
+          description: Legal action initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Legal documentation includes card ending in 1234
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+security:
+  - apiKeyAuth: []
