@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentPlanProposalRequestPaymentPlan.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openapi-spring</a> &gt; <a href="index.source.html" class="el_package">org.openapitools.model</a> &gt; <span class="el_source">PaymentPlanProposalRequestPaymentPlan.java</span></div><h1>PaymentPlanProposalRequestPaymentPlan.java</h1><pre class="source lang-java linenums">package org.openapitools.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+import java.util.*;
+import javax.annotation.Generated;
+
+/**
+ * PaymentPlanProposalRequestPaymentPlan
+ */
+
+@JsonTypeName(&quot;paymentPlanProposal_request_paymentPlan&quot;)
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2024-04-19T17:24:41.195299+05:30[Asia/Kolkata]&quot;, comments = &quot;Generator version: 7.4.0&quot;)
+<span class="nc" id="L24">public class PaymentPlanProposalRequestPaymentPlan {</span>
+
+  private String installmentAmount;
+
+  private String interestRate;
+
+  private String termLength;
+
+  public PaymentPlanProposalRequestPaymentPlan installmentAmount(String installmentAmount) {
+<span class="nc" id="L33">    this.installmentAmount = installmentAmount;</span>
+<span class="nc" id="L34">    return this;</span>
+  }
+
+  /**
+   * Get installmentAmount
+   * @return installmentAmount
+  */
+  
+  @Schema(name = &quot;installmentAmount&quot;, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @JsonProperty(&quot;installmentAmount&quot;)
+  public String getInstallmentAmount() {
+<span class="nc" id="L45">    return installmentAmount;</span>
+  }
+
+  public void setInstallmentAmount(String installmentAmount) {
+<span class="nc" id="L49">    this.installmentAmount = installmentAmount;</span>
+<span class="nc" id="L50">  }</span>
+
+  public PaymentPlanProposalRequestPaymentPlan interestRate(String interestRate) {
+<span class="nc" id="L53">    this.interestRate = interestRate;</span>
+<span class="nc" id="L54">    return this;</span>
+  }
+
+  /**
+   * Get interestRate
+   * @return interestRate
+  */
+  
+  @Schema(name = &quot;interestRate&quot;, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @JsonProperty(&quot;interestRate&quot;)
+  public String getInterestRate() {
+<span class="nc" id="L65">    return interestRate;</span>
+  }
+
+  public void setInterestRate(String interestRate) {
+<span class="nc" id="L69">    this.interestRate = interestRate;</span>
+<span class="nc" id="L70">  }</span>
+
+  public PaymentPlanProposalRequestPaymentPlan termLength(String termLength) {
+<span class="nc" id="L73">    this.termLength = termLength;</span>
+<span class="nc" id="L74">    return this;</span>
+  }
+
+  /**
+   * Get termLength
+   * @return termLength
+  */
+  
+  @Schema(name = &quot;termLength&quot;, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @JsonProperty(&quot;termLength&quot;)
+  public String getTermLength() {
+<span class="nc" id="L85">    return termLength;</span>
+  }
+
+  public void setTermLength(String termLength) {
+<span class="nc" id="L89">    this.termLength = termLength;</span>
+<span class="nc" id="L90">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L95">      return true;</span>
+    }
+<span class="nc bnc" id="L97" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L98">      return false;</span>
+    }
+<span class="nc" id="L100">    PaymentPlanProposalRequestPaymentPlan paymentPlanProposalRequestPaymentPlan = (PaymentPlanProposalRequestPaymentPlan) o;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">    return Objects.equals(this.installmentAmount, paymentPlanProposalRequestPaymentPlan.installmentAmount) &amp;&amp;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        Objects.equals(this.interestRate, paymentPlanProposalRequestPaymentPlan.interestRate) &amp;&amp;</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        Objects.equals(this.termLength, paymentPlanProposalRequestPaymentPlan.termLength);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L108">    return Objects.hash(installmentAmount, interestRate, termLength);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L113">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L114">    sb.append(&quot;class PaymentPlanProposalRequestPaymentPlan {\n&quot;);</span>
+<span class="nc" id="L115">    sb.append(&quot;    installmentAmount: &quot;).append(toIndentedString(installmentAmount)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L116">    sb.append(&quot;    interestRate: &quot;).append(toIndentedString(interestRate)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L117">    sb.append(&quot;    termLength: &quot;).append(toIndentedString(termLength)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L118">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L119">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L128">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L130">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

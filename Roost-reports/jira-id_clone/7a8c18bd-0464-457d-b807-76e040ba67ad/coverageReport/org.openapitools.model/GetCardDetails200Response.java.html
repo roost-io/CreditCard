@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GetCardDetails200Response.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openapi-spring</a> &gt; <a href="index.source.html" class="el_package">org.openapitools.model</a> &gt; <span class="el_source">GetCardDetails200Response.java</span></div><h1>GetCardDetails200Response.java</h1><pre class="source lang-java linenums">package org.openapitools.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+import java.util.*;
+import javax.annotation.Generated;
+
+/**
+ * GetCardDetails200Response
+ */
+
+@JsonTypeName(&quot;getCardDetails_200_response&quot;)
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2024-04-19T17:24:41.195299+05:30[Asia/Kolkata]&quot;, comments = &quot;Generator version: 7.4.0&quot;)
+<span class="nc" id="L24">public class GetCardDetails200Response {</span>
+
+  private String cardNumberPartial;
+
+  public GetCardDetails200Response cardNumberPartial(String cardNumberPartial) {
+<span class="nc" id="L29">    this.cardNumberPartial = cardNumberPartial;</span>
+<span class="nc" id="L30">    return this;</span>
+  }
+
+  /**
+   * Get cardNumberPartial
+   * @return cardNumberPartial
+  */
+  
+  @Schema(name = &quot;cardNumberPartial&quot;, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @JsonProperty(&quot;cardNumberPartial&quot;)
+  public String getCardNumberPartial() {
+<span class="nc" id="L41">    return cardNumberPartial;</span>
+  }
+
+  public void setCardNumberPartial(String cardNumberPartial) {
+<span class="nc" id="L45">    this.cardNumberPartial = cardNumberPartial;</span>
+<span class="nc" id="L46">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L51">      return true;</span>
+    }
+<span class="nc bnc" id="L53" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L54">      return false;</span>
+    }
+<span class="nc" id="L56">    GetCardDetails200Response getCardDetails200Response = (GetCardDetails200Response) o;</span>
+<span class="nc" id="L57">    return Objects.equals(this.cardNumberPartial, getCardDetails200Response.cardNumberPartial);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L62">    return Objects.hash(cardNumberPartial);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L67">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L68">    sb.append(&quot;class GetCardDetails200Response {\n&quot;);</span>
+<span class="nc" id="L69">    sb.append(&quot;    cardNumberPartial: &quot;).append(toIndentedString(cardNumberPartial)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L70">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L71">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L80">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L82">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
