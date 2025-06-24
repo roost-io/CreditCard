@@ -1,0 +1,43 @@
+**Functional Test Cases**
+
+- **Test Case 1: Verify Comment Addition**
+  - **Input:** Add a comment in the file.
+  - **Expected Output:** The comment "this test is created by Divyesh Maheshwari" is successfully added to the file.
+  - **Edge Case:** Ensure that the comment is added even if the file is empty.
+
+- **Test Case 2: Verify Comment Format**
+  - **Input:** Add a comment in the file.
+  - **Expected Output:** The comment is added in the correct format (e.g., `// this test is created by Divyesh Maheshwari` for languages like Java, C++ or `# this test is created by Divyesh Maheshwari` for Python).
+  - **Edge Case:** Verify that the comment format is correct for different programming languages.
+
+- **Test Case 3: Verify Multiple Comment Additions**
+  - **Input:** Add multiple comments in the file.
+  - **Expected Output:** Each comment is added successfully without overwriting previous comments.
+  - **Edge Case:** Ensure that adding multiple comments does not affect the existing content of the file.
+
+- **Test Case 4: Verify Comment Position**
+  - **Input:** Add a comment at the beginning of the file.
+  - **Expected Output:** The comment is added at the very top of the file.
+  - **Edge Case:** Ensure that the comment is added at the correct position even if the file already contains other comments or code.
+
+**Non-Functional Test Cases**
+
+- **Test Case 1: Performance Test for Comment Addition**
+  - **Input:** Add a comment in a large file.
+  - **Expected Output:** The comment is added within an acceptable time frame (e.g., less than 2 seconds).
+  - **Edge Case:** Test with extremely large files to ensure performance remains acceptable.
+
+- **Test Case 2: Usability Test for Comment Addition**
+  - **Input:** User interface for adding comments.
+  - **Expected Output:** The process of adding a comment is intuitive and user-friendly.
+  - **Edge Case:** Ensure that users with minimal technical knowledge can add comments without difficulty.
+
+- **Test Case 3: Security Test for Comment Addition**
+  - **Input:** Attempt to add a comment with malicious content.
+  - **Expected Output:** The system should sanitize input and prevent execution of any malicious code.
+  - **Edge Case:** Test with various types of malicious inputs to ensure robust security measures are in place.
+
+- **Test Case 4: Compatibility Test for Comment Addition**
+  - **Input:** Add a comment in files of different formats (e.g., .txt, .java, .py).
+  - **Expected Output:** The comment is added successfully in all supported file formats.
+  - **Edge Case:** Ensure compatibility with less common file formats.
