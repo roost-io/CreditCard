@@ -1,0 +1,33 @@
+**Functional Test Cases:**
+
+- **Test Case 1: Verify Comment Addition**
+  - **Input:** Open the file and add a comment "This test is created by Divyesh Maheshwari."
+  - **Expected Output:** The comment "This test is created by Divyesh Maheshwari." should be successfully added to the file.
+  - **Edge Case:** Attempt to add the comment to a read-only file. The system should prevent the addition and display an appropriate error message.
+
+- **Test Case 2: Verify Comment Format**
+  - **Input:** Add the comment "This test is created by Divyesh Maheshwari." in various formats (e.g., with different spacing, line breaks).
+  - **Expected Output:** The comment should maintain its intended format without unintended alterations.
+  - **Edge Case:** Add the comment with excessive whitespace or special characters. The system should handle it gracefully without errors.
+
+- **Test Case 3: Verify Multiple Comment Additions**
+  - **Input:** Add the comment "This test is created by Divyesh Maheshwari." multiple times in the same file.
+  - **Expected Output:** Each instance of the comment should be added successfully without overwriting previous comments.
+  - **Edge Case:** Add the comment in rapid succession to test system performance and stability.
+
+**Non-Functional Test Cases:**
+
+- **Test Case 1: Performance Under Load**
+  - **Input:** Add the comment "This test is created by Divyesh Maheshwari." to a large file with numerous existing comments.
+  - **Expected Output:** The comment should be added within an acceptable time frame without significant delay.
+  - **Edge Case:** Test with the maximum file size supported by the system to ensure performance remains optimal.
+
+- **Test Case 2: Usability**
+  - **Input:** Evaluate the user interface for adding comments to ensure it is intuitive and user-friendly.
+  - **Expected Output:** Users should be able to add comments easily without requiring extensive instructions or training.
+  - **Edge Case:** Test with users who have minimal technical expertise to ensure the process is straightforward.
+
+- **Test Case 3: Security**
+  - **Input:** Attempt to add the comment "This test is created by Divyesh Maheshwari." with unauthorized access.
+  - **Expected Output:** The system should prevent unauthorized users from adding comments and log the attempt.
+  - **Edge Case:** Test with various unauthorized access methods to ensure robust security measures are in place.
