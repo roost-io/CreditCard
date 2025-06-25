@@ -1,0 +1,45 @@
+**Functional Test Cases**
+
+- **Test Case 1: Verify Home Page Loading**
+  - **Input:** Access the home page URL.
+  - **Expected Output:** The home page should load completely without any errors.
+  - **Edge Case:** Test with a slow internet connection to ensure the page loads correctly.
+
+- **Test Case 2: Verify Error Message on Home Page Load Failure**
+  - **Input:** Simulate a scenario where the home page fails to load.
+  - **Expected Output:** An error message should be displayed indicating a loading error.
+  - **Edge Case:** Test with different browsers to ensure consistent error messaging.
+
+- **Test Case 3: Verify New Application Error Message**
+  - **Input:** Launch the new application.
+  - **Expected Output:** The application should launch without displaying any error messages.
+  - **Edge Case:** Test on different operating systems to ensure compatibility.
+
+- **Test Case 4: Verify Device Connection Status**
+  - **Input:** Connect a device to the computer.
+  - **Expected Output:** The device should be recognized and accessible.
+  - **Edge Case:** Test with different types of devices (e.g., USB, Bluetooth) to ensure all are recognized.
+
+**Non-Functional Test Cases**
+
+- **Test Case 5: Performance of Home Page Loading**
+  - **Input:** Measure the time taken for the home page to load.
+  - **Expected Output:** The home page should load within 3 seconds.
+  - **Edge Case:** Test during peak usage times to ensure performance is maintained.
+
+- **Test Case 6: Usability of Error Messages**
+  - **Input:** Review the error messages displayed for clarity and helpfulness.
+  - **Expected Output:** Error messages should be clear, concise, and provide guidance on next steps.
+  - **Edge Case:** Test with users of varying technical expertise to ensure messages are understandable.
+
+- **Test Case 7: Compatibility of New Application**
+  - **Input:** Test the new application on various devices and operating systems.
+  - **Expected Output:** The application should function correctly across all tested platforms.
+  - **Edge Case:** Include older versions of operating systems to ensure backward compatibility.
+
+- **Test Case 8: Security of Device Connection**
+  - **Input:** Attempt unauthorized access to the connected device.
+  - **Expected Output:** Access should be denied, and a security alert should be triggered.
+  - **Edge Case:** Test with different security settings to ensure robustness.
+
+**Note:** הוסף הערה שהמבחן הזה נוצר על ידי דיביש מהשווארי
