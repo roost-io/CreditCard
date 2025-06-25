@@ -1,0 +1,92 @@
+**Functional Test Cases**
+
+- **Test Case 1: Fetch Employees from BambooHR**
+  - **Input Values**: Valid BambooHR API key and subdomain.
+  - **Expected Output**: Successfully retrieve a list of active employees with valid work emails.
+  - **Edge Cases**: 
+    - No employees in BambooHR.
+    - All employees have inactive status.
+    - Employees without work emails.
+
+- **Test Case 2: Check if User Exists in Okta**
+  - **Input Values**: Valid email address of an employee.
+  - **Expected Output**: Return Okta user object if the user exists, otherwise return null.
+  - **Edge Cases**: 
+    - Email address does not exist in Okta.
+    - Invalid email format.
+
+- **Test Case 3: Generate Temporary Password**
+  - **Input Values**: None.
+  - **Expected Output**: Generate a 12-character password with at least one uppercase letter, one lowercase letter, and one digit.
+  - **Edge Cases**: 
+    - Ensure password does not contain special characters other than 'Aa1!'.
+
+- **Test Case 4: Create Okta User Profile**
+  - **Input Values**: Valid employee object from BambooHR.
+  - **Expected Output**: Return a correctly structured Okta user profile object.
+  - **Edge Cases**: 
+    - Missing optional fields like mobilePhone or supervisor.
+
+- **Test Case 5: Create User in Okta**
+  - **Input Values**: Valid Okta user profile.
+  - **Expected Output**: Successfully create a user in Okta and return the created user object.
+  - **Edge Cases**: 
+    - User already exists in Okta.
+    - Invalid user profile data.
+
+- **Test Case 6: Update Existing Okta User**
+  - **Input Values**: Valid Okta user ID and updated profile data.
+  - **Expected Output**: Successfully update the user's profile in Okta.
+  - **Edge Cases**: 
+    - User ID does not exist.
+    - Invalid profile data.
+
+- **Test Case 7: Assign User to Groups**
+  - **Input Values**: Valid Okta user ID, department, and job title.
+  - **Expected Output**: User is assigned to the correct department and manager groups.
+  - **Edge Cases**: 
+    - Department does not have a corresponding group.
+    - Job title does not include 'manager'.
+
+- **Test Case 8: Provision Users**
+  - **Input Values**: Options for dryRun and updateExisting.
+  - **Expected Output**: Correctly process all employees, creating or updating users in Okta as needed.
+  - **Edge Cases**: 
+    - All employees already exist in Okta.
+    - Errors during user creation or update.
+
+- **Test Case 9: Sync Single Employee**
+  - **Input Values**: Valid BambooHR employee ID.
+  - **Expected Output**: Successfully sync the employee's data to Okta.
+  - **Edge Cases**: 
+    - Employee ID does not exist.
+    - Employee is inactive or missing email.
+
+**Non-Functional Test Cases**
+
+- **Test Case 1: Performance of Fetching Employees**
+  - **Input Values**: Large number of employees in BambooHR.
+  - **Expected Output**: Fetching employees should complete within a reasonable time frame.
+
+- **Test Case 2: Scalability of User Provisioning**
+  - **Input Values**: Large number of users to be provisioned.
+  - **Expected Output**: System should handle provisioning without performance degradation.
+
+- **Test Case 3: Security of API Requests**
+  - **Input Values**: Valid and invalid API keys and tokens.
+  - **Expected Output**: Only valid credentials should allow access; invalid credentials should be rejected.
+
+- **Test Case 4: Reliability of User Creation and Updates**
+  - **Input Values**: Continuous user creation and update requests.
+  - **Expected Output**: System should maintain reliability and consistency in user data.
+
+- **Test Case 5: Logging and Error Handling**
+  - **Input Values**: Various error scenarios during API calls.
+  - **Expected Output**: Errors should be logged with detailed information, and the system should handle them gracefully.
+
+- **Test Case 6: Usability of the Provisioning Process**
+  - **Input Values**: User interface for running the provisioning script.
+  - **Expected Output**: The process should be intuitive and provide clear feedback to the user.
+
+**Additional Note**
+- Add a comment in the code file: `// Test created by Divyesh Maheshwari`
