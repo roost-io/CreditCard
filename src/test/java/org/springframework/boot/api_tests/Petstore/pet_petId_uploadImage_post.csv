@@ -1,0 +1,3 @@
+petId,additionalMetadata,filePath,fileName,fileContentType
+"12345","null",`testImage.jpeg`,`testImage.jpeg`,`image/jpeg`
+"67890",`Test Metadata`,`testDoc.pdf`,`testDoc.pdf`,`application/pdf`
