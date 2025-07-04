@@ -1,0 +1,15 @@
+inputPayload
+`[`
+`{`
+"id": 1, "username": "johnDoe", "firstName": "John", "lastName": "Doe",
+"email": "john.doe@example.com", "password": "securePass123", "phone": "+1234567890", "userStatus": 1
+`},`
+`{`
+"id": 2, "username": "janeDoe", "firstName": "Jane", "lastName": "Doe",
+"email": "jane.doe@example.com", "password": "anotherPass123", "phone": "+0987654321", "userStatus": 2
+`},`
+`{`
+"id": 3, "username": "emmaW", "firstName": "Emma", "lastName": "Watson",
+"email": "emma.w@example.com", "password": "randomPass456", "phone": "+1122334455", "userStatus": 3
+`}`
+`]`
