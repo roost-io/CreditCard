@@ -1,0 +1,144 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "Credit Card Application Submission",
+      "description": "Verify successful submission of a credit card application with valid information.",
+      "testId": "TC-001",
+      "testDescription": "A customer submits a credit card application with all required fields filled with valid data.",
+      "prerequisites": "Customer has access to the online application form.",
+      "stepsToPerform": "1. Navigate to the credit card application page.\n2. Enter valid identification, income details, and contact information.\n3. Submit the application form.",
+      "expectedResult": "The application is submitted successfully, and a confirmation message is displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Credit Card Application Error Handling",
+      "description": "Verify error handling when submitting an application with invalid or incomplete information.",
+      "testId": "TC-002",
+      "testDescription": "A customer attempts to submit a credit card application with missing or incorrect data.",
+      "prerequisites": "Customer has access to the online application form.",
+      "stepsToPerform": "1. Navigate to the credit card application page.\n2. Enter invalid or incomplete information in the required fields.\n3. Attempt to submit the application form.",
+      "expectedResult": "An error message is displayed, indicating the need for valid or complete information."
+    },
+    {
+      "type": "functional",
+      "title": "Waiving Off Charges",
+      "description": "Verify the process of waiving off unexpected charges on a credit card statement.",
+      "testId": "TC-003",
+      "testDescription": "A customer requests to waive off an unexpected fee, and the bank reviews the customer's history to make a decision.",
+      "prerequisites": "Customer has an active credit card account with the bank.",
+      "stepsToPerform": "1. Customer reports an unexpected fee via their online account or phone.\n2. Bank reviews the customer's transaction history.\n3. Bank decides to waive off the charges as a one-time courtesy.",
+      "expectedResult": "Charges are waived, and the updated balance is reflected on the account."
+    },
+    {
+      "type": "functional",
+      "title": "Redeeming Reward Points",
+      "description": "Verify the redemption of reward points for various benefits.",
+      "testId": "TC-004",
+      "testDescription": "A cardholder redeems accumulated reward points for benefits such as gift cards or cashback.",
+      "prerequisites": "Customer has sufficient reward points accumulated.",
+      "stepsToPerform": "1. Customer logs into their account.\n2. Selects the reward of choice to redeem.\n3. Confirms the redemption request.",
+      "expectedResult": "Rewards are claimed successfully, and the points balance is updated."
+    },
+    {
+      "type": "functional",
+      "title": "Credit Limit Extension",
+      "description": "Verify the process of increasing a customer's credit limit.",
+      "testId": "TC-005",
+      "testDescription": "The bank evaluates a customer's creditworthiness and decides to increase their credit limit.",
+      "prerequisites": "Customer has a good credit history with the bank.",
+      "stepsToPerform": "1. Bank reviews the customer's creditworthiness and payment history.\n2. Bank decides to increase the credit limit.\n3. Customer is notified of the credit limit increase.",
+      "expectedResult": "Credit limit is increased, and the customer receives a notification."
+    },
+    {
+      "type": "functional",
+      "title": "Credit Limit Reduction",
+      "description": "Verify the process of reducing a customer's credit limit.",
+      "testId": "TC-006",
+      "testDescription": "The bank decides to reduce a customer's credit limit due to changes in their financial situation.",
+      "prerequisites": "Customer has an active credit card account with the bank.",
+      "stepsToPerform": "1. Bank reviews the customer's financial situation.\n2. Bank decides to reduce the credit limit.\n3. Customer is notified of the credit limit reduction.",
+      "expectedResult": "Credit limit is reduced, and the customer receives a notification."
+    },
+    {
+      "type": "functional",
+      "title": "Promotional Balance Transfers",
+      "description": "Verify the process of transferring balances under a promotional offer.",
+      "testId": "TC-007",
+      "testDescription": "A customer transfers high-interest balances from other credit cards to their bank's card under a promotional offer.",
+      "prerequisites": "Customer is eligible for the promotional balance transfer offer.",
+      "stepsToPerform": "1. Customer initiates a balance transfer request.\n2. Bank applies the promotional offer to the balance transfer.\n3. Balance is transferred successfully under promotional terms.",
+      "expectedResult": "Balance is transferred successfully, and the promotional terms are applied."
+    },
+    {
+      "type": "non-functional",
+      "title": "System Response Time for Credit Card Application",
+      "description": "Check the system's response time when a user applies for a credit card.",
+      "testId": "TC-008",
+      "testDescription": "Measure the time taken by the system to process a credit card application submission.",
+      "prerequisites": "System is operational and accessible.",
+      "stepsToPerform": "1. Submit a credit card application with valid information.\n2. Measure the time taken for the system to process the application and display a confirmation.",
+      "expectedResult": "The system processes the application within an acceptable response time."
+    },
+    {
+      "type": "non-functional",
+      "title": "Handling Multiple Credit Card Applications",
+      "description": "Check the system's ability to handle multiple credit card applications simultaneously.",
+      "testId": "TC-009",
+      "testDescription": "Simulate multiple users submitting credit card applications at the same time to test system performance.",
+      "prerequisites": "System is operational and accessible.",
+      "stepsToPerform": "1. Simulate multiple users accessing the application form.\n2. Submit multiple applications simultaneously.\n3. Monitor system performance and response.",
+      "expectedResult": "The system handles multiple applications without performance degradation."
+    },
+    {
+      "type": "non-functional",
+      "title": "System Behavior on Connection Loss",
+      "description": "Check the system's behavior when connection is lost during the credit card application process.",
+      "testId": "TC-010",
+      "testDescription": "Simulate a connection loss during application submission to observe system behavior.",
+      "prerequisites": "System is operational and accessible.",
+      "stepsToPerform": "1. Start filling out a credit card application.\n2. Simulate a connection loss before submission.\n3. Restore connection and attempt to resume the application process.",
+      "expectedResult": "The system allows the user to resume the application process without data loss."
+    },
+    {
+      "type": "non-functional",
+      "title": "Secure Protocols for Data Entry and Storage",
+      "description": "Verify if secure protocols are used while entering and storing personal and financial data.",
+      "testId": "TC-011",
+      "testDescription": "Ensure that all data entry and storage processes use secure protocols to protect sensitive information.",
+      "prerequisites": "System is operational and accessible.",
+      "stepsToPerform": "1. Access the credit card application form.\n2. Enter personal and financial data.\n3. Monitor network traffic for secure protocol usage.",
+      "expectedResult": "All data entry and storage processes use secure protocols such as HTTPS and encryption."
+    },
+    {
+      "type": "non-functional",
+      "title": "Maximum Attempts for Unsuccessful Applications",
+      "description": "Check the system's behavior when the maximum number of attempts is reached for unsuccessful credit card applications.",
+      "testId": "TC-012",
+      "testDescription": "Simulate multiple unsuccessful application attempts to test system response.",
+      "prerequisites": "System is operational and accessible.",
+      "stepsToPerform": "1. Attempt to submit a credit card application with invalid data multiple times.\n2. Reach the maximum allowed attempts.\n3. Observe system response.",
+      "expectedResult": "The system displays an appropriate message and restricts further attempts after the maximum limit is reached."
+    },
+    {
+      "type": "non-functional",
+      "title": "Notification on Successful Actions",
+      "description": "Verify that the system sends notifications upon successful completion of actions like fee waiving, points redemption, and credit limit updates.",
+      "testId": "TC-013",
+      "testDescription": "Ensure notifications are sent to customers after successful actions.",
+      "prerequisites": "Customer has an active account with notification preferences set.",
+      "stepsToPerform": "1. Perform actions such as fee waiving, points redemption, or credit limit update.\n2. Check if the customer receives an email or SMS notification.",
+      "expectedResult": "The customer receives a notification for each successful action performed."
+    },
+    {
+      "type": "non-functional",
+      "title": "Data Integrity During Balance Transfers",
+      "description": "Verify data integrity while transferring balance from one card to another under a promotional offer.",
+      "testId": "TC-014",
+      "testDescription": "Ensure that all data remains consistent and accurate during balance transfers.",
+      "prerequisites": "Customer is eligible for the promotional balance transfer offer.",
+      "stepsToPerform": "1. Initiate a balance transfer under a promotional offer.\n2. Monitor data consistency before and after the transfer.\n3. Verify that all data is accurately reflected in the system.",
+      "expectedResult": "Data integrity is maintained throughout the balance transfer process."
+    }
+  ]
+}
