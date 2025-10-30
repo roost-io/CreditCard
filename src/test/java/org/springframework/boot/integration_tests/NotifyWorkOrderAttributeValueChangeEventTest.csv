@@ -1,0 +1,67 @@
+METHOD^|^URL^|^REQ_HEADERS^|^REQ_BODY^|^RESPONSE_CODE^|^RESPONSE_BODY
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "BOOKING_CANCELED",
+  "details": {}
+}^|^200^|^{
+  "message": "Ok"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "BOOKING_COMPLETED",
+  "details": {}
+}^|^200^|^{
+  "message": "Ok"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "BOOKING_RESCHEDULE",
+  "details": {}
+}^|^200^|^{
+  "message": "Ok"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "INVALID_PAYLOAD",
+  "details": {}
+}^|^400^|^{
+  "message": "Bad Request"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "UNAUTHORIZED_ACCESS",
+  "details": {}
+}^|^401^|^{
+  "message": "Unauthorized"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "FORBIDDEN_ACTION",
+  "details": {}
+}^|^403^|^{
+  "message": "Forbidden"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "RESOURCE_NOT_FOUND",
+  "details": {}
+}^|^404^|^{
+  "message": "Not Found"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "TOO_MANY_REQUESTS",
+  "details": {}
+}^|^429^|^{
+  "message": "Too Many Requests"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "SERVER_ERROR",
+  "details": {}
+}^|^500^|^{
+  "message": "Internal Server Error"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "SERVICE_UNAVAILABLE",
+  "details": {}
+}^|^503^|^{
+  "message": "Service Unavailable"
+}
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "GATEWAY_TIMEOUT",
+  "details": {}
+}^|^504^|^{
+  "message": "Gateway Timeout"
+}
