@@ -191,6 +191,7 @@ paths:
                       userId: "user-past-due"
                       timestamp: "2024-07-27T10:30:00Z"
                       status: "TRIGGERED"
+                      maskedCardNumber: "**** **** **** 4321"
                 NoLogs:
                   summary: No call logs for a paid-up user
                   value: []
@@ -276,6 +277,10 @@ components:
           type: string
           description: The status of the collection call.
           example: "TRIGGERED"
+        maskedCardNumber:
+          type: string
+          description: The credit card number associated with the account, masked to show only the last 4 digits.
+          example: "**** **** **** 4321"
     ErrorResponse:
       type: object
       properties:

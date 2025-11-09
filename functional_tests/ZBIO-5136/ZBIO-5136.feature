@@ -113,6 +113,7 @@ Feature: Credit Card Balance and Payment Management
     When I send a POST request to '/api/v1/admin/batch/check-past-due'
     Then the response status should be 202
     And a subsequent GET request to '/api/v1/admin/call-logs?userId=user-past-due' should return a log entry with status 'TRIGGERED'
+    And the log entry must show the credit card number masked to the last 4 digits
 
   @api
   Scenario: Ensure no collection call is triggered for a fully paid account
