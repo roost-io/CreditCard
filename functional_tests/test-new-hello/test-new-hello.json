@@ -109,6 +109,66 @@
       "prerequisites": "User is logged into the platform.",
       "stepsToPerform": "1. Log in to the EvolvePay platform.\n2. Leave the application idle without any user interaction for a predefined period (e.g., 15 minutes).\n3. After the period has passed, attempt to perform an action that requires authentication (e.g., view card details, initiate a transfer).",
       "expectedResult": "The user should be automatically logged out. The attempted action should fail, and the user should be redirected to the login page with a message indicating their session has expired."
+    },
+    {
+      "type": "functional",
+      "title": "Tier 2 User Successfully Sends International Remittance",
+      "description": "Verify a Tier 2 (Verified) user can successfully initiate an international money transfer.",
+      "testId": "TC-012",
+      "testDescription": "This test case validates the happy path for the international remittance feature as per US-401.",
+      "prerequisites": "User must be logged in as a 'Tier 2 (Verified)' user with sufficient funds in their account. A beneficiary must be set up.",
+      "stepsToPerform": "1. Log in as a Tier 2 user.\n2. Navigate to the 'International Transfer' or 'Send Money' section.\n3. Select a pre-saved beneficiary.\n4. Enter the amount to send.\n5. Review the exchange rate and fees.\n6. Confirm the transaction.",
+      "expectedResult": "The transfer is initiated successfully. The user sees a confirmation screen with a transaction reference number. The account balance is updated, and the transfer appears in the international transfer history with a 'Pending' status."
+    },
+    {
+      "type": "functional",
+      "title": "Tier 1 User Blocked from International Remittance",
+      "description": "Verify a Tier 1 (Unverified) user is not able to access or use the international remittance feature.",
+      "testId": "TC-013",
+      "testDescription": "This negative test case enforces the business rule in US-401 that only verified users can send money internationally.",
+      "prerequisites": "User must be logged in as a 'Tier 1 (Unverified)' user.",
+      "stepsToPerform": "1. Log in as a Tier 1 user.\n2. Attempt to navigate to the 'International Transfer' or 'Send Money' section.",
+      "expectedResult": "The 'International Transfer' option should be disabled or not visible. If accessed directly, the user should be redirected or shown a message stating they need to be a Tier 2 user to access this feature."
+    },
+    {
+      "type": "functional",
+      "title": "User Adds and Saves a New Beneficiary",
+      "description": "Verify a user can add and save the details of a new international beneficiary.",
+      "testId": "TC-014",
+      "testDescription": "This test case validates the beneficiary management feature described in US-402.",
+      "prerequisites": "User must be logged in as a Tier 2 user.",
+      "stepsToPerform": "1. Log in as a Tier 2 user.\n2. Navigate to the 'Beneficiaries' or 'Recipients' management page.\n3. Click 'Add New Beneficiary'.\n4. Fill in all required fields (Full Name, Country, Bank Account/Mobile Money details).\n5. Save the beneficiary.",
+      "expectedResult": "The new beneficiary is saved successfully and appears in the list of saved beneficiaries. A confirmation message is displayed."
+    },
+    {
+      "type": "functional",
+      "title": "User Deletes an Existing Beneficiary",
+      "description": "Verify a user can delete a previously saved beneficiary.",
+      "testId": "TC-015",
+      "testDescription": "This test case validates the beneficiary deletion functionality from US-402.",
+      "prerequisites": "User must be logged in as a Tier 2 user and have at least one saved beneficiary.",
+      "stepsToPerform": "1. Log in as a Tier 2 user.\n2. Navigate to the 'Beneficiaries' management page.\n3. Select a beneficiary from the list.\n4. Click the 'Delete' or 'Remove' option.\n5. Confirm the deletion in the confirmation prompt.",
+      "expectedResult": "The beneficiary is successfully removed from the list of saved beneficiaries."
+    },
+    {
+      "type": "functional",
+      "title": "Verify Display of Exchange Rate and Fees Before Transfer Confirmation",
+      "description": "Verify that the exchange rate and all applicable fees are clearly displayed to the user before they confirm an international transfer.",
+      "testId": "TC-016",
+      "testDescription": "This test case validates the transparency requirement of US-403.",
+      "prerequisites": "User is logged in as a Tier 2 user and is in the process of initiating an international transfer.",
+      "stepsToPerform": "1. Log in as a Tier 2 user.\n2. Navigate to the 'International Transfer' section.\n3. Select a beneficiary and enter a sending amount.\n4. Proceed to the confirmation/review screen.",
+      "expectedResult": "The confirmation screen must clearly display the send amount, the exchange rate being used, the calculated recipient amount, a breakdown of all transaction fees, and the total amount to be debited. The 'Confirm' button should be present."
+    },
+    {
+      "type": "functional",
+      "title": "Verify International Transfer History and Pagination",
+      "description": "Verify the user can view a paginated history of their international transfers with correct statuses.",
+      "testId": "TC-017",
+      "testDescription": "This test case validates the requirements of US-404 for viewing transfer history.",
+      "prerequisites": "User must be logged in and have a history of more than 25 international transfers with various statuses (Completed, Failed, Pending).",
+      "stepsToPerform": "1. Log in to the platform.\n2. Navigate to the 'International Transfer History' page.\n3. Observe the list of transactions and their statuses.\n4. Verify the number of items on the first page.\n5. Click the 'Next' page button.",
+      "expectedResult": "The page displays a list of past international transfers with their status. The first page shows a maximum of 25 transactions. Clicking 'Next' loads the subsequent set of transactions."
     }
   ]
 }
