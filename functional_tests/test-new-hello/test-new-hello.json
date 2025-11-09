@@ -1,0 +1,114 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "New User Registration for Tier 1 Access",
+      "description": "Verify a new user can successfully register for an account using a valid email and password.",
+      "testId": "TC-001",
+      "testDescription": "This test case validates the happy path for user registration as per US-101. A user provides a unique email and a strong password to create a Tier 1 account.",
+      "prerequisites": "The user must have a valid email address that is not already registered on the platform.",
+      "stepsToPerform": "1. Navigate to the EvolvePay registration page.\n2. Enter a valid, unregistered email address (e.g., test.user@example.com).\n3. Enter a strong password meeting the platform's criteria.\n4. Confirm the password.\n5. Click the 'Register' or 'Sign Up' button.\n6. Check the provided email inbox for a verification link and click it.",
+      "expectedResult": "The user account is created successfully. The user is logged in and redirected to the dashboard. Their profile should clearly indicate they are a 'Tier 1 (Unverified)' user."
+    },
+    {
+      "type": "functional",
+      "title": "Attempt Registration with an Existing Email",
+      "description": "Verify that the system prevents a new registration using an email address that is already in use.",
+      "testId": "TC-002",
+      "testDescription": "This is a negative test case for US-101 to ensure data integrity and prevent duplicate accounts.",
+      "prerequisites": "An account must already exist with a specific email address (e.g., existing.user@example.com).",
+      "stepsToPerform": "1. Navigate to the EvolvePay registration page.\n2. Enter an email address that is already registered (e.g., existing.user@example.com).\n3. Enter any valid password.\n4. Confirm the password.\n5. Click the 'Register' or 'Sign Up' button.",
+      "expectedResult": "The system should display a clear and user-friendly error message, such as 'This email address is already registered. Please log in or use a different email.'"
+    },
+    {
+      "type": "functional",
+      "title": "Tier 1 User Submits Documents for KYC Verification",
+      "description": "Verify a Tier 1 user can successfully submit their ID and selfie to apply for Tier 2 status.",
+      "testId": "TC-003",
+      "testDescription": "This test case covers the happy path for the KYC upgrade process as described in US-103.",
+      "prerequisites": "User must be logged in as a 'Tier 1 (Unverified)' user.",
+      "stepsToPerform": "1. Log in to the platform as a Tier 1 user.\n2. Navigate to the 'Profile' or 'Verification' section.\n3. Click the 'Upgrade to Tier 2' or 'Get Verified' button.\n4. Select a valid ID type (e.g., Passport).\n5. Upload a clear image of the selected government-issued ID.\n6. Follow the on-screen instructions to capture and upload a selfie.\n7. Submit the application.",
+      "expectedResult": "The documents are submitted successfully. The user's verification status in their profile should change from 'Tier 1' to 'Pending' as per US-104."
+    },
+    {
+      "type": "functional",
+      "title": "Tier 2 (Verified) User Orders a Physical Card",
+      "description": "Verify that a fully verified (Tier 2) user can successfully order a physical prepaid card.",
+      "testId": "TC-004",
+      "testDescription": "This test case validates the feature specified in US-202 for authorized users.",
+      "prerequisites": "User must be logged in and have a 'Tier 2 (Verified)' status. User must have a valid mailing address entered in their profile.",
+      "stepsToPerform": "1. Log in as a Tier 2 user.\n2. Navigate to the 'Cards' or 'Wallet' section.\n3. Locate and click the 'Order Physical Card' option.\n4. Confirm the mailing address displayed on the screen.\n5. Complete the order process.",
+      "expectedResult": "The user receives a confirmation message that their physical card order has been placed and will be mailed to their address. The interface should reflect the status of the physical card (e.g., 'Ordered', 'Shipped')."
+    },
+    {
+      "type": "functional",
+      "title": "Tier 1 (Unverified) User is Blocked from Ordering a Physical Card",
+      "description": "Verify that a Tier 1 user is not able to order a physical prepaid card.",
+      "testId": "TC-005",
+      "testDescription": "This is a negative test case to enforce the business rule in US-202 that only verified users can order physical cards.",
+      "prerequisites": "User must be logged in as a 'Tier 1 (Unverified)' user.",
+      "stepsToPerform": "1. Log in as a Tier 1 user.\n2. Navigate to the 'Cards' or 'Wallet' section.\n3. Attempt to find an option to 'Order Physical Card'.",
+      "expectedResult": "The option to order a physical card should either be disabled (greyed out) or not visible at all. If the user somehow finds a direct link, they should be presented with a message explaining that they must be a Tier 2 (Verified) user to order a physical card."
+    },
+    {
+      "type": "functional",
+      "title": "Filter Transaction History by Date Range and Type",
+      "description": "Verify the user can successfully filter their transaction history using both a date range and a transaction type filter.",
+      "testId": "TC-006",
+      "testDescription": "This test validates the core filtering functionality described in US-205.",
+      "prerequisites": "User must be logged in and have a card with a varied transaction history (e.g., multiple loads, purchases, and refunds across different dates).",
+      "stepsToPerform": "1. Log in and navigate to the 'Card Details' or 'Transaction History' page.\n2. Set a 'Start Date' and 'End Date' for the filter.\n3. Select 'Purchase' from the 'Transaction Type' dropdown filter.\n4. Apply the filters.",
+      "expectedResult": "The transaction list updates to show only 'Purchase' transactions that occurred within the specified date range. The pagination should also update accordingly."
+    },
+    {
+      "type": "functional",
+      "title": "Verify Transaction History Pagination",
+      "description": "Verify that the transaction history list is paginated, displaying a maximum of 25 items per page.",
+      "testId": "TC-007",
+      "testDescription": "This test case checks the pagination requirement from US-205.",
+      "prerequisites": "User must be logged in and have a card with more than 25 transactions.",
+      "stepsToPerform": "1. Log in and navigate to the 'Transaction History' page.\n2. Observe the number of transactions displayed on the first page.\n3. If there are more than 25 transactions in total, locate and click the 'Next' page button or page number '2'.",
+      "expectedResult": "The first page should display exactly 25 transactions. After clicking to the next page, a new set of up to 25 transactions should be displayed."
+    },
+    {
+      "type": "functional",
+      "title": "User Blocks a Lost or Stolen Card",
+      "description": "Verify a user can immediately block their prepaid card from the application.",
+      "testId": "TC-008",
+      "testDescription": "This test case validates the critical security feature described in US-206.",
+      "prerequisites": "User must be logged in and have an active prepaid card (virtual or physical).",
+      "stepsToPerform": "1. Log in to the EvolvePay app.\n2. Navigate to the 'Cards' section and select the card to be blocked.\n3. Find and click the 'Block Card' or 'Freeze Card' button.\n4. Confirm the action in the confirmation dialog.",
+      "expectedResult": "The card status immediately changes to 'Blocked' or 'Frozen'. A confirmation message is displayed. Any subsequent transaction attempts with this card should be declined."
+    },
+    {
+      "type": "functional",
+      "title": "Verify Daily Load Limit Display and Update",
+      "description": "Verify the card details screen accurately displays the daily load limit and the remaining allowance, and that it updates after a transaction.",
+      "testId": "TC-009",
+      "testDescription": "This test case validates the limit display requirement from US-207.",
+      "prerequisites": "User is logged in and has an active card. The daily limit is known (e.g., $2000.00).",
+      "stepsToPerform": "1. Log in and navigate to the 'Card Details' screen.\n2. Observe the daily load limit display (e.g., '$0.00 / $2000.00 daily limit used').\n3. Perform a successful top-up/load transaction of $500.00 as per US-203.\n4. Refresh or navigate back to the 'Card Details' screen.",
+      "expectedResult": "Initially, the display should show the full allowance. After the $500.00 load, the display should update to accurately reflect the new usage: '$500.00 / $2000.00 daily limit used'."
+    },
+    {
+      "type": "non-functional",
+      "title": "Performance of Loading Transaction History",
+      "description": "Ensure the transaction history page loads within an acceptable time frame, even for users with a large number of transactions.",
+      "testId": "TC-010",
+      "testDescription": "This performance test addresses the usability aspect of US-205, ensuring the system remains responsive under a heavy data load.",
+      "prerequisites": "A test user account must be populated with a large number of transactions (e.g., 1000+).",
+      "stepsToPerform": "1. Log in with the test user account.\n2. Start a timer and navigate to the 'Transaction History' page.\n3. Stop the timer once the first page of transactions is fully rendered.\n4. Apply a date range filter and measure the time it takes for the filtered results to appear.",
+      "expectedResult": "The initial page load time should be under 3 seconds. The time to apply filters and display results should be under 2 seconds, providing a smooth user experience."
+    },
+    {
+      "type": "non-functional",
+      "title": "Secure Session Management after Inactivity",
+      "description": "Verify that the user's session is automatically terminated after a period of inactivity.",
+      "testId": "TC-011",
+      "testDescription": "This security test case relates to US-102 (secure login) and general platform security. It ensures that unattended sessions are closed to prevent unauthorized access.",
+      "prerequisites": "User is logged into the platform.",
+      "stepsToPerform": "1. Log in to the EvolvePay platform.\n2. Leave the application idle without any user interaction for a predefined period (e.g., 15 minutes).\n3. After the period has passed, attempt to perform an action that requires authentication (e.g., view card details, initiate a transfer).",
+      "expectedResult": "The user should be automatically logged out. The attempted action should fail, and the user should be redirected to the login page with a message indicating their session has expired."
+    }
+  ]
+}
