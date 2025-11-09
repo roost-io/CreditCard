@@ -28,7 +28,7 @@
       "testDescription": "This test simulates a scenario where a payment is missed. It checks if the backend process correctly identifies the past-due account and triggers the automated call workflow.",
       "prerequisites": "A user account with an unpaid balance exists. The system's current date is configured to be one day after the card's payment due date. The user has a valid phone number on file.",
       "stepsToPerform": "1. Set the system date to be 'Due Date + 1 day'.\n2. Trigger the daily batch process that checks for past-due accounts.\n3. Check the system logs or a dedicated call-log table in the database for an entry corresponding to the test user.",
-      "expectedResult": "A log entry should be created indicating that an automated call for payment collection was successfully triggered for the user's account and phone number."
+      "expectedResult": "A log entry should be created indicating that an automated call for payment collection was successfully triggered. This log must not contain the full credit card number; if referenced, it should be masked to show only the last 4 digits."
     },
     {
       "type": "functional",
@@ -109,6 +109,16 @@
       "prerequisites": "Access to the application in a test environment. Security scanning tools like OWASP ZAP or Burp Suite.",
       "stepsToPerform": "1. Intercept the network traffic when submitting a payment.\n2. Verify that the connection is encrypted using a valid TLS/SSL certificate.\n3. Confirm that sensitive data like the full card number and CVC are not logged in plain text on the client or server.\n4. Attempt to inject malicious scripts (XSS) or SQL commands (SQLi) into the payment form fields.",
       "expectedResult": "All communication must be over HTTPS. No sensitive payment details should be stored or logged insecurely. The application must properly sanitize all inputs to prevent injection attacks."
+    },
+    {
+      "type": "non-functional",
+      "title": "Verify Masking of Credit Card Number in Collection Documentation",
+      "description": "To ensure that any logs or documentation generated during the automated payment collection process do not expose the full credit card number, in compliance with security policies.",
+      "testId": "TC-012",
+      "testDescription": "This security test verifies that when the system logs an activity for the collection process (e.g., a triggered call), the associated credit card number is properly masked.",
+      "prerequisites": "A user account with a past-due balance exists. The system's collection process is about to be triggered. Access to system logs is available.",
+      "stepsToPerform": "1. Trigger the daily batch process that checks for past-due accounts.\n2. Access the system logs or a dedicated call-log table in the database.\n3. Locate the log entry corresponding to the test user's collection activity.\n4. Inspect the log entry for any mention of the user's credit card number.",
+      "expectedResult": "The log entry must not contain the full credit card number in plain text. If the card number is referenced, it must be masked to show only the last 4 digits (e.g., '************1234')."
     }
   ]
 }
