@@ -1,0 +1,114 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "Verify Display of Unpaid Balance and Due Date",
+      "description": "To ensure the system accurately displays the current unpaid balance and the corresponding payment due date for a card with an outstanding amount.",
+      "testId": "TC-001",
+      "testDescription": "This test validates that a user with a credit card that has a balance carried over from a previous billing cycle can see the correct unpaid amount and the correct due date.",
+      "prerequisites": "A user account must exist with a credit card that has a known, non-zero unpaid balance (e.g., $150.75) and a specific due date.",
+      "stepsToPerform": "1. Log in to the user's account.\n2. Navigate to the 'Credit Card Summary' or 'Account Details' page.\n3. Locate the section displaying the card balance information.",
+      "expectedResult": "The system should display the exact unpaid balance (e.g., $150.75) and the correct payment due date associated with that balance."
+    },
+    {
+      "type": "functional",
+      "title": "Validate Zero Balance for New or Fully Paid Cards",
+      "description": "To verify that the unpaid balance is shown as zero for a new card with no transactions or a card that has been fully paid off.",
+      "testId": "TC-002",
+      "testDescription": "This edge case test ensures that the system correctly identifies accounts with no outstanding debt and displays the unpaid balance as $0.00.",
+      "prerequisites": "Have two test user accounts:\n1. A user with a newly issued credit card that has not been used.\n2. A user who has paid their previous statement balance in full before the due date.",
+      "stepsToPerform": "1. Log in to the first user's account (new card).\n2. Navigate to the card balance page and observe the unpaid balance.\n3. Log out.\n4. Log in to the second user's account (fully paid card).\n5. Navigate to the card balance page and observe the unpaid balance.",
+      "expectedResult": "For both user accounts, the unpaid balance should be clearly displayed as $0.00 or 'N/A'."
+    },
+    {
+      "type": "functional",
+      "title": "Verify Automated Call is Triggered for Past-Due Balance",
+      "description": "To confirm that the system automatically initiates a payment collection call when a card's payment due date has passed and there is still an unpaid balance.",
+      "testId": "TC-003",
+      "testDescription": "This test simulates a scenario where a payment is missed. It checks if the backend process correctly identifies the past-due account and triggers the automated call workflow.",
+      "prerequisites": "A user account with an unpaid balance exists. The system's current date is configured to be one day after the card's payment due date. The user has a valid phone number on file.",
+      "stepsToPerform": "1. Set the system date to be 'Due Date + 1 day'.\n2. Trigger the daily batch process that checks for past-due accounts.\n3. Check the system logs or a dedicated call-log table in the database for an entry corresponding to the test user.",
+      "expectedResult": "A log entry should be created indicating that an automated call for payment collection was successfully triggered for the user's account and phone number."
+    },
+    {
+      "type": "functional",
+      "title": "Ensure No Call is Triggered for a Fully Paid Account",
+      "description": "To ensure that no collection call is triggered for an account that was paid in full, even after the due date has passed.",
+      "testId": "TC-004",
+      "testDescription": "This is a negative test case to prevent false positives in the collection process. It verifies that users who have met their payment obligations are not contacted.",
+      "prerequisites": "A user account exists where the balance was paid in full before the due date. The system's current date is configured to be one day after the due date.",
+      "stepsToPerform": "1. Set the system date to be 'Due Date + 1 day'.\n2. Trigger the daily batch process that checks for past-due accounts.\n3. Check the system and call logs for any activity related to the test user's account.",
+      "expectedResult": "There should be no log entry or any indication that a collection call was triggered for this user's account."
+    },
+    {
+      "type": "functional",
+      "title": "Successful Full Payment of Unpaid Balance",
+      "description": "To test the end-to-end process of a user successfully paying off their entire unpaid balance.",
+      "testId": "TC-005",
+      "testDescription": "This scenario covers the 'happy path' for the payment collection process. It validates that a payment is processed correctly and the balance is updated in real-time.",
+      "prerequisites": "A user account with a known unpaid balance (e.g., $250.00). The user has valid payment details (e.g., debit card, bank account).",
+      "stepsToPerform": "1. Log in and navigate to the 'Make a Payment' section.\n2. Select the option to pay the 'Unpaid Balance'. The amount field should be pre-filled with $250.00.\n3. Enter valid payment details and confirm the transaction.\n4. Wait for the payment confirmation.",
+      "expectedResult": "The system displays a 'Payment Successful' message. Upon refreshing the account summary, the unpaid balance is updated to $0.00."
+    },
+    {
+      "type": "functional",
+      "title": "Successful Partial Payment and Balance Update",
+      "description": "To verify that the system can process a partial payment and correctly update the remaining unpaid balance.",
+      "testId": "TC-006",
+      "testDescription": "This test ensures the system correctly calculates and displays the remaining balance after a user pays an amount that is less than the total unpaid balance.",
+      "prerequisites": "A user account with a known unpaid balance (e.g., $500.00).",
+      "stepsToPerform": "1. Log in and navigate to the 'Make a Payment' section.\n2. Enter a custom payment amount that is less than the total unpaid balance (e.g., $200.00).\n3. Enter valid payment details and confirm the transaction.\n4. After receiving a success confirmation, navigate back to the account summary page.",
+      "expectedResult": "The payment is successful. The account summary page should now display a reduced unpaid balance of $300.00 ($500.00 - $200.00)."
+    },
+    {
+      "type": "functional",
+      "title": "Handle Overpayment of Unpaid Balance",
+      "description": "To test how the system handles a payment that is greater than the total unpaid balance.",
+      "testId": "TC-007",
+      "testDescription": "This edge case ensures that if a user accidentally pays more than they owe, the system processes the payment, clears the debt, and correctly manages the surplus amount.",
+      "prerequisites": "A user account with a known unpaid balance (e.g., $100.00).",
+      "stepsToPerform": "1. Log in and navigate to the 'Make a Payment' section.\n2. Enter a custom payment amount that is greater than the unpaid balance (e.g., $120.00).\n3. Enter valid payment details and confirm the transaction.\n4. Check the account summary after payment confirmation.",
+      "expectedResult": "The payment is successful. The unpaid balance should be $0.00. The account should show a credit balance of $20.00, which will be applied to future statements."
+    },
+    {
+      "type": "functional",
+      "title": "Payment Failure with Invalid Card Details",
+      "description": "To verify that the system rejects a payment attempt made with invalid payment information and provides a clear error message.",
+      "testId": "TC-008",
+      "testDescription": "This negative test case checks the system's input validation and error handling during the payment process.",
+      "prerequisites": "A user account with an unpaid balance.",
+      "stepsToPerform": "1. Log in and navigate to the 'Make a Payment' section.\n2. Enter a payment amount.\n3. Enter invalid payment details (e.g., an incorrect CVC, an expired card date).\n4. Attempt to confirm the payment.",
+      "expectedResult": "The system should prevent the transaction from processing and display a user-friendly error message, such as 'Payment failed. Please check your card details and try again.' The unpaid balance should remain unchanged."
+    },
+    {
+      "type": "non-functional",
+      "title": "Performance of Balance Retrieval API",
+      "description": "To measure the response time of the system when fetching a user's card balance information under normal load.",
+      "testId": "TC-009",
+      "testDescription": "This performance test ensures that users can view their balance information quickly, providing a good user experience. The test will measure the server-side processing time for the balance inquiry API.",
+      "prerequisites": "A performance testing environment with appropriate monitoring tools (e.g., APM). The API endpoint for fetching the card balance is identified.",
+      "stepsToPerform": "1. Simulate a realistic number of users (e.g., 100) making simultaneous requests to the balance retrieval API.\n2. Run the test for a sustained period (e.g., 10 minutes).\n3. Monitor the 95th percentile response time of the API.",
+      "expectedResult": "The 95th percentile response time for the balance retrieval API should be within the acceptable performance threshold, for example, under 500 milliseconds."
+    },
+    {
+      "type": "non-functional",
+      "title": "System Stability Under Concurrent Payments",
+      "description": "To verify the system's ability to handle a high volume of concurrent users making payments without performance degradation or data corruption.",
+      "testId": "TC-010",
+      "testDescription": "This load test simulates a peak-hour scenario where many users are trying to pay their bills at the same time. It checks for system stability, scalability, and data integrity.",
+      "prerequisites": "A dedicated load testing environment. A load testing tool like JMeter or Gatling is configured with a test script.",
+      "stepsToPerform": "1. Configure the tool to simulate a high number of concurrent users (e.g., 500) logging in, viewing their balance, and submitting a payment.\n2. Ramp up the user load gradually over 5 minutes and sustain it for 30 minutes.\n3. Monitor server CPU, memory, and database connections.\n4. After the test, verify a sample of accounts to ensure balances were updated correctly.",
+      "expectedResult": "The system should remain stable with resource utilization within acceptable limits (e.g., CPU < 80%). The transaction error rate should be less than 1%. All processed payments must be accurately reflected in the respective account balances."
+    },
+    {
+      "type": "non-functional",
+      "title": "Security of Payment Collection Process",
+      "description": "To ensure that all sensitive data transmitted during the payment process is encrypted and secure from common vulnerabilities.",
+      "testId": "TC-011",
+      "testDescription": "This security test focuses on protecting user data during payment. It verifies that industry-standard security protocols are in place to prevent data breaches.",
+      "prerequisites": "Access to the application in a test environment. Security scanning tools like OWASP ZAP or Burp Suite.",
+      "stepsToPerform": "1. Intercept the network traffic when submitting a payment.\n2. Verify that the connection is encrypted using a valid TLS/SSL certificate.\n3. Confirm that sensitive data like the full card number and CVC are not logged in plain text on the client or server.\n4. Attempt to inject malicious scripts (XSS) or SQL commands (SQLi) into the payment form fields.",
+      "expectedResult": "All communication must be over HTTPS. No sensitive payment details should be stored or logged insecurely. The application must properly sanitize all inputs to prevent injection attacks."
+    }
+  ]
+}

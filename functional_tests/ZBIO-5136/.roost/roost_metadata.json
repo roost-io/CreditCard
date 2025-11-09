@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "ZBIO-5136",
+    "created_at": "2025-11-09T12:26:17.825Z",
+    "updated_at": "2025-11-09T12:26:17.825Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "ZBIO-5136.txt",
+        "fileURI": "/var/tmp/Roost/RoostGPT/systemAnalysis_clone/1762690980/functional_tests/ZBIO-5136/ZBIO-5136.txt",
+        "fileSha": "fed3d46f4d"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}
