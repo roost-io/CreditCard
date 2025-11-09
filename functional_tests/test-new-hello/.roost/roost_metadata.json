@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "test-new-hello",
+    "created_at": "2025-11-09T12:09:49.150Z",
+    "updated_at": "2025-11-09T12:09:49.150Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "prepaid.txt",
+        "fileURI": "/var/tmp/Roost/RoostGPT/systemAnalysis_clone/1762690177/functional_tests/test-new-hello/prepaid.txt",
+        "fileSha": "e8e3419115"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}

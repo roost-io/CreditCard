@@ -1,0 +1,477 @@
+openapi: 3.0.3
+info:
+  title: EvolvePay Platform API
+  description: >
+    API specification for the EvolvePay Platform, providing services for user registration,
+    KYC verification, prepaid card management, and transaction history.
+    This specification is derived from Gherkin feature files.
+  version: 1.5.0
+servers:
+  - url: '{baseUrl}/api/v1'
+    variables:
+      baseUrl:
+        default: https://api.evolvepay.com
+        description: The base URL for the API, sourced from an environment variable like 'BASE_URL'.
+
+tags:
+  - name: User & KYC Management
+    description: Endpoints for user registration, profile management, and KYC verification.
+  - name: Card Management
+    description: Endpoints for ordering and managing prepaid cards.
+  - name: Transactions
+    description: Endpoints for retrieving transaction history.
+
+paths:
+  /users/register:
+    post:
+      tags:
+        - User & KYC Management
+      summary: Register a new user
+      description: Creates a new Tier 1 user account.
+      operationId: registerUser
+      requestBody:
+        description: User registration details. The password must meet security requirements.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+            examples:
+              successful_registration:
+                summary: Example for a new user
+                value:
+                  email: "new.user.api@example.com"
+                  password: "StrongPassword123!"
+                  passwordConfirmation: "StrongPassword123!"
+              weak_password:
+                summary: Example with a weak password
+                value:
+                  email: "weak.password.user@example.com"
+                  password: "123"
+                  passwordConfirmation: "123"
+      responses:
+        '201':
+          description: User created successfully. Returns a user ID, auth token, and initial user state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistrationSuccess'
+        '400':
+          description: Bad Request. The provided data is invalid, e.g., weak password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Password does not meet security requirements."
+        '409':
+          description: Conflict. An account with the provided email already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "This email address is already registered."
+
+  /users/kyc/submit:
+    post:
+      tags:
+        - User & KYC Management
+      summary: Submit KYC documents
+      description: Allows a Tier 1 user to submit documents for KYC verification to upgrade to Tier 2.
+      operationId: submitKyc
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: KYC documents including ID and a selfie.
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id_document:
+                  type: string
+                  format: binary
+                  description: A file containing the user's government-issued ID (e.g., passport.jpg).
+                selfie_image:
+                  type: string
+                  format: binary
+                  description: A file containing a selfie of the user (e.g., selfie.png).
+                documentType:
+                  type: string
+                  description: The type of ID document being submitted.
+                  example: PASSPORT
+                  enum: [PASSPORT, DRIVERS_LICENSE, NATIONAL_ID]
+              required:
+                - id_document
+                - selfie_image
+                - documentType
+      responses:
+        '202':
+          description: Accepted. The documents have been successfully received and are pending review.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycSubmissionResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /users/profile:
+    get:
+      tags:
+        - User & KYC Management
+      summary: Get user profile
+      description: Retrieves the profile information for the currently authenticated user, including their verification status.
+      operationId: getUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successful retrieval of user profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /cards/physical/order:
+    post:
+      tags:
+        - Card Management
+      summary: Order a physical card
+      description: Allows a Tier 2 (verified) user to order a physical prepaid card.
+      operationId: orderPhysicalCard
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: The ID of the shipping address to use for the card order.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCardRequest'
+      responses:
+        '201':
+          description: Card ordered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCardResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden. The user does not have the required verification level (Tier 2) to perform this action.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User must be Tier 2 verified to order a physical card."
+
+  /cards/{cardId}/status:
+    put:
+      tags:
+        - Card Management
+      summary: Update card status
+      description: Allows a user to update the status of their card, for example, to block a lost or stolen card.
+      operationId: updateCardStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          description: The unique identifier of the card to update.
+          schema:
+            type: string
+          example: card-active-123
+      requestBody:
+        description: The new status for the card and the reason for the change.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCardStatusRequest'
+      responses:
+        '200':
+          description: Card status updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardStatusResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: The specified card was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Card not found."
+
+  /cards/{cardId}/transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get card transaction history
+      description: Retrieves a paginated list of transactions for a specific card, with options for filtering.
+      operationId: getCardTransactions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          description: The unique identifier of the card.
+          schema:
+            type: string
+          example: card-tx-history-456
+        - name: startDate
+          in: query
+          description: The start date for the transaction filter (YYYY-MM-DD).
+          schema:
+            type: string
+            format: date
+          example: '2025-09-01'
+        - name: endDate
+          in: query
+          description: The end date for the transaction filter (YYYY-MM-DD).
+          schema:
+            type: string
+            format: date
+          example: '2025-09-30'
+        - name: type
+          in: query
+          description: Filter transactions by type.
+          schema:
+            type: string
+            enum: [purchase, load, refund]
+          example: purchase
+        - name: page
+          in: query
+          description: The page number for pagination.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: The number of items to return per page.
+          schema:
+            type: integer
+            default: 25
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: A paginated list of transactions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactionsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: The specified card was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Card not found."
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication token (JWT) obtained upon registration or login.
+
+  schemas:
+    UserRegistrationRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: new.user.api@example.com
+        password:
+          type: string
+          format: password
+          example: StrongPassword123!
+        passwordConfirmation:
+          type: string
+          format: password
+          example: StrongPassword123!
+      required:
+        - email
+        - password
+        - passwordConfirmation
+
+    UserRegistrationSuccess:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        authToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          type: object
+          properties:
+            tier:
+              type: string
+              example: "Tier 1 (Unverified)"
+
+    UserProfile:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        tier:
+          type: string
+          example: "Tier 1 (Unverified)"
+        kycStatus:
+          type: string
+          enum: [Not Submitted, Pending, Verified, Rejected]
+          example: "Pending"
+
+    KycSubmissionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "KYC documents submitted for review."
+        kycStatus:
+          type: string
+          example: "Pending"
+
+    OrderCardRequest:
+      type: object
+      properties:
+        addressId:
+          type: string
+          description: The unique identifier for the user's shipping address.
+          example: "addr_123456789"
+      required:
+        - addressId
+
+    OrderCardResponse:
+      type: object
+      properties:
+        cardId:
+          type: string
+          example: "card_phys_987654321"
+        cardType:
+          type: string
+          example: "PHYSICAL"
+        status:
+          type: string
+          example: "Ordered"
+
+    UpdateCardStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [BLOCKED, ACTIVE]
+          example: BLOCKED
+        reason:
+          type: string
+          description: Reason for blocking the card.
+          example: "Card was lost"
+      required:
+        - status
+
+    CardStatusResponse:
+      type: object
+      properties:
+        cardId:
+          type: string
+          example: "card-active-123"
+        status:
+          type: string
+          example: "BLOCKED"
+
+    Transaction:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [purchase, load, refund]
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: "USD"
+        date:
+          type: string
+          format: date-time
+        description:
+          type: string
+      example:
+        transactionId: "txn_123abc456def"
+        type: "purchase"
+        amount: 42.50
+        currency: "USD"
+        date: "2025-09-15T14:30:00Z"
+        description: "Coffee Shop"
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 2
+        itemsPerPage:
+          type: integer
+          example: 25
+        totalItems:
+          type: integer
+          example: 57
+        totalPages:
+          type: integer
+          example: 3
+
+    PaginatedTransactionsResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A human-readable error message.
+
+  responses:
+    UnauthorizedError:
+      description: Authentication failed. The provided token is invalid or expired.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Session has expired. Please log in again."
