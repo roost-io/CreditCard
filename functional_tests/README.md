@@ -17,3 +17,35 @@
 
 ---
 
+**Execution Date:** 11/9/2025, 5:56:17 PM
+
+**Test Unique Identifier:** "ZBIO-5136"
+
+**Input(s):**
+   1. JIRA ID: ZBIO-5136
+
+**Test Output Folder:**
+   1. [ZBIO-5136.json](ZBIO-5136/ZBIO-5136.json)
+   2. [ZBIO-5136.feature](ZBIO-5136/ZBIO-5136.feature)
+   3. [ZBIO-5136.csv](ZBIO-5136/ZBIO-5136.csv)
+   4. [ZBIO-5136.xlsx](ZBIO-5136/ZBIO-5136.xlsx)
+   5. [ZBIO-5136.yaml](ZBIO-5136/ZBIO-5136.yaml)
+
+---
+
+**Execution Date:** 11/9/2025, 5:59:33 PM
+
+**Test Unique Identifier:** "ZBIO-5139"
+
+**Input(s):**
+   1. JIRA ID: ZBIO-5139
+
+**Test Output Folder:**
+   1. [ZBIO-5139.json](ZBIO-5139/ZBIO-5139.json)
+   2. [ZBIO-5139.feature](ZBIO-5139/ZBIO-5139.feature)
+   3. [ZBIO-5139.csv](ZBIO-5139/ZBIO-5139.csv)
+   4. [ZBIO-5139.xlsx](ZBIO-5139/ZBIO-5139.xlsx)
+   5. [ZBIO-5139.yaml](ZBIO-5139/ZBIO-5139.yaml)
+
+---
+

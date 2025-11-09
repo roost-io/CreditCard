@@ -1,0 +1,299 @@
+openapi: 3.0.0
+info:
+  title: Credit Card Management API
+  description: API for managing credit card balances, payments, and administrative tasks like checking for past-due accounts.
+  version: 1.0.0
+servers:
+  - url: '{baseUrl}/api/v1'
+    variables:
+      baseUrl:
+        default: https://api.example.com
+        description: The base URL for the API, configured via an environment variable.
+paths:
+  /cards/{cardId}/balance:
+    get:
+      summary: Retrieve Card Balance
+      description: Fetches the current balance details for a specific credit card.
+      tags:
+        - Cards
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          description: The unique identifier of the credit card.
+          schema:
+            type: string
+          example: card-123
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved card balance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+              examples:
+                OutstandingBalance:
+                  summary: Account with an outstanding balance
+                  value:
+                    unpaidBalance: 150.75
+                    creditBalance: 0.00
+                    dueDate: '2024-08-15'
+                ZeroBalance:
+                  summary: New or fully paid account
+                  value:
+                    unpaidBalance: 0.00
+                    creditBalance: 0.00
+                    dueDate: null
+                CreditBalance:
+                  summary: Account with a credit balance after overpayment
+                  value:
+                    unpaidBalance: 0.00
+                    creditBalance: 20.00
+                    dueDate: null
+        '401':
+          description: Authentication information is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The specified card was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards/{cardId}/payments:
+    post:
+      summary: Make a Payment
+      description: Submits a payment towards the balance of a specific credit card.
+      tags:
+        - Cards
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          description: The unique identifier of the credit card to which the payment is being made.
+          schema:
+            type: string
+          example: card-250
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        description: Payment details.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+            examples:
+              FullPayment:
+                summary: A full payment request
+                value:
+                  amount: 250.00
+                  paymentMethodId: "pm_valid_source"
+                  currency: "USD"
+              PartialPayment:
+                summary: A partial payment request
+                value:
+                  amount: 200.00
+                  paymentMethodId: "pm_valid_source"
+                  currency: "USD"
+      responses:
+        '201':
+          description: Payment was successfully processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSuccessResponse'
+        '400':
+          description: Bad Request. The payment failed due to invalid details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorCode: "payment_details_invalid"
+                errorMessage: "Your card details are incorrect."
+        '401':
+          description: Authentication information is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Authentication required"
+        '404':
+          description: The specified card was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorMessage: "Card not found."
+
+  /admin/batch/check-past-due:
+    post:
+      summary: Check for Past-Due Accounts
+      description: Triggers a batch process to identify past-due accounts and initiate collection actions. Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - BearerAuth: [admin]
+      responses:
+        '202':
+          description: The request has been accepted for processing. The batch job will run asynchronously.
+        '401':
+          description: Authentication information is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: The authenticated user does not have admin privileges.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/call-logs:
+    get:
+      summary: Get Collection Call Logs
+      description: Retrieves collection call logs for a specific user. Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - BearerAuth: [admin]
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user to retrieve call logs for.
+          schema:
+            type: string
+          example: user-past-due
+      responses:
+        '200':
+          description: Successfully retrieved call logs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CallLogEntry'
+              examples:
+                LogFound:
+                  summary: Call log found for a past-due user
+                  value:
+                    - logId: "log-9876"
+                      userId: "user-past-due"
+                      timestamp: "2024-07-27T10:30:00Z"
+                      status: "TRIGGERED"
+                NoLogs:
+                  summary: No call logs for a paid-up user
+                  value: []
+        '401':
+          description: Authentication information is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: The authenticated user does not have admin privileges.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    BalanceResponse:
+      type: object
+      properties:
+        unpaidBalance:
+          type: number
+          format: float
+          description: The total outstanding balance on the card.
+          example: 150.75
+        creditBalance:
+          type: number
+          format: float
+          description: Any credit balance on the account, typically resulting from an overpayment.
+          example: 20.00
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          description: The due date for the next payment. Null if there is no outstanding balance.
+          example: '2024-08-15'
+    PaymentRequest:
+      type: object
+      required:
+        - amount
+        - paymentMethodId
+        - currency
+      properties:
+        amount:
+          type: number
+          format: float
+          description: The amount to be paid.
+          example: 250.00
+        paymentMethodId:
+          type: string
+          description: The identifier for the payment method to be used.
+          example: "pm_valid_source"
+        currency:
+          type: string
+          description: The three-letter ISO currency code.
+          example: "USD"
+    PaymentSuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the payment transaction.
+          example: "succeeded"
+        transactionId:
+          type: string
+          description: The unique identifier for the payment transaction.
+          example: "txn_1a2b3c4d5e6f"
+    CallLogEntry:
+      type: object
+      properties:
+        logId:
+          type: string
+          description: The unique identifier for the log entry.
+        userId:
+          type: string
+          description: The user associated with this log entry.
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp when the log was created.
+        status:
+          type: string
+          description: The status of the collection call.
+          example: "TRIGGERED"
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A short error message or type.
+          example: "Authentication required"
+        errorCode:
+          type: string
+          description: A machine-readable error code.
+          example: "payment_details_invalid"
+        errorMessage:
+          type: string
+          description: A human-readable description of the error.
+          example: "Your card details are incorrect."
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "A JWT token is required for authentication. For admin endpoints, the token must have admin scope."

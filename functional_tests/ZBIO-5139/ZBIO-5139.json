@@ -1,0 +1,114 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "Successful Credit Card Application Submission",
+      "description": "To verify that a customer can successfully submit a credit card application with all valid and complete information.",
+      "testId": "TC-001",
+      "testDescription": "This test case ensures that the online credit card application form accepts valid user data (personal, income, contact) and processes the submission successfully, providing confirmation to the user.",
+      "prerequisites": "User must have access to the bank's online application portal. User must have all necessary personal and financial information ready.",
+      "stepsToPerform": "1. Navigate to the credit card application page.\n2. Fill in all required fields with valid data (e.g., Name: John Doe, Annual Income: 75000, Email: john.doe@example.com).\n3. Accept the terms and conditions.\n4. Click the 'Submit Application' button.",
+      "expectedResult": "The system should display a success message confirming the application has been submitted, along with a unique application reference number. The user may also receive a confirmation email or SMS."
+    },
+    {
+      "type": "functional",
+      "title": "Credit Card Application with Missing Required Information",
+      "description": "To verify that the system prevents submission and displays appropriate error messages when required fields are left blank.",
+      "testId": "TC-002",
+      "testDescription": "This test case validates the form's input validation by attempting to submit an application without filling in mandatory fields, such as income details or contact information.",
+      "prerequisites": "User is on the credit card application page.",
+      "stepsToPerform": "1. Navigate to the credit card application page.\n2. Fill in some, but not all, of the required fields (e.g., fill in personal details but leave the 'Annual Income' field blank).\n3. Click the 'Submit Application' button.",
+      "expectedResult": "The application submission should fail. The system must display clear, user-friendly error messages next to each empty required field, prompting the user to provide the missing information."
+    },
+    {
+      "type": "functional",
+      "title": "Successful Fee Waiver Request and Processing",
+      "description": "To verify that a bank representative can successfully waive a fee for an eligible customer.",
+      "testId": "TC-003",
+      "testDescription": "This scenario tests the backend process where a bank agent, after reviewing a customer's request and history, waives a charge (e.g., an annual fee). The test confirms the charge is removed and the customer's balance is updated.",
+      "prerequisites": "A customer account exists with a posted fee (e.g., $95 annual fee). The customer must be eligible for a waiver based on bank policy (e.g., good payment history). Bank agent must be logged into the CRM/banking system.",
+      "stepsToPerform": "1. Bank agent locates the customer's account in the system.\n2. Agent identifies the specific fee to be waived on the customer's statement.\n3. Agent initiates the 'Waive Fee' action, providing a reason (e.g., 'One-time courtesy').\n4. Agent confirms the action.",
+      "expectedResult": "The specified fee is removed from the customer's account. The account balance is updated to reflect the waiver. A transaction record for the fee waiver is created in the customer's history. The customer receives a notification about the successful waiver."
+    },
+    {
+      "type": "functional",
+      "title": "Successful Reward Points Redemption for Cashback",
+      "description": "To verify that a cardholder can successfully redeem their accumulated reward points for a cashback credit.",
+      "testId": "TC-004",
+      "testDescription": "This test case ensures that a customer with sufficient points can navigate the rewards portal, select a cashback option, and complete the redemption process, resulting in an updated points balance and a credit to their statement.",
+      "prerequisites": "Customer is logged into their online banking account. The account has a sufficient reward points balance (e.g., 5,000 points). A cashback redemption option is available (e.g., 2,500 points for $25 cashback).",
+      "stepsToPerform": "1. Navigate to the 'Rewards' or 'Points Redemption' section.\n2. Select the 'Cashback' option.\n3. Choose a specific cashback amount (e.g., $25 for 2,500 points).\n4. Confirm the redemption request.",
+      "expectedResult": "The customer's reward points balance is reduced by the redeemed amount (e.g., decreases from 5,000 to 2,500). A statement credit for the cashback amount ($25) is posted to the credit card account. The user receives a confirmation message on screen and via email."
+    },
+    {
+      "type": "functional",
+      "title": "Attempt to Redeem Points with Insufficient Balance",
+      "description": "To verify that the system prevents a cardholder from redeeming points for a reward they cannot afford.",
+      "testId": "TC-005",
+      "testDescription": "This edge case scenario tests the system's validation logic by ensuring a user with an insufficient points balance is shown an error message and cannot complete a redemption.",
+      "prerequisites": "Customer is logged into their online banking account. The account has an insufficient reward points balance (e.g., 1,000 points). A reward is available that costs more than the user's balance (e.g., a $25 gift card for 2,500 points).",
+      "stepsToPerform": "1. Navigate to the 'Rewards' section.\n2. Select a reward that costs more than the available points balance.\n3. Attempt to add the reward to the cart or click 'Redeem'.",
+      "expectedResult": "The system should prevent the redemption and display a clear error message stating 'You have insufficient points to redeem this item.' The user's point balance should remain unchanged."
+    },
+    {
+      "type": "functional",
+      "title": "Bank-Initiated Credit Limit Increase Notification",
+      "description": "To verify that a customer is properly notified when the bank proactively increases their credit limit.",
+      "testId": "TC-006",
+      "testDescription": "This test case validates the automated process of a credit limit increase. Based on internal criteria (e.g., good payment history), the bank's system increases a customer's limit and must send a notification to inform them of the change.",
+      "prerequisites": "A customer account exists and is flagged by the system as eligible for a credit limit increase. The automated credit review process has been executed.",
+      "stepsToPerform": "1. The bank's automated system identifies an eligible customer and increases their credit limit (e.g., from $5,000 to $7,500).\n2. The system triggers a notification event.\n3. Verify the customer's account details to see the updated credit limit.",
+      "expectedResult": "The customer's credit limit is successfully updated in the banking system. The customer receives a notification (e.g., email, SMS, or in-app message) informing them of the new credit limit and the date it becomes effective."
+    },
+    {
+      "type": "functional",
+      "title": "Bank-Initiated Credit Limit Reduction Notification",
+      "description": "To verify that a customer is properly notified when the bank reduces their credit limit due to increased risk.",
+      "testId": "TC-007",
+      "testDescription": "This test ensures that when the bank reduces a customer's credit limit based on a risk assessment, the change is reflected in the system and a formal notification is sent to the customer as required by regulations.",
+      "prerequisites": "A customer account exists and is flagged for a credit limit review due to a change in their risk profile. The bank has decided to reduce the credit limit.",
+      "stepsToPerform": "1. A bank administrator or automated system reduces the customer's credit limit in the system (e.g., from $10,000 to $5,000).\n2. The system triggers a notification event.\n3. Check the customer's account details to confirm the new, lower limit.",
+      "expectedResult": "The customer's credit limit is successfully reduced in the banking system. The customer receives an official notification explaining the change and the reason for the reduction, as per regulatory guidelines."
+    },
+    {
+      "type": "functional",
+      "title": "Successful Promotional Balance Transfer",
+      "description": "To verify a customer can successfully transfer a balance from another bank's credit card under a promotional offer.",
+      "testId": "TC-008",
+      "testDescription": "This test case checks the end-to-end process of a balance transfer, including entering the other card's details, specifying the amount, and confirming the transfer under a promotional interest rate (e.g., 0% APR for 12 months).",
+      "prerequisites": "Customer is logged into their online account. The customer has a promotional balance transfer offer available on their account. The transfer amount is within the customer's available credit limit.",
+      "stepsToPerform": "1. Navigate to the 'Balance Transfer' section.\n2. Select the promotional offer.\n3. Enter the details of the external credit card (issuer, 16-digit card number).\n4. Enter the amount to transfer (e.g., $2,000).\n5. Review the terms and submit the request.",
+      "expectedResult": "The system should accept the request and show a confirmation message with a transaction ID. The balance transfer should be processed, and the transferred amount should appear on the customer's statement with the promotional interest rate applied. The available credit limit should be reduced accordingly."
+    },
+    {
+      "type": "non-functional",
+      "title": "Application Form Data Security in Transit",
+      "description": "To verify that all sensitive customer data entered on the application form is securely transmitted.",
+      "testId": "TC-009",
+      "testDescription": "This security test ensures that the connection to the credit card application page is encrypted using TLS/SSL and that sensitive data (like identification numbers and income details) is not sent as plain text.",
+      "prerequisites": "Access to a network monitoring tool (e.g., browser developer tools, Wireshark).",
+      "stepsToPerform": "1. Open the credit card application page.\n2. Verify that the URL uses 'https://' and a valid security certificate is present (lock icon in the browser).\n3. Start the network monitoring tool.\n4. Fill in the application form with sample data and submit it.\n5. Inspect the network request payload sent from the browser to the server.",
+      "expectedResult": "The entire communication must be over a secure HTTPS connection. The data within the submitted form payload should be encrypted and not visible as plain text in the network logs."
+    },
+    {
+      "type": "non-functional",
+      "title": "Performance of Reward Points Balance Update",
+      "description": "To measure the system's response time when updating and displaying the user's points balance after a redemption.",
+      "testId": "TC-010",
+      "testDescription": "This performance test checks how quickly the system reflects the change in a user's reward points balance on the UI after a redemption action is completed. A slow update can lead to a poor user experience.",
+      "prerequisites": "Customer is logged into their online account with sufficient points for a redemption. A performance monitoring tool or browser developer tools are available.",
+      "stepsToPerform": "1. Navigate to the rewards redemption page.\n2. Note the current points balance.\n3. Start a timer or performance profiler.\n4. Perform a small redemption (e.g., for a $5 gift card).\n5. Stop the timer when the UI updates to show the new, lower points balance.",
+      "expectedResult": "The UI showing the points balance should update within an acceptable time frame (e.g., under 3 seconds) after the redemption confirmation is received."
+    },
+    {
+      "type": "non-functional",
+      "title": "Usability of Error Messages on Application Form",
+      "description": "To ensure that error messages for invalid data on the application form are clear, helpful, and user-friendly.",
+      "testId": "TC-011",
+      "testDescription": "This usability test evaluates the quality of validation feedback. Instead of generic 'Invalid Input' errors, the system should guide the user on how to correct the mistake.",
+      "prerequisites": "User is on the credit card application page.",
+      "stepsToPerform": "1. In the 'Email' field, enter an invalid email format (e.g., 'john.doe@test').\n2. In the 'Annual Income' field, enter non-numeric characters (e.g., 'seventy five thousand').\n3. In a date of birth field, enter an invalid date (e.g., a future date).\n4. Attempt to submit the form or move to the next field.\n5. Review the error messages displayed for each invalid field.",
+      "expectedResult": "The system should display specific and constructive error messages. For example: 'Please enter a valid email address (e.g., name@example.com)' for the email field, and 'Please enter numbers only' for the income field."
+    }
+  ]
+}

@@ -1,0 +1,439 @@
+openapi: 3.0.0
+info:
+  title: Credit Card Account Management API
+  description: API for managing credit card applications, accounts, rewards, and administrative actions based on provided Gherkin scenarios.
+  version: 1.0.0
+servers:
+  - url: '{BASE_URL}/api/v1'
+    variables:
+      BASE_URL:
+        default: https://api.examplebank.com
+        description: The base URL for the API environment.
+
+tags:
+  - name: Applications
+    description: Operations related to credit card applications.
+  - name: Accounts
+    description: Operations for managing customer accounts, including fees, limits, and transfers.
+  - name: Rewards
+    description: Operations for managing customer reward points.
+
+paths:
+  /applications:
+    post:
+      tags:
+        - Applications
+      summary: Submit a new credit card application
+      description: Allows a potential customer to submit an application for a new credit card. This is a public endpoint and does not require authentication.
+      operationId: submitApplication
+      requestBody:
+        description: New credit card application details.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationRequest'
+      responses:
+        '201':
+          description: Application submitted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationResponse'
+        '400':
+          description: Bad Request - The request was malformed, contained invalid data, or was missing required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/{accountId}/fees/{feeId}/waive:
+    post:
+      tags:
+        - Accounts
+      summary: Waive a fee on a customer's account
+      description: Allows an authorized bank agent to waive a specific fee for a customer. Requires agent-level authentication.
+      operationId: waiveFee
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The unique identifier of the customer's account.
+          schema:
+            type: string
+            example: cust-acc-123
+        - name: feeId
+          in: path
+          required: true
+          description: The unique identifier of the fee to be waived.
+          schema:
+            type: string
+            example: fee-xyz-456
+      requestBody:
+        description: Reason for the fee waiver.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeWaiverRequest'
+      responses:
+        '200':
+          description: Fee waived successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeWaiverResponse'
+
+  /accounts/{accountId}/rewards/redeem:
+    post:
+      tags:
+        - Rewards
+      summary: Redeem reward points
+      description: Allows a customer to redeem their accumulated reward points for various benefits like cashback. Requires customer-level authentication.
+      operationId: redeemRewards
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The unique identifier of the customer's account.
+          schema:
+            type: string
+            example: cust-acc-456
+      requestBody:
+        description: Details of the reward redemption.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RewardRedemptionRequest'
+      responses:
+        '200':
+          description: Points redeemed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardRedemptionResponse'
+        '400':
+          description: Bad Request - Insufficient points for redemption.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/{accountId}/limit:
+    put:
+      tags:
+        - Accounts
+      summary: Update a customer's credit limit
+      description: Allows an authorized system administrator to increase a customer's credit limit. Requires admin-level authentication.
+      operationId: updateCreditLimit
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The unique identifier of the customer's account.
+          schema:
+            type: string
+            example: cust-acc-123
+      requestBody:
+        description: New credit limit details.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditLimitRequest'
+      responses:
+        '200':
+          description: Credit limit updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditLimitResponse'
+
+  /accounts/{accountId}/balance-transfers:
+    post:
+      tags:
+        - Accounts
+      summary: Request a balance transfer
+      description: Allows a customer to initiate a balance transfer from another credit card. Requires customer-level authentication.
+      operationId: requestBalanceTransfer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The unique identifier of the customer's account.
+          schema:
+            type: string
+            example: cust-acc-123
+      requestBody:
+        description: Details for the balance transfer request.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceTransferRequest'
+      responses:
+        '202':
+          description: Balance transfer request accepted and is being processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceTransferResponse'
+
+  /accounts/{accountId}/rewards:
+    get:
+      tags:
+        - Rewards
+      summary: Get reward points balance
+      description: Retrieves the current reward points balance for a customer's account. Requires customer-level authentication.
+      operationId: getRewardsBalance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The unique identifier of the customer's account.
+          schema:
+            type: string
+            example: cust-acc-456
+      responses:
+        '200':
+          description: Successfully retrieved the points balance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardsBalanceResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token for authenticating customer, agent, or admin users.
+
+  schemas:
+    # Application Schemas
+    ApplicationRequest:
+      type: object
+      required:
+        - personalDetails
+        - incomeDetails
+        - contactInfo
+        - termsAccepted
+      properties:
+        personalDetails:
+          type: object
+          required:
+            - firstName
+            - lastName
+            - dateOfBirth
+            - socialSecurityNumber
+          properties:
+            firstName:
+              type: string
+              example: John
+            lastName:
+              type: string
+              example: Doe
+            dateOfBirth:
+              type: string
+              format: date
+              example: '1990-05-15'
+            socialSecurityNumber:
+              type: string
+              example: '999-00-1111'
+        incomeDetails:
+          type: object
+          required:
+            - annualIncome
+            - employmentStatus
+          properties:
+            annualIncome:
+              type: number
+              format: double
+              example: 75000
+            employmentStatus:
+              type: string
+              enum: [FULL_TIME, PART_TIME, SELF_EMPLOYED, UNEMPLOYED]
+              example: FULL_TIME
+        contactInfo:
+          type: object
+          required:
+            - email
+            - phone
+            - address
+          properties:
+            email:
+              type: string
+              format: email
+              example: john.doe@example.com
+            phone:
+              type: string
+              example: '555-123-4567'
+            address:
+              type: string
+              example: 123 Main St, Anytown, USA
+        termsAccepted:
+          type: boolean
+          example: true
+    ApplicationResponse:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+          example: 'app-a1b2c3d4-e5f6-7890-1234-567890abcdef'
+        status:
+          type: string
+          example: 'SUBMITTED'
+
+    # Fee Waiver Schemas
+    FeeWaiverRequest:
+      type: object
+      required:
+        - reason
+        - agentId
+      properties:
+        reason:
+          type: string
+          example: One-time courtesy for valued customer
+        agentId:
+          type: string
+          example: agent-987
+    FeeWaiverResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          example: 'waiver-txn-a1b2c3d4'
+        message:
+          type: string
+          example: Fee waived successfully
+
+    # Reward Schemas
+    RewardRedemptionRequest:
+      type: object
+      required:
+        - rewardType
+        - pointsToRedeem
+      properties:
+        rewardType:
+          type: string
+          enum: [CASHBACK, GIFT_CARD, TRAVEL]
+          example: CASHBACK
+        pointsToRedeem:
+          type: integer
+          example: 2500
+    RewardRedemptionResponse:
+      type: object
+      properties:
+        statementCreditId:
+          type: string
+          example: 'sc-5678-efgh'
+        newPointsBalance:
+          type: number
+          example: 2500
+    RewardsBalanceResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: cust-acc-456
+        pointsBalance:
+          type: integer
+          example: 5000
+
+    # Credit Limit Schemas
+    CreditLimitRequest:
+      type: object
+      required:
+        - newLimit
+        - reasonCode
+        - effectiveDate
+      properties:
+        newLimit:
+          type: number
+          format: double
+          example: 7500
+        reasonCode:
+          type: string
+          example: AUTOMATED_6MONTH_REVIEW
+        effectiveDate:
+          type: string
+          format: date-time
+          example: '2023-10-27T00:00:00Z'
+    CreditLimitResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: cust-acc-123
+        newLimit:
+          type: number
+          format: double
+          example: 7500
+        status:
+          type: string
+          example: 'UPDATED'
+
+    # Balance Transfer Schemas
+    BalanceTransferRequest:
+      type: object
+      required:
+        - fromIssuer
+        - fromCardNumber
+        - amount
+      properties:
+        fromIssuer:
+          type: string
+          example: Rival Bank
+        fromCardNumber:
+          type: string
+          example: '4567123487650987'
+        amount:
+          type: number
+          format: double
+          example: 2000.00
+        promoCode:
+          type: string
+          example: BT_0_APR_12M
+    BalanceTransferResponse:
+      type: object
+      properties:
+        transferId:
+          type: string
+          example: 'bt-req-9876-abcd'
+        status:
+          type: string
+          example: 'PROCESSING'
+
+    # Generic Error Schema
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A single error message. Used for high-level errors.
+          example: Insufficient points balance for redemption
+        errors:
+          type: array
+          description: An array of detailed field-level errors. Used for validation failures.
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: incomeDetails.annualIncome
+              message:
+                type: string
+                example: Annual income is required
