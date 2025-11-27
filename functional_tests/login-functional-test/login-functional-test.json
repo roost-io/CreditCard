@@ -1,0 +1,515 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "Create SSO User with Existing Login ID",
+      "description": "Verify that the system prevents the creation of a new SSO user if the provided Login ID already exists.",
+      "testId": "TC-SPD-001",
+      "testDescription": "This test case validates the primary requirement: adding duplicate Login ID validation for SSO users. An admin attempts to create a new user with the SSO flag enabled, using a Login ID that is already assigned to another user.",
+      "prerequisites": "An administrator is logged in. A user with a known Login ID (e.g., 'j.doe') already exists in the system.",
+      "stepsToPerform": "1. Navigate to the user creation page ('Sleep Physician Details').\n2. Fill in all mandatory fields (Last Name, Email, etc.).\n3. In the 'Login ID' field, enter the existing Login ID 'j.doe'.\n4. Enable the 'SSO' toggle switch.\n5. Click the 'Save' or 'Create' button.",
+      "expectedResult": "The form submission should fail. An inline error message, such as 'Login ID already exists', should appear next to the Login ID field. The user should not be created."
+    },
+    {
+      "type": "functional",
+      "title": "Create Standard User with Existing Login ID (Regression)",
+      "description": "Verify that the existing validation for standard users (non-SSO) still works correctly.",
+      "testId": "TC-SPD-002",
+      "testDescription": "This is a regression test to ensure that the new changes for SSO users have not broken the existing functionality for standard users.",
+      "prerequisites": "An administrator is logged in. A user with a known Login ID (e.g., 'a.smith') already exists in the system.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Fill in all mandatory fields.\n3. In the 'Login ID' field, enter the existing Login ID 'a.smith'.\n4. Ensure the 'SSO' toggle switch is disabled.\n5. Click the 'Save' or 'Create' button.",
+      "expectedResult": "The form submission should fail. An inline error message, such as 'Login ID already exists', should appear next to the Login ID field. The user should not be created."
+    },
+    {
+      "type": "functional",
+      "title": "Create SSO User with Case-Insensitive Duplicate Login ID",
+      "description": "Verify that the Login ID validation is case-insensitive for SSO users.",
+      "testId": "TC-SPD-003",
+      "testDescription": "This test checks if the duplicate validation logic correctly handles different casing. For example, if 'j.doe' exists, 'J.Doe' should also be considered a duplicate.",
+      "prerequisites": "An administrator is logged in. A user with the Login ID 'j.doe' exists.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Fill in all mandatory fields.\n3. In the 'Login ID' field, enter 'J.DOE'.\n4. Enable the 'SSO' toggle switch.\n5. Click the 'Save' or 'Create' button.",
+      "expectedResult": "The form submission should fail. An inline error message indicating the Login ID already exists should be displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Edit an Existing SSO User to Have a Duplicate Login ID",
+      "description": "Verify that the duplicate Login ID validation triggers when editing an existing SSO user.",
+      "testId": "TC-SPD-004",
+      "testDescription": "The validation should not only apply during creation but also when an admin modifies an existing user's Login ID to one that is already in use.",
+      "prerequisites": "An administrator is logged in. At least two users exist: User A ('user.a') and User B ('user.b'). User B is an SSO user.",
+      "stepsToPerform": "1. Navigate to the user management list and open the details for User B.\n2. In the 'Login ID' field, change 'user.b' to 'user.a'.\n3. Ensure the 'SSO' toggle is enabled.\n4. Click the 'Save' button.",
+      "expectedResult": "The form save should fail. An error message 'Login ID already exists' should be displayed, and the changes should not be saved."
+    },
+
+    {
+      "type": "functional",
+      "title": "Create SSO User with Unique Login ID",
+      "description": "Verify successful creation of an SSO user with a unique Login ID.",
+      "testId": "TC-SPD-005",
+      "testDescription": "This is a positive test case to ensure that a new SSO user can be created without issues when all data, including the Login ID, is valid and unique.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Fill in all mandatory fields with valid data.\n3. Enter a completely new and unique Login ID (e.g., 'new.physician123').\n4. Enable the 'SSO' toggle switch.\n5. Click the 'Save' or 'Create' button.",
+      "expectedResult": "The user should be created successfully. The system should display a success message and the user should be visible in the user list."
+    },
+    {
+      "type": "functional",
+      "title": "Create Standard User with Unique Login ID",
+      "description": "Verify successful creation of a standard (non-SSO) user with a unique Login ID.",
+      "testId": "TC-SPD-006",
+      "testDescription": "This is a positive test case for creating a standard user, ensuring the basic creation flow is functional.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Fill in all mandatory fields with valid data.\n3. Enter a completely new and unique Login ID.\n4. Ensure the 'SSO' toggle is disabled.\n5. Set and confirm a password.\n6. Click the 'Save' or 'Create' button.",
+      "expectedResult": "The user should be created successfully. The system should display a success message."
+    },
+    {
+      "type": "functional",
+      "title": "Validation on Empty Mandatory Fields",
+      "description": "Verify that appropriate error messages are shown when mandatory fields are left blank.",
+      "testId": "TC-SPD-007",
+      "testDescription": "This test checks the form's client-side or server-side validation for required fields like Last Name, Login ID, and Email.",
+      "prerequisites": "An administrator is logged in and on the user creation page.",
+      "stepsToPerform": "1. Leave the 'Last Name', 'Login ID', and 'Email' fields empty.\n2. Fill in other non-mandatory fields if desired.\n3. Click the 'Save' or 'Create' button.",
+      "expectedResult": "The form submission should be prevented. Inline error messages like 'Required Input' should appear under each of the empty mandatory fields."
+    },
+    {
+      "type": "functional",
+      "title": "Validation for Invalid Email Format",
+      "description": "Verify that the system validates the format of the email address.",
+      "testId": "TC-SPD-008",
+      "testDescription": "Ensures that the email field accepts only correctly formatted email addresses.",
+      "prerequisites": "An administrator is logged in and on the user creation page.",
+      "stepsToPerform": "1. Fill in all mandatory fields.\n2. In the 'Email' field, enter an invalid value (e.g., 'test@domain', 'test.domain.com', 'test').\n3. Click the 'Save' or 'Create' button.",
+      "expectedResult": "The form should not be submitted. An error message like 'Invalid email format' should be displayed next to the Email field."
+    },
+    {
+      "type": "functional",
+      "title": "Toggle User from Standard to SSO during Edit",
+      "description": "Verify the form behavior when changing an existing standard user to an SSO user.",
+      "testId": "TC-SPD-009",
+      "testDescription": "When a user is switched to SSO, password-related fields should become hidden or disabled as authentication is handled externally.",
+      "prerequisites": "An administrator is logged in. A standard (non-SSO) user exists.",
+      "stepsToPerform": "1. Navigate to the user list and open the standard user for editing.\n2. Observe the presence of 'New Password' and 'Retype New Password' fields.\n3. Enable the 'SSO' toggle switch.",
+      "expectedResult": "The 'New Password' and 'Retype New Password' fields should be hidden or disabled immediately after the SSO toggle is enabled."
+    },
+    {
+      "type": "functional",
+      "title": "Toggle User from SSO to Standard during Edit",
+      "description": "Verify the form behavior when changing an existing SSO user to a standard user.",
+      "testId": "TC-SPD-010",
+      "testDescription": "When an SSO user is converted to a standard user, password fields must become visible and likely mandatory to set up local credentials.",
+      "prerequisites": "An administrator is logged in. An SSO user exists.",
+      "stepsToPerform": "1. Navigate to the user list and open the SSO user for editing.\n2. Observe that password fields are not visible.\n3. Disable the 'SSO' toggle switch.",
+      "expectedResult": "The 'New Password' and 'Retype New Password' fields should appear and become mandatory for saving the user as a standard account."
+    },
+    {
+      "type": "functional",
+      "title": "Activate and Deactivate a User",
+      "description": "Verify the functionality of the 'Active' toggle switch.",
+      "testId": "TC-SPD-011",
+      "testDescription": "This test ensures an admin can change the active status of a user account, which typically controls their ability to log in.",
+      "prerequisites": "An administrator is logged in. An existing user is available for editing.",
+      "stepsToPerform": "1. Open an existing user's details.\n2. Note the current state of the 'Active' toggle.\n3. Click the 'Active' toggle to change its state (e.g., from ON to OFF).\n4. Click 'Save'.\n5. Re-open the user's details to verify the change was saved.",
+      "expectedResult": "The user's active status is successfully updated and persists after saving. An inactive user should not be able to log in."
+    },
+    {
+      "type": "functional",
+      "title": "Password Mismatch Validation for Standard User",
+      "description": "Verify that an error is shown if 'New Password' and 'Retype New Password' do not match.",
+      "testId": "TC-SPD-012",
+      "testDescription": "This is a standard security feature to prevent typos when setting a new password for a non-SSO user.",
+      "prerequisites": "An administrator is logged in, creating or editing a standard user.",
+      "stepsToPerform": "1. Ensure the 'SSO' toggle is OFF.\n2. In the 'New Password' field, enter 'Password123!'.\n3. In the 'Retype New Password' field, enter 'Password123?'.\n4. Click 'Save'.",
+      "expectedResult": "The form submission should fail. An error message like 'Passwords do not match' should be displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Create User with Only Mandatory Fields",
+      "description": "Verify a user can be created by filling only the required fields.",
+      "testId": "TC-SPD-013",
+      "testDescription": "Tests the minimal data required for successful user creation, leaving all optional fields (Prefix, Middle Name, Suffix, etc.) blank.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Fill in only the mandatory fields: 'Last Name', 'Login ID', and 'Email'.\n3. If creating a standard user, also fill in the password fields.\n4. Click 'Save'.",
+      "expectedResult": "The user is created successfully without any errors related to the empty optional fields."
+    },
+    {
+      "type": "functional",
+      "title": "Verify Functionality of 'Locked' Toggle",
+      "description": "Ensure an admin can manually lock and unlock a user account.",
+      "testId": "TC-SPD-014",
+      "testDescription": "A locked account should prevent the user from logging in, even with correct credentials. This test verifies the admin's ability to control this state.",
+      "prerequisites": "An administrator is logged in. An existing user is available for editing.",
+      "stepsToPerform": "1. Open a user's details.\n2. Enable the 'Locked' toggle switch.\n3. Click 'Save'.\n4. Verify the user cannot log in.\n5. Re-open the user's details, disable the 'Locked' toggle, and save.\n6. Verify the user can now log in.",
+      "expectedResult": "The 'Locked' status is updated correctly, and the user's login access is controlled accordingly."
+    },
+    {
+      "type": "functional",
+      "title": "Cancel User Creation",
+      "description": "Verify that clicking a 'Cancel' or 'Close' (X) button discards all changes and closes the form.",
+      "testId": "TC-SPD-015",
+      "testDescription": "Ensures that a user creation or edit process can be aborted without saving any data.",
+      "prerequisites": "An administrator is logged in and on the user creation/edit page.",
+      "stepsToPerform": "1. Open the 'Sleep Physician Details' form.\n2. Enter some data into various fields (e.g., First Name, Last Name).\n3. Click the 'Cancel' button or the 'X' icon to close the form.\n4. Re-open the user creation form.",
+      "expectedResult": "The form closes without saving. When re-opened, the form is empty and does not contain the data entered before canceling."
+    },
+    {
+      "type": "functional",
+      "title": "Login ID Validation with Special Characters",
+      "description": "Verify how the system handles special characters in the Login ID field.",
+      "testId": "TC-SPD-016",
+      "testDescription": "This test determines if special characters are allowed or if a validation error is correctly thrown.",
+      "prerequisites": "An administrator is logged in and on the user creation page.",
+      "stepsToPerform": "1. Fill in all mandatory fields.\n2. In the 'Login ID' field, enter a value with special characters (e.g., 'user!@#').\n3. Click 'Save'.",
+      "expectedResult": "The expected result depends on the system requirements. Either the user is created successfully (if allowed) or a validation error like 'Login ID contains invalid characters' is displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Login ID Validation with Leading/Trailing Spaces",
+      "description": "Verify that the duplicate check for SSO users trims leading/trailing spaces.",
+      "testId": "TC-SPD-017",
+      "testDescription": "If 'j.doe' exists, an attempt to create an SSO user with ' j.doe ' should be treated as a duplicate.",
+      "prerequisites": "An administrator is logged in. A user with the Login ID 'j.doe' exists.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Fill in mandatory fields.\n3. In the 'Login ID' field, enter ' j.doe ' (with spaces).\n4. Enable the 'SSO' toggle.\n5. Click 'Save'.",
+      "expectedResult": "The form submission should fail, and an error message for a duplicate Login ID should be displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Verify Dropdown Fields Population",
+      "description": "Check that dropdown fields like 'Prefix', 'Suffix', and 'CloudPat Language' contain the expected options.",
+      "testId": "TC-SPD-018",
+      "testDescription": "This test ensures that the UI is populated with the correct, pre-defined data for selection.",
+      "prerequisites": "An administrator is logged in and on the user creation page.",
+      "stepsToPerform": "1. Open the 'Sleep Physician Details' form.\n2. Click on the 'Prefix' dropdown.\n3. Click on the 'CloudPat Language' dropdown.",
+      "expectedResult": "The 'Prefix' dropdown should contain options like 'Dr.', 'Mr.', 'Ms.'. The 'CloudPat Language' dropdown should contain options like 'English', 'Spanish', etc."
+    },
+    {
+      "type": "functional",
+      "title": "Verify Checkbox Functionality",
+      "description": "Ensure that checkboxes like 'Windows Creds' and 'Allowed to sign e-order' can be checked and unchecked.",
+      "testId": "TC-SPD-019",
+      "testDescription": "This test verifies the basic UI interaction of checkboxes and that their state is saved correctly.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Open an existing user for editing.\n2. Check the 'Windows Creds' checkbox.\n3. Uncheck the 'Allowed to sign e-order' checkbox.\n4. Click 'Save'.\n5. Re-open the same user.",
+      "expectedResult": "The state of the checkboxes should be saved and reflected correctly when the user details are viewed again."
+    },
+    {
+      "type": "functional",
+      "title": "Numeric Field Validation",
+      "description": "Verify that the 'Link Expiry Seconds' field only accepts numeric input.",
+      "testId": "TC-SPD-020",
+      "testDescription": "Tests the input validation for fields that are expected to be numeric.",
+      "prerequisites": "An administrator is logged in and on the user edit page.",
+      "stepsToPerform": "1. Open a user for editing.\n2. In the 'Link Expiry Seconds' field, attempt to enter alphabetic characters (e.g., 'abc').\n3. Click 'Save'.",
+      "expectedResult": "The system should either prevent the entry of non-numeric characters or display a validation error upon trying to save."
+    },
+    {
+      "type": "functional",
+      "title": "Create User with Maximum Length Input in Fields",
+      "description": "Verify that the system correctly handles inputs that are at the maximum allowed character limit for each field.",
+      "testId": "TC-SPD-021",
+      "testDescription": "This boundary test ensures there are no data truncation issues or unexpected errors when using maximum length strings.",
+      "prerequisites": "An administrator is logged in. The maximum character lengths for fields like 'First Name', 'Last Name', 'Login ID' are known.",
+      "stepsToPerform": "1. On the user creation page, fill each text field with a string that is exactly the maximum allowed length.\n2. Click 'Save'.",
+      "expectedResult": "The user should be created successfully with all data saved correctly without any truncation."
+    },
+    {
+      "type": "functional",
+      "title": "Create User with Input Exceeding Maximum Length",
+      "description": "Verify that the system prevents data entry beyond the maximum character limit or shows an error.",
+      "testId": "TC-SPD-022",
+      "testDescription": "This negative boundary test checks the system's robustness when handling oversized input.",
+      "prerequisites": "An administrator is logged in. The maximum character lengths for fields are known.",
+      "stepsToPerform": "1. On the user creation page, attempt to enter a string longer than the maximum allowed length in the 'Last Name' field.\n2. Click 'Save'.",
+      "expectedResult": "The system should either truncate the input to the maximum length or display a validation error message indicating the field is too long."
+    },
+    {
+      "type": "functional",
+      "title": "Edit Login ID of a Standard User to a Duplicate",
+      "description": "Verify duplicate Login ID validation triggers when editing a standard (non-SSO) user.",
+      "testId": "TC-SPD-023",
+      "testDescription": "This is a regression test to ensure the duplicate check works during the edit flow for standard users.",
+      "prerequisites": "An administrator is logged in. Two standard users exist: 'user.a' and 'user.b'.",
+      "stepsToPerform": "1. Open the details for standard user 'user.b'.\n2. Change their Login ID to 'user.a'.\n3. Click 'Save'.",
+      "expectedResult": "The save operation should fail, and an error message 'Login ID already exists' should be displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Password Policy Validation for Standard User",
+      "description": "Verify that a new password for a standard user must meet the defined complexity requirements.",
+      "testId": "TC-SPD-024",
+      "testDescription": "Tests security policies for passwords, such as minimum length, and requirements for uppercase, lowercase, numbers, and special characters.",
+      "prerequisites": "An administrator is logged in, creating a standard user. The password policy is known (e.g., 8 chars, 1 uppercase, 1 number).",
+      "stepsToPerform": "1. On the user creation form for a standard user.\n2. Enter a weak password that does not meet the policy (e.g., 'password').\n3. Enter the same weak password in the retype field.\n4. Click 'Save'.",
+      "expectedResult": "The form submission should fail. A descriptive error message explaining the password requirements should be displayed."
+    },
+    {
+      "type": "functional",
+      "title": "UI State of Password Fields for SSO User Creation",
+      "description": "Verify that password fields are hidden or disabled when creating a new user with SSO enabled from the start.",
+      "testId": "TC-SPD-025",
+      "testDescription": "Ensures the UI correctly reflects the user type from the beginning of the creation process.",
+      "prerequisites": "An administrator is logged in and on the user creation page.",
+      "stepsToPerform": "1. Open the 'Sleep Physician Details' form for a new user.\n2. Immediately enable the 'SSO' toggle switch.",
+      "expectedResult": "The 'New Password' and 'Retype New Password' fields should be hidden or disabled, as they are not relevant for an SSO user."
+    },
+    {
+      "type": "functional",
+      "title": "Verify 'Redok' Toggle Functionality",
+      "description": "Ensure the 'Redok' toggle can be enabled/disabled and its state is saved correctly.",
+      "testId": "TC-SPD-026",
+      "testDescription": "This test validates the UI interaction and persistence of the 'Redok' setting for a user.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Open an existing user for editing.\n2. Change the state of the 'Redok' toggle switch.\n3. Click 'Save'.\n4. Re-open the user's details.",
+      "expectedResult": "The new state of the 'Redok' toggle should be correctly saved and displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Verify 'Override MFA' Toggle Functionality",
+      "description": "Ensure the 'Override MFA' toggle can be enabled/disabled and its state is saved correctly.",
+      "testId": "TC-SPD-027",
+      "testDescription": "This test validates the UI interaction and persistence of the 'Override MFA' setting for a user.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Open an existing user for editing.\n2. Change the state of the 'Override MFA' toggle switch.\n3. Click 'Save'.\n4. Re-open the user's details.",
+      "expectedResult": "The new state of the 'Override MFA' toggle should be correctly saved and displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Attempt to Save Form During Duplicate ID Check",
+      "description": "Verify the UI behavior if the user tries to click 'Save' again while the duplicate ID check is in progress.",
+      "testId": "TC-SPD-028",
+      "testDescription": "This test checks for race conditions and ensures the UI prevents multiple submissions. The 'Save' button should be disabled after the first click until a response is received.",
+      "prerequisites": "An administrator is logged in and on the user creation page.",
+      "stepsToPerform": "1. Fill in all fields on the user creation form.\n2. Click the 'Save' button.\n3. Immediately try to click the 'Save' button again.",
+      "expectedResult": "The 'Save' button should be disabled after the first click, preventing a second submission until the first one is complete."
+    },
+    {
+      "type": "functional",
+      "title": "Duplicate Email Validation",
+      "description": "Verify if the system checks for duplicate email addresses upon user creation.",
+      "testId": "TC-SPD-029",
+      "testDescription": "This test checks if, similar to Login ID, the email address must also be unique across all users.",
+      "prerequisites": "An administrator is logged in. A user with a known email (e.g., 'test@example.com') exists.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Fill in all mandatory fields with unique data, except for the email.\n3. In the 'Email' field, enter 'test@example.com'.\n4. Click 'Save'.",
+      "expectedResult": "Depending on requirements, the form should either save successfully or display an error message like 'Email address already in use'."
+    },
+    {
+      "type": "functional",
+      "title": "Tab Order Navigation",
+      "description": "Verify that the tab order of the fields on the form is logical and sequential.",
+      "testId": "TC-SPD-030",
+      "testDescription": "This usability and accessibility test ensures that users can navigate the form efficiently using the keyboard.",
+      "prerequisites": "An administrator is logged in and on the user creation page.",
+      "stepsToPerform": "1. Click on the first field of the form (e.g., 'Prefix').\n2. Press the 'Tab' key repeatedly.\n3. Observe the focus moving through the form elements.",
+      "expectedResult": "The focus should move logically from one field to the next, top-to-bottom, left-to-right, without any unexpected jumps. All interactive elements (inputs, toggles, checkboxes, buttons) should be focusable."
+    },
+    {
+      "type": "non-functional",
+      "title": "Performance of Duplicate Login ID Check",
+      "description": "Measure the time taken for the system to validate the uniqueness of a Login ID.",
+      "testId": "TC-SPD-031",
+      "testDescription": "This test measures the server response time for the duplicate check, especially in a database with a large number of users. The check should be near-instantaneous to provide a good user experience.",
+      "prerequisites": "The system has a large volume of user data (e.g., >100,000 users). An administrator is on the user creation page.",
+      "stepsToPerform": "1. Enter a Login ID in the field.\n2. Move focus away from the field to trigger the validation (if it's on-blur) or click 'Save'.\n3. Using browser developer tools, measure the time from the request being sent to the response being received.",
+      "expectedResult": "The validation response time should be within an acceptable threshold (e.g., under 500ms)."
+    },
+    {
+      "type": "non-functional",
+      "title": "Performance of Form Submission",
+      "description": "Measure the overall time it takes to create a new user after clicking 'Save'.",
+      "testId": "TC-SPD-032",
+      "testDescription": "This test evaluates the end-to-end performance of the user creation process.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Fill out the user creation form with valid data.\n2. Open the browser's developer tools to the 'Network' tab.\n3. Click 'Save' and measure the time until the success response is received and the UI is updated.",
+      "expectedResult": "The total time for user creation should be within acceptable limits (e.g., under 2 seconds)."
+    },
+    {
+      "type": "non-functional",
+      "title": "Security - Cross-Site Scripting (XSS) in Text Fields",
+      "description": "Verify that the application is not vulnerable to XSS attacks through the form fields.",
+      "testId": "TC-SPD-033",
+      "testDescription": "This test attempts to inject malicious scripts into text fields to see if they are executed, which would indicate a security vulnerability.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. On the user creation form, enter a simple XSS payload like `<script>alert('XSS')</script>` into a text field (e.g., 'First Name').\n2. Save the user.\n3. Navigate to a page where this user's name is displayed.",
+      "expectedResult": "The script should not execute. The input should be properly sanitized and displayed as plain text (e.g., `&lt;script&gt;alert('XSS')&lt;/script&gt;`). No alert box should appear."
+    },
+    {
+      "type": "non-functional",
+      "title": "Security - SQL Injection",
+      "description": "Verify that the form is not vulnerable to SQL injection attacks.",
+      "testId": "TC-SPD-034",
+      "testDescription": "This test attempts to manipulate the database query by injecting SQL commands into the input fields.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. In a text field like 'Login ID', enter a basic SQL injection payload (e.g., `' OR '1'='1`).\n2. Click 'Save'.",
+      "expectedResult": "The application should handle the input as a literal string. It should not cause a database error or unexpected behavior. The save operation should fail with a validation error or create a user with the literal (and strange) Login ID."
+    },
+    {
+      "type": "non-functional",
+      "title": "Accessibility - Keyboard-Only Navigation",
+      "description": "Ensure all form elements can be accessed and manipulated using only the keyboard.",
+      "testId": "TC-SPD-035",
+      "testDescription": "This test is crucial for users who cannot use a mouse. It verifies that all controls are reachable and operable via Tab, Shift+Tab, Enter, and Spacebar keys.",
+      "prerequisites": "An administrator is on the user creation page.",
+      "stepsToPerform": "1. Do not use the mouse. Use the 'Tab' key to navigate through all fields, dropdowns, toggles, and buttons.\n2. Use 'Shift+Tab' to navigate backward.\n3. Use 'Spacebar' to activate toggles and checkboxes.\n4. Use 'Enter' or arrow keys to open and select from dropdowns.\n5. Navigate to the 'Save' button and press 'Enter'.",
+      "expectedResult": "The user should be able to complete and submit the entire form successfully using only the keyboard."
+    },
+    {
+      "type": "non-functional",
+      "title": "Accessibility - Screen Reader Compatibility",
+      "description": "Verify that form fields and controls have proper labels for screen readers.",
+      "testId": "TC-SPD-036",
+      "testDescription": "This test ensures that visually impaired users can understand and interact with the form using assistive technology.",
+      "prerequisites": "A screen reader tool (e.g., NVDA, JAWS) is installed and active.",
+      "stepsToPerform": "1. Navigate to the user creation page.\n2. Allow the screen reader to read the page content.\n3. Tab through the form fields.",
+      "expectedResult": "The screen reader should announce the correct, descriptive label for each field (e.g., 'Last Name, required, edit text'). Toggles should announce their state (e.g., 'SSO, switch, off'). Error messages should be read out when they appear."
+    },
+    {
+      "type": "non-functional",
+      "title": "Compatibility - Cross-Browser Rendering",
+      "description": "Verify that the user details form displays and functions correctly on different web browsers.",
+      "testId": "TC-SPD-037",
+      "testDescription": "This test checks for any CSS or JavaScript issues that might cause the form to look or behave differently across major browsers like Chrome, Firefox, and Edge.",
+      "prerequisites": "Access to multiple web browsers.",
+      "stepsToPerform": "1. Open the user creation form in Google Chrome and verify its layout and functionality.\n2. Open the same form in Mozilla Firefox and verify its layout and functionality.\n3. Open the same form in Microsoft Edge and verify its layout and functionality.",
+      "expectedResult": "The form should be visually consistent and fully functional across all supported browsers. All fields, toggles, and buttons should work as expected."
+    },
+    {
+      "type": "non-functional",
+      "title": "Usability - Clarity of Error Messages",
+      "description": "Evaluate if the validation and error messages are clear, concise, and helpful to the user.",
+      "testId": "TC-SPD-038",
+      "testDescription": "Good error messages guide the user to fix the problem. This test assesses the quality of that guidance.",
+      "prerequisites": "An administrator is on the user creation page.",
+      "stepsToPerform": "1. Trigger various validation errors (e.g., leave a required field blank, enter an invalid email, use a duplicate Login ID).\n2. Read and evaluate each error message that appears.",
+      "expectedResult": "The messages should be easy to understand (e.g., 'Login ID already exists' is better than 'Error code 542'). They should appear close to the field in error and clearly state what needs to be corrected."
+    },
+    {
+      "type": "non-functional",
+      "title": "Responsive Design - Mobile Viewport",
+      "description": "Verify that the form is usable and well-organized on a small screen size.",
+      "testId": "TC-SPD-039",
+      "testDescription": "This test ensures a good user experience for admins who might access the application on a tablet or mobile device.",
+      "prerequisites": "A web browser with developer tools to simulate mobile viewports.",
+      "stepsToPerform": "1. Open the user creation form in a desktop browser.\n2. Open developer tools (F12) and switch to a mobile device view (e.g., iPhone 12 Pro).\n3. Refresh the page.\n4. Interact with the form.",
+      "expectedResult": "The form layout should adapt to the smaller screen. Fields should be stacked vertically, text should be readable, and all controls should be easily tappable. There should be no horizontal scrolling."
+    },
+    {
+      "type": "security",
+      "title": "Security - Password Field Masking",
+      "description": "Verify that characters entered into password fields are masked.",
+      "testId": "TC-SPD-040",
+      "testDescription": "This is a basic security measure to prevent 'shoulder surfing' where someone could see the password as it's being typed.",
+      "prerequisites": "An administrator is creating/editing a standard user.",
+      "stepsToPerform": "1. Navigate to the 'New Password' or 'Retype New Password' field.\n2. Type a password into the field.",
+      "expectedResult": "The characters entered should be obscured (e.g., displayed as dots or asterisks)."
+    },
+    {
+      "type": "functional",
+      "title": "Create SSO User with Unicode Characters in Name",
+      "description": "Verify that user creation works correctly with non-ASCII characters in name fields.",
+      "testId": "TC-SPD-041",
+      "testDescription": "This test ensures internationalization support for user names.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. On the user creation page, enable the SSO toggle.\n2. In the 'First Name' field, enter a name with Unicode characters (e.g., 'Renée', 'José', 'Müller').\n3. In the 'Last Name' field, enter a name with Unicode characters.\n4. Fill all other mandatory fields and click 'Save'.",
+      "expectedResult": "The user should be created successfully, and the names with Unicode characters should be stored and displayed correctly throughout the application."
+    },
+    {
+      "type": "functional",
+      "title": "Create SSO User with a very long valid email address",
+      "description": "Verify system behavior with a long but valid email address.",
+      "testId": "TC-SPD-042",
+      "testDescription": "This is a boundary case for the email field validation and database schema.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. On the user creation page, enable the SSO toggle.\n2. Fill all mandatory fields.\n3. In the 'Email' field, enter a very long, but technically valid, email address (e.g., 'firstname.lastname-firstname.lastname-firstname.lastname@long-domain-name.long-domain-name.com').\n4. Click 'Save'.",
+      "expectedResult": "The user should be created successfully without data truncation or errors, provided the email length is within system limits."
+    },
+    {
+      "type": "functional",
+      "title": "Real-time validation of Login ID",
+      "description": "Verify if the duplicate Login ID check happens in real-time after the user types and leaves the field.",
+      "testId": "TC-SPD-043",
+      "testDescription": "This tests for a better user experience where validation occurs on-blur, rather than waiting for form submission.",
+      "prerequisites": "An administrator is logged in. A user with Login ID 'j.doe' exists.",
+      "stepsToPerform": "1. On the user creation page, enable the SSO toggle.\n2. In the 'Login ID' field, type 'j.doe'.\n3. Click or tab into the next field (e.g., 'Email').",
+      "expectedResult": "The 'Login ID already exists' error message should appear immediately after the 'Login ID' field loses focus, without needing to click 'Save'."
+    },
+    {
+      "type": "functional",
+      "title": "Error message persistence after correction",
+      "description": "Verify that the duplicate Login ID error message disappears after the user corrects the input.",
+      "testId": "TC-SPD-044",
+      "testDescription": "Ensures a good user experience by removing error messages once the issue has been resolved by the user.",
+      "prerequisites": "An administrator is on the user creation page and has triggered the 'Login ID already exists' error.",
+      "stepsToPerform": "1. Trigger the duplicate Login ID error by entering an existing ID.\n2. Observe the error message.\n3. Modify the Login ID to be a unique value.\n4. Click or tab out of the field.",
+      "expectedResult": "The 'Login ID already exists' error message should disappear."
+    },
+    {
+      "type": "functional",
+      "title": "Editing a user without changing the Login ID",
+      "description": "Verify that saving a user without changing their own Login ID does not trigger a duplicate error.",
+      "testId": "TC-SPD-045",
+      "testDescription": "The validation logic must be smart enough to know that the Login ID belongs to the user currently being edited.",
+      "prerequisites": "An administrator is logged in. An SSO user with Login ID 's.jones' exists.",
+      "stepsToPerform": "1. Open the user details for 's.jones'.\n2. Change a different field, like 'First Name'.\n3. Do not change the 'Login ID' field.\n4. Click 'Save'.",
+      "expectedResult": "The user details should be saved successfully without triggering a false positive 'Login ID already exists' error."
+    },
+    {
+      "type": "functional",
+      "title": "API Response for Duplicate SSO Login ID",
+      "description": "Verify the API returns a specific and appropriate error code when attempting to create an SSO user with a duplicate Login ID.",
+      "testId": "TC-SPD-046",
+      "testDescription": "This is a backend/API level test. It ensures the API provides a clear, machine-readable error, like a 409 Conflict or 400 Bad Request with a specific error message.",
+      "prerequisites": "Access to an API testing tool (e.g., Postman). A user with Login ID 'api.test' exists.",
+      "stepsToPerform": "1. Using an API tool, construct a POST request to the user creation endpoint.\n2. In the request body, provide all necessary user data, including `loginId: 'api.test'` and `sso: true`.\n3. Send the request.",
+      "expectedResult": "The API should respond with an appropriate HTTP status code (e.g., 409 Conflict) and a JSON body containing a clear error code or message, like `{\"error\": \"LOGIN_ID_EXISTS\"}`."
+    },
+    {
+      "type": "functional",
+      "title": "Form state after failed submission",
+      "description": "Verify that user-entered data is preserved in the form after a submission fails due to a validation error.",
+      "testId": "TC-SPD-047",
+      "testDescription": "This is a key usability feature. Users should not have to re-enter all data if they make one mistake.",
+      "prerequisites": "An administrator is on the user creation page.",
+      "stepsToPerform": "1. Fill out all fields in the form.\n2. Intentionally make one field invalid (e.g., use a duplicate Login ID).\n3. Click 'Save'.\n4. Observe the form after the error message appears.",
+      "expectedResult": "The submission should fail, and the error message should be displayed. All other data entered by the user in other fields should remain intact."
+    },
+    {
+      "type": "functional",
+      "title": "Create user with only a Last Name",
+      "description": "Verify user creation when optional name fields (First, Middle) are empty.",
+      "testId": "TC-SPD-048",
+      "testDescription": "This tests the system's ability to handle users who may only have a single name or prefer not to enter optional name parts.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. On the user creation page, fill in the 'Last Name' field.\n2. Leave 'Prefix', 'First Name', 'Middle Name', 'Suffix' empty.\n3. Fill in all other mandatory fields (Login ID, Email).\n4. Click 'Save'.",
+      "expectedResult": "The user should be created successfully. The user's display name throughout the application should be handled gracefully (e.g., just show the last name)."
+    },
+    {
+      "type": "functional",
+      "title": "Verify 'Maximize Views' Checkbox Functionality",
+      "description": "Ensure the 'Maximize Views' checkbox can be checked/unchecked and its state is saved.",
+      "testId": "TC-SPD-049",
+      "testDescription": "This test validates the UI interaction and persistence of the 'Maximize Views' setting.",
+      "prerequisites": "An administrator is logged in.",
+      "stepsToPerform": "1. Open an existing user for editing.\n2. Change the state of the 'Maximize Views' checkbox.\n3. Click 'Save'.\n4. Re-open the user's details.",
+      "expectedResult": "The new state of the 'Maximize Views' checkbox should be correctly saved and displayed."
+    },
+    {
+      "type": "non-functional",
+      "title": "Database Constraint for Login ID",
+      "description": "Verify that a UNIQUE constraint exists on the Login ID column in the database.",
+      "testId": "TC-SPD-050",
+      "testDescription": "This is a backend test to ensure data integrity at the database level, acting as a final safeguard against duplicate Login IDs, regardless of application logic.",
+      "prerequisites": "Database access and knowledge of the user table schema.",
+      "stepsToPerform": "1. Inspect the schema of the users table in the database.\n2. Check the constraints defined for the column corresponding to the Login ID.",
+      "expectedResult": "A UNIQUE index or UNIQUE constraint should be defined on the Login ID column."
+    },
+    {
+      "type": "functional",
+      "title": "Create SSO user with Login ID matching a deleted user's ID",
+      "description": "Verify behavior when creating a user with a Login ID that belonged to a soft-deleted user.",
+      "testId": "TC-SPD-051",
+      "testDescription": "This test depends on whether the system uses soft-deletes and if it allows Login ID reuse. The expected outcome is based on business rules.",
+      "prerequisites": "An administrator is logged in. A user with Login ID 're.use' has been soft-deleted.",
+      "stepsToPerform": "1. On the user creation page, enable the SSO toggle.\n2. Fill in all mandatory fields.\n3. For the Login ID, enter 're.use'.\n4. Click 'Save'.",
+      "expectedResult": "The expected result depends on the business rule. It could be: a) Success, the ID is reused. b) Failure, an error message states the ID is unavailable. The test confirms the defined behavior."
+    }
+  ]
+}
