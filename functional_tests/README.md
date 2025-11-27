@@ -65,3 +65,19 @@
 
 ---
 
+**Execution Date:** 11/27/2025, 2:03:35 PM
+
+**Test Unique Identifier:** "login-functional-test"
+
+**Input(s):**
+   1. login.docx
+      Path: /var/tmp/Roost/RoostGPT/login-functional-test/8b84b586-7ca6-4826-9d33-419837ee421f/login.docx
+
+**Test Output Folder:**
+   1. [login-functional-test.json](login-functional-test/login-functional-test.json)
+   2. [login-functional-test.feature](login-functional-test/login-functional-test.feature)
+   3. [login-functional-test.csv](login-functional-test/login-functional-test.csv)
+   4. [login-functional-test.xlsx](login-functional-test/login-functional-test.xlsx)
+
+---
+

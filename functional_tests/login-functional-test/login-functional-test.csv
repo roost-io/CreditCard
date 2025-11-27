@@ -1,0 +1,2 @@
+"Scenario Outline: Validate API response when creating a new user with a unique or duplicate Login ID"
+"Scenario Outline: Validate user creation feedback on the UI for unique and duplicate Login IDs"
