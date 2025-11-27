@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "systemAnalysis_clone_clone_clone",
+    "created_at": "2025-11-27T12:19:38.136Z",
+    "updated_at": "2025-11-27T12:19:38.136Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "functiontestcases.txt",
+        "fileURI": "/var/tmp/Roost/RoostGPT/systemAnalysis_clone_clone_clone/14144776-dd13-43ce-aa60-7a9049606fd2/functional_tests/systemAnalysis_clone_clone_clone/functiontestcases.txt",
+        "fileSha": "2d31ee1131"
+      },
+      {
+        "fileName": "hebrew.docx",
+        "fileURI": "/var/tmp/Roost/RoostGPT/systemAnalysis_clone_clone_clone/14144776-dd13-43ce-aa60-7a9049606fd2/functional_tests/systemAnalysis_clone_clone_clone/hebrew.docx",
+        "fileSha": "a3da2e9197"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}
