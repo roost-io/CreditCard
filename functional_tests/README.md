@@ -65,3 +65,19 @@
 
 ---
 
+**Execution Date:** 11/27/2025, 7:34:55 PM
+
+**Test Unique Identifier:** "loginTest"
+
+**Input(s):**
+   1. login.docx
+      Path: /Users/iamdm/Downloads/login.docx
+
+**Test Output Folder:**
+   1. [loginTest.json](loginTest/loginTest.json)
+   2. [loginTest.feature](loginTest/loginTest.feature)
+   3. [loginTest.csv](loginTest/loginTest.csv)
+   4. [loginTest.xlsx](loginTest/loginTest.xlsx)
+
+---
+
