@@ -1,0 +1,12 @@
+API prevents creating a user with a duplicate Login ID
+API allows creating a user with a unique Login ID
+Prevent user creation with a duplicate Login ID
+Prevent updating a user to have a duplicate Login ID
+Editing a user without changing their own Login ID is successful
+Successfully create a new user with valid and unique data
+Verify form field validations for user creation and editing
+UI state of password fields changes based on SSO toggle
+Form data is preserved after a failed submission
+Real-time validation for duplicate Login ID
+Verify functionality and persistence of user setting toggles and checkboxes
+Application correctly handles malicious input in text fields
