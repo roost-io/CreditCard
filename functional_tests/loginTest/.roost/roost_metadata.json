@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "loginTest",
+    "created_at": "2025-11-27T14:04:55.706Z",
+    "updated_at": "2025-11-27T14:04:55.706Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "login.docx",
+        "fileURI": "/var/tmp/Roost/RoostGPT/login-functional-test/1764252183/functional_tests/loginTest/login.docx",
+        "fileSha": "4c85af107e"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}
