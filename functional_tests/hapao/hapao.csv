@@ -1,0 +1,31 @@
+הקמת בקשה OTP – כאל (SMS/IVR) – ניתוב, מיפוי שדות ובדיקת זמן תגובה
+הקמת בקשה OTP – ישראכרט (SMS/IVR) – שני שלבים (token ואז send) כולל מיפוי CYYMMDD ו-alpha2CountryCode
+ניתוב ל-MAX – הקמת OTP ובדיקת החזרת תשובה/שגיאה
+ולידציות קלט generateOtp – שדות חסרים/לא תקינים (Id=7)
+שגיאת המרה בקלט (Mismatch Conversion Id=19) – partySerialId בכותרת אינו מספרי
+שגיאות/טיימאאוט – ישראכרט (token/send) ומיפוי לתשובת השירות
+שגיאות/טיימאאוט – כאל sendOTP ומיפוי לתשובת השירות
+מיפוי מספר טלפון – ישראכרט (masked) מול כאל (plain)
+alpha2CountryCode – מיפוי IL מ-countryId=212 ונשלח לבקשת token
+חסר alpha2CountryCode אצל ישראכרט – שגיאת ולידציה (Id=7)
+requestTimeStamp – פורמט ותזמון Asia/Jerusalem בבקשת token
+המרת תאריך לידה ל-CYYMMDD – לפני/אחרי שנת 2000
+קבועים bankCode ו-companyCode בבקשת token לישראכרט
+אימות OTP – כאל: הצלחה (Authenticate ואז GetEncryptedKey)
+אימות OTP – ישראכרט: הצלחה (validate – tek ו-authorizationToken)
+ולידציות קלט verify-otp – חסרים/לא תקינים (Id=7) ושימור אפסים מובילים
+טיימאאוט כאל – Authenticate (Id=8)
+שגיאות validate – ישראכרט ומיפוי לתשובת השירות
+השבת orderId בתשובות – generateOtp ו-verify-otp
+אימות הרשאה – רמה 2 (CA) חסרה/פגה – החזרת 401 (Id=5)
+ביצועים – זמן תגובה generateOtp תחת עומס (SLA)
+ביצועים – זמן תגובה otpByToken תחת עומס (SLA)
+אבטחה – תמיכת TLS1.2+ בלבד בתקשורת נכנסת/יוצאת
+פרטיות – אי-לוגינג של OTP/Token/Master Key
+נגישות ותמיכה תרבותית – תוכן SMS/IVR בעברית ו-RTL
+איתור וניטור – קורלציה מלאה לפי orderId לאורך השרשרת
+Rate Limiting/Brute Force – ניסיונות OTP מוגבלים במסלול ישראכרט
+סקיילביליות – עומס מקבילי גבוה על /otp ו-/verify-otp
+התאוששות מתקלות – טיימאאוט/404 והחזרת מסרים ידידותיים
+לוקליזציה – פורמטי תאריך/זמן ואזור זמן Asia/Jerusalem
+ציות לרגולציה – בנק ישראל והגנת הפרטיות

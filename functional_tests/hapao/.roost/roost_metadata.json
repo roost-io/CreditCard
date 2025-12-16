@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "hapao",
+    "created_at": "2025-12-16T15:23:29.499Z",
+    "updated_at": "2025-12-16T15:23:29.500Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "MS restore-details-gw.docx",
+        "fileURI": "/var/tmp/Roost/RoostGPT/hapo-functional-test/1765898171/functional_tests/hapao/MS restore-details-gw.docx",
+        "fileSha": "929ed574ee"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}

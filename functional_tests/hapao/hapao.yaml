@@ -1,0 +1,757 @@
+openapi: 3.0.3
+info:
+  title: "MS: restore-details-gw – שירות ניתוב יציאה למתפעלת בתהליך אחזור פרטי כרטיס אונליין"
+  version: "1.1.0"
+  description: >
+    שירות REST לניהול בקשה לאחזור פרטי כרטיס אשראי ולתהליך אימות OTP מול מתפעלות חיצוניות (ישראכרט, MAX, כאל).
+    השירות כולל שתי מתודות:
+    - POST /otp (generateOtp): הקמת בקשה ויצירת/שליחת OTP ללקוח.
+    - POST /verify-otp (otpByToken): אימות OTP וקבלת מפתח הצפנה/מזהה תהליך (OTT).
+    ניתוב מתבצע לפי cardIssuingSpCode:
+    - 1: ישראכרט (שני שלבים: token ולאחר מכן send/validate עם מיפויים מיוחדים).
+    - 2: MAX (תשובת השירות משקפת את תשובת המתפעלת).
+    - 3: כאל (שלב יחיד לשליחה; אימות כולל שני שלבים).
+    הרשאות: נדרשת הרשאת CA ברמה 2 בכותרת Authorization. חסר/פג תוקף ⇒ 401, errors.id=5.
+    אבטחה: TLS1.2+ בלבד בתקשורת נכנסת/יוצאת.
+    ניהול שגיאות בהתאם לנספח ההודעות (ראו components/schemas/ErrorItem).
+
+servers:
+  - url: https://{host}/card-operator/restore-details-gw
+    description: "שרת השירות (ניתן לקבוע לפי משתנה סביבה BASE_URL)"
+    variables:
+      host:
+        default: api.example.com
+  - url: /
+    description: "בסיס יחסי – מתאים להרצה בסביבת בדיקות לפי BASE_URL"
+
+tags:
+  - name: "OTP"
+    description: "הקמה ושליחה של OTP"
+  - name: "Verify"
+    description: "אימות OTP וקבלת OTT/מפתח הצפנה"
+
+paths:
+  /otp:
+    post:
+      tags: ["OTP"]
+      summary: "הקמת בקשה OTP (generateOtp)"
+      description: >
+        ניתוב לבקשת OTP לפי חברה מתפעלת:
+        - כאל (cardIssuingSpCode=3): קריאה חיצונית sendOTP (עם x-access-token), זמן תגובה < 5000ms.
+        - ישראכרט (cardIssuingSpCode=1): token (byIdAndDateOfBirth) ואז send (otpByToken/v1.3.0), כולל:
+          • המרת birthDate ל־CYYMMDD, • שליחת alpha2CountryCode, • מס' טלפון במסכה.
+        - MAX (cardIssuingSpCode=2): ניתוב לנקודת הקצה של MAX; תשובה/שגיאה משוקפת.
+        ולידציות:
+        • activityTypeCode: מספרים בלבד.
+        • cardIssuingSpCode: אחד מ־[1,2,3].
+        • creditCardSerialId: פורמט hex עם "_" (ESB requestId).
+        • cardIdServiceProvider: 19 ספרות (לכאל/MAX).
+        • cardSuffix: 4 ספרות (לישראכרט).
+        • birthDate: פורמט dd/MM/yyyy (לישראכרט).
+        • smsByVoice: 0 או 1.
+        • orderId: UUID.
+        שגיאות:
+        • 400 id=7 — שדה חסר/קלט לא תקין; 400 id=19 — שגיאת המרה (mismatch conversion).
+        • 401 id=5 — הרשאה CA חסרה/פגה.
+        • 408 id=8 — טיימאאוט מתפעולת (<= 5000ms).
+        • 404 id=20 — כישלון בפנייה לשירות חיצוני.
+        • 409 + StatusCode: מיפויי שגיאות מיוחדים בישראכרט (למשל 3/4).
+        • 500 id=6 — שגיאה פנימית/סדרת 40X/50X לפי מדיניות המיפוי.
+      security:
+        - CAAuth: []
+      parameters:
+        - $ref: "#/components/parameters/variousChannelTypeCode"
+        - $ref: "#/components/parameters/bankNumber"
+        - $ref: "#/components/parameters/branchNumber"
+        - $ref: "#/components/parameters/accountNumber"
+        - $ref: "#/components/parameters/partySerialId"
+        - $ref: "#/components/parameters/partyShortId"
+        - $ref: "#/components/parameters/partyIdTypeCode"
+        - $ref: "#/components/parameters/countryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/GenerateOtpRequestIsracard"
+                - $ref: "#/components/schemas/GenerateOtpRequestCal"
+                - $ref: "#/components/schemas/GenerateOtpRequestMax"
+              discriminator:
+                propertyName: cardIssuingSpCode
+                mapping:
+                  "1": "#/components/schemas/GenerateOtpRequestIsracard"
+                  "2": "#/components/schemas/GenerateOtpRequestMax"
+                  "3": "#/components/schemas/GenerateOtpRequestCal"
+            examples:
+              cal_sms:
+                summary: "כאל – SMS"
+                value:
+                  activityTypeCode: 101
+                  cardIssuingSpCode: 3
+                  creditCardSerialId: "abcdef_1234_abcd_5678_90ab_cdef_1234"
+                  cardIdServiceProvider: "1234567890123456789"
+                  smsByVoice: 0
+                  orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+              isracard_ivr:
+                summary: "ישראכרט – IVR"
+                value:
+                  activityTypeCode: 101
+                  cardIssuingSpCode: 1
+                  creditCardSerialId: "abcdef_1234_abcd_5678_90ab_cdef_1234"
+                  cardSuffix: "1234"
+                  birthDate: "15/04/1998"
+                  smsByVoice: 1
+                  orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                  alpha2CountryCode: "IL"
+              max_route:
+                summary: "MAX – ניתוב"
+                value:
+                  activityTypeCode: 101
+                  cardIssuingSpCode: 2
+                  creditCardSerialId: "abcdef_1234_abcd_5678_90ab_cdef_1234"
+                  cardIdServiceProvider: "1234567890123456789"
+                  smsByVoice: 0
+                  orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+      responses:
+        "200":
+          description: "הצלחה – נוצר OTP ונמסר מספר טלפון; ללא errors"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateOtpResponse"
+              examples:
+                cal_success:
+                  summary: "כאל – מספר גלוי"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    otpToken: "OTP123TOKEN"
+                    phoneNumber: "0521234567"
+                isracard_success:
+                  summary: "ישראכרט – מספר במסכה"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    otpToken: "OTP123TOKEN"
+                    phoneNumber: "050******7"
+        "400":
+          description: "בקשה שגויה – שדות חסרים/ולידציה/שגיאת המרה"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                missing_field:
+                  summary: "חסר alpha2CountryCode בישראכרט (id=7)"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    errors:
+                      - id: "7"
+                        message: "Invalid request field [alpha2CountryCode]"
+                mismatch_conversion:
+                  summary: "partySerialId בכותרת אינו מספרי (id=19)"
+                  value:
+                    errors:
+                      - id: "19"
+                        message: "Cannot assign field [partySerialId] due to a mismatch conversion"
+        "401":
+          description: "לא מורשה – הרשאת CA חסרה/פגה (id=5)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                unauthorized:
+                  value:
+                    errors:
+                      - id: "5"
+                        message: "Authorization not valid/expired"
+        "404":
+          description: "נתיב חיצוני לא אותר/כישלון בפנייה (id=20)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                external_not_found:
+                  value:
+                    errors:
+                      - id: "20"
+                        message: "The server was not able to retrieve the requested page"
+        "408":
+          description: "טיימאאוט מתפעלת (≤5000ms) (id=8)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                timeout:
+                  value:
+                    errors:
+                      - id: "8"
+                        message: "The service is temporarily unavailable"
+        "409":
+          description: "התנגשות – מיפוי שגיאות מתפעלת לסטטוס קוד עסקי"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                isracard_no_phone:
+                  summary: "ישראכרט send – undefined_parameter ⇒ StatusCode=4"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    StatusCode: 4
+                    errors: []
+                isracard_attempts_exceeded:
+                  summary: "ישראכרט token/send – 423 ⇒ StatusCode=3"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    StatusCode: 3
+                    errors: []
+        "500":
+          description: "שגיאה פנימית/מתפעלת – (id=6)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                internal_error:
+                  value:
+                    errors:
+                      - id: "6"
+                        message: "Internal Server Error"
+
+  /verify-otp:
+    post:
+      tags: ["Verify"]
+      summary: "אימות OTP (otpByToken)"
+      description: >
+        אימות OTP לפי חברה מתפעלת:
+        - כאל (cardIssuingSpCode=3): authenticate לקבלת jwt (ott), ולאחר מכן getEncryptedKey לקבלת encryptionKey.
+        - ישראכרט (cardIssuingSpCode=1): validate לקבלת tek (encryptionKey) ו-authorizationToken (ott).
+        - MAX (cardIssuingSpCode=2): ניתוב לנקודת הקצה; תשובת MAX משוקפת.
+        ולידציות:
+        • activityTypeCode: מספרים בלבד.
+        • cardIssuingSpCode: אחד מ־[1,2,3].
+        • otpPassword: מספרים בלבד (שמירת אפסים מובילים).
+        • otpToken: נדרש.
+        • orderId: UUID.
+        שגיאות:
+        • 400 id=7 — חסרים/ולידציה; 400 id=19 — שגיאת המרה.
+        • 401 id=5 — הרשאה CA חסרה/פגה.
+        • 403 + StatusCode=33 — ישראכרט: פג תוקף סיסמה (provider 401).
+        • 408 id=8 — טיימאאוט מתפעלת.
+        • 409 + StatusCode=7/8 — נסיונות/OTP שגוי (ישראכרט).
+        • 500 id=6 — שגיאה פנימית/סדרות 40X/50X לפי מדיניות.
+      security:
+        - CAAuth: []
+      parameters:
+        - $ref: "#/components/parameters/variousChannelTypeCode"
+        - $ref: "#/components/parameters/bankNumber"
+        - $ref: "#/components/parameters/branchNumber"
+        - $ref: "#/components/parameters/accountNumber"
+        - $ref: "#/components/parameters/partySerialId"
+        - $ref: "#/components/parameters/partyShortId"
+        - $ref: "#/components/parameters/partyIdTypeCode"
+        - $ref: "#/components/parameters/countryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequest"
+            examples:
+              cal_ok:
+                summary: "כאל – אימות תקין"
+                value:
+                  activityTypeCode: 101
+                  cardIssuingSpCode: 3
+                  otpPassword: "123456"
+                  otpToken: "OTP123TOKEN"
+                  orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+              isracard_ok_leading_zeros:
+                summary: "ישראכרט – שימור אפסים מובילים"
+                value:
+                  activityTypeCode: 101
+                  cardIssuingSpCode: 1
+                  otpPassword: "000123"
+                  otpToken: "OTP123TOKEN"
+                  orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+      responses:
+        "200":
+          description: "הצלחה – אומת OTP והוחזרו ott/encryptionKey; ללא errors"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyOtpResponse"
+              examples:
+                cal_success:
+                  summary: "כאל – jwt + encryptionKey"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    ott: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    encryptionKey: "K3Y-ABCDEF-123456"
+                isracard_success:
+                  summary: "ישראכרט – authorizationToken + tek"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    ott: "AUTHTOKEN-XYZ-2048"
+                    encryptionKey: "TEK-WBD-001"
+        "400":
+          description: "בקשה שגויה – שדות חסרים/ולידציה/שגיאת המרה"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                missing_otpPassword:
+                  summary: "חסר otpPassword (id=7)"
+                  value:
+                    errors:
+                      - id: "7"
+                        message: "Invalid request field [otpPassword]"
+                invalid_uuid_orderId:
+                  summary: "orderId אינו UUID (id=7)"
+                  value:
+                    errors:
+                      - id: "7"
+                        message: "Invalid request field [orderId]"
+        "401":
+          description: "לא מורשה – הרשאת CA חסרה/פגה (id=5)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: "אסור – מיפוי מתפעלת (ישראכרט 401 ⇒ StatusCode=33)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                isracard_expired:
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    StatusCode: 33
+                    errors: []
+        "404":
+          description: "נתיב חיצוני לא אותר/כישלון בפנייה (id=20)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "408":
+          description: "טיימאאוט מתפעלת (≤5000ms) (id=8)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                cal_auth_timeout:
+                  summary: "טיימאאוט כאל – Authenticate"
+                  value:
+                    errors:
+                      - id: "8"
+                        message: "The service is temporarily unavailable"
+        "409":
+          description: "התנגשות – OTP שגוי/חריגה במספר ניסיונות (ישראכרט)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                invalid_otp_attempt:
+                  summary: "ישראכרט validate – responseCode=invalid_otp_attempt ⇒ StatusCode=7"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    StatusCode: 7
+                    errors: []
+                too_many_attempts:
+                  summary: "ישראכרט validate – 423 ⇒ StatusCode=8"
+                  value:
+                    orderId: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+                    StatusCode: 8
+                    errors: []
+        "500":
+          description: "שגיאה פנימית/מתפעלת – (id=6)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+components:
+  securitySchemes:
+    CAAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "כותרת הרשאה CA רמה 2 (ערך תקין נדרש לכל הקריאות)."
+  parameters:
+    variousChannelTypeCode:
+      name: variousChannelTypeCode
+      in: header
+      required: true
+      description: "קוד ערוץ שירות (שמירת אפסים מובילים)."
+      schema:
+        type: string
+        pattern: "^[0-9]{1,5}$"
+        example: "10001"
+    bankNumber:
+      name: bankNumber
+      in: header
+      required: true
+      description: "מספר בנק (3 ספרות; שמירת אפסים מובילים)."
+      schema:
+        type: string
+        pattern: "^[0-9]{3}$"
+        example: "012"
+    branchNumber:
+      name: branchNumber
+      in: header
+      required: true
+      description: "מספר סניף (3 ספרות)."
+      schema:
+        type: string
+        pattern: "^[0-9]{3}$"
+        example: "123"
+    accountNumber:
+      name: accountNumber
+      in: header
+      required: true
+      description: "מספר חשבון (7 ספרות)."
+      schema:
+        type: string
+        pattern: "^[0-9]{7}$"
+        example: "1234567"
+    partySerialId:
+      name: partySerialId
+      in: header
+      required: true
+      description: "ספרור לקוח (11 ספרות). אם אינו מספרי ⇒ 400 id=19."
+      schema:
+        type: string
+        pattern: "^[0-9]{11}$"
+        example: "12345678901"
+    partyShortId:
+      name: partyShortId
+      in: header
+      required: true
+      description: "מזהה לקוח (9 ספרות)."
+      schema:
+        type: string
+        pattern: "^[0-9]{9}$"
+        example: "012345678"
+    partyIdTypeCode:
+      name: partyIdTypeCode
+      in: header
+      required: true
+      description: "סוג מסמך מזהה (מספרים בלבד)."
+      schema:
+        type: string
+        pattern: "^[0-9]{1,5}$"
+        example: "1"
+    countryId:
+      name: countryId
+      in: header
+      required: true
+      description: "קוד ארץ (3 ספרות; לדוגמה 212⇒IL)."
+      schema:
+        type: string
+        pattern: "^[0-9]{3}$"
+        example: "212"
+  schemas:
+    GenerateOtpRequestBase:
+      type: object
+      properties:
+        activityTypeCode:
+          type: integer
+          description: "קוד סוג בקשה פנימי (מספרים בלבד; לדוגמה 101)."
+          example: 101
+        cardIssuingSpCode:
+          type: integer
+          description: "קוד חברה מתפעלת: 1=ישראכרט, 2=MAX, 3=כאל."
+          enum: [1, 2, 3]
+        creditCardSerialId:
+          type: string
+          description: "מזהה כרטיס פועלים (פורמט ESB hex עם '_' – xxxxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx)."
+          pattern: "^[0-9a-f]{6}_[0-9a-f]{4}(?:_[0-9a-f]{4}){5}$"
+          example: "abcdef_1234_abcd_5678_90ab_cdef_1234"
+        smsByVoice:
+          type: integer
+          description: "שיטת מסירה: 0=SMS, 1=IVR."
+          enum: [0, 1]
+        orderId:
+          type: string
+          format: uuid
+          description: "מזהה בקשה (UUID)."
+          example: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+      required: ["activityTypeCode", "cardIssuingSpCode", "creditCardSerialId", "smsByVoice", "orderId"]
+    GenerateOtpRequestCal:
+      allOf:
+        - $ref: "#/components/schemas/GenerateOtpRequestBase"
+        - type: object
+          properties:
+            cardIssuingSpCode:
+              type: integer
+              enum: [3]
+            cardIdServiceProvider:
+              type: string
+              description: "מזהה כרטיס מתפעלת (19 ספרות; חובה לכאל)."
+              pattern: "^[0-9]{19}$"
+              example: "1234567890123456789"
+          required: ["cardIdServiceProvider"]
+    GenerateOtpRequestMax:
+      allOf:
+        - $ref: "#/components/schemas/GenerateOtpRequestBase"
+        - type: object
+          properties:
+            cardIssuingSpCode:
+              type: integer
+              enum: [2]
+            cardIdServiceProvider:
+              type: string
+              description: "מזהה כרטיס מתפעלת (19 ספרות; נדרש ל־MAX)."
+              pattern: "^[0-9]{19}$"
+              example: "1234567890123456789"
+          required: ["cardIdServiceProvider"]
+    GenerateOtpRequestIsracard:
+      allOf:
+        - $ref: "#/components/schemas/GenerateOtpRequestBase"
+        - type: object
+          properties:
+            cardIssuingSpCode:
+              type: integer
+              enum: [1]
+            cardSuffix:
+              type: string
+              description: "4 ספרות אחרונות של הכרטיס (חובה לישראכרט)."
+              pattern: "^[0-9]{4}$"
+              example: "1234"
+            birthDate:
+              type: string
+              description: "תאריך לידה בפורמט dd/MM/yyyy (חובה לישראכרט)."
+              pattern: "^\\d{2}/\\d{2}/\\d{4}$"
+              example: "15/04/1998"
+            alpha2CountryCode:
+              type: string
+              description: "קוד ארץ ISO Alpha-2 (חובה לישראכרט; לדוגמה IL)."
+              pattern: "^[A-Z]{2}$"
+              example: "IL"
+          required: ["cardSuffix", "birthDate", "alpha2CountryCode"]
+    GenerateOtpResponse:
+      type: object
+      description: "תשובת הצלחה להקמת OTP."
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: "מזהה הבקשה כפי שהתקבל בקלט."
+        otpToken:
+          type: string
+          description: "מזהה OTP כפי שהתקבל מהמתפעלת."
+        phoneNumber:
+          type: string
+          description: "מספר הטלפון אליו נשלח הקוד (בישראכרט – מחרוזת באורך 10, maskedCellphoneNumber)."
+        StatusCode:
+          type: integer
+          description: "קוד סטטוס עסקי (אופציונלי; בשגיאות מיפוי מתפעלת)."
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorItem"
+          description: "רשימת שגיאות (במצב הצלחה אמורה להיות ריקה או לא להופיע)."
+      required: ["orderId", "otpToken", "phoneNumber"]
+    VerifyOtpRequest:
+      type: object
+      properties:
+        activityTypeCode:
+          type: integer
+          description: "קוד סוג בקשה פנימי."
+          example: 101
+        cardIssuingSpCode:
+          type: integer
+          description: "קוד חברה מתפעלת: 1=ישראכרט, 2=MAX, 3=כאל."
+          enum: [1, 2, 3]
+        otpPassword:
+          type: string
+          description: "קוד OTP (מספרים בלבד; נשמרים אפסים מובילים)."
+          pattern: "^[0-9]+$"
+          example: "000123"
+        otpToken:
+          type: string
+          description: "מזהה OTP שהוחזר בשלב ההקמה."
+          example: "OTP123TOKEN"
+        orderId:
+          type: string
+          format: uuid
+          description: "מזהה בקשה (UUID)."
+          example: "a3e9f7d2-4b5c-11ee-be56-0242ac120002"
+      required: ["activityTypeCode", "cardIssuingSpCode", "otpPassword", "otpToken", "orderId"]
+    VerifyOtpResponse:
+      type: object
+      description: "תשובת הצלחה לאימות OTP."
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: "מזהה הבקשה כפי שהתקבל בקלט."
+        ott:
+          type: string
+          description: "מזהה תהליך שנוצר ע״י המתפעלת (CAL: jwt; ישראכרט: authorizationToken)."
+        encryptionKey:
+          type: string
+          description: "מפתח הצפנה (CAL: encryptionKey מ־GetEncryptedKey; ישראכרט: tek)."
+        StatusCode:
+          type: integer
+          description: "קוד סטטוס עסקי (אופציונלי; בשגיאות מיפוי מתפעלת)."
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorItem"
+          description: "רשימת שגיאות (במצב הצלחה אמורה להיות ריקה או לא להופיע)."
+      required: ["orderId", "ott", "encryptionKey"]
+    ErrorItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "מזהה השגיאה לפי נספח."
+          example: "7"
+        message:
+          type: string
+          description: "הודעת השגיאה."
+          example: "Invalid request field [@@]"
+    ErrorEnvelope:
+      type: object
+      description: "מבנה תשובה בשגיאה."
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: "מזהה בקשה (אם זמין)."
+        StatusCode:
+          type: integer
+          description: "קוד סטטוס עסקי (במיפויי שגיאות מתפעלת)."
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorItem"
+          description: "רשימת שגיאות גלובלית."
+        data:
+          type: object
+          description: "מיפוי שדה קלט לרשימת שגיאות."
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/ErrorItem"
+      required: ["errors"]
+
+x-tlsMinimumVersion: "1.2"
+x-integrations:
+  cal:
+    baseUrl: "https://tst-api.cal-online.co.il/PartnerAuthentication.Api"
+    sendOtp:
+      method: "POST"
+      path: "/api/SendOtp/sendOTP"
+      headers:
+        - "x-access-token: <תקין>"
+      requestMapping:
+        CustomerDetails.idNumber: "partyShortId (HEADER)"
+        CustomerDetails.CustomerIdType: "partyIdTypeCode (HEADER)"
+        cardInfo.cardId: "cardIdServiceProvider (BODY)"
+        message.smsTemplate: "0"
+        message.smsSender: ""
+        message.smsByVoice: "smsByVoice (BODY)"
+      timeoutMs: 5000
+      successCriteria: "HTTP 200 + StatusCode=1"
+      responseMapping:
+        otpToken: "result.token"
+        phoneNumber: "result.phoneNumber"
+    authenticate:
+      method: "POST"
+      path: "/api/Authenticate/authenticate"
+      headers:
+        - "x-access-token: <תקין>"
+      body:
+        token: "otpToken"
+        password: "otpPassword"
+      timeoutMs: 5000
+      successCriteria: "HTTP 200 + StatusCode=1"
+      responseMapping:
+        ott: "result.jwt"
+    getEncryptedKey:
+      method: "POST"
+      path: "/api/GetEncryptedKey/getEncryptedKey"
+      headers:
+        - "x-access-token: <תקין>"
+        - "authorization: <jwt>"
+      timeoutMs: 5000
+      successCriteria: "HTTP 200 + StatusCode=1"
+      responseMapping:
+        encryptionKey: "result.encryptionKey"
+  isracard:
+    baseUrl: "https://preprod.api.isracard.co.il/isracard/preprod"
+    tokenByIdAndDob:
+      method: "POST"
+      path: "/authorization/token/v1.2.0/byIdAndDateOfBirth"
+      bodyMapping:
+        tokenPostRequest.requestId: "orderId"
+        tokenPostRequest.requestTimeStamp: "yyyy-MM-dd-HH.mm.ss.SSSSSS (Asia/Jerusalem)"
+        tokenPostRequest.idNumber: "partyShortId (HEADER)"
+        tokenPostRequest.idCode: "partyIdTypeCode (HEADER)"
+        tokenPostRequest.cardLastFourDigits: "cardSuffix"
+        tokenPostRequest.companyCode: "B (קבוע)"
+        tokenPostRequest.dateOfBirth: "CYYMMDD (מירוץ מתאריך לידה)"
+        tokenPostRequest.activityType: "activityTypeCode"
+        tokenPostRequest.alpha2CountryCode: "alpha2CountryCode (מומר מ-countryId=212⇒IL)"
+        tokenPostRequest.bankCode: "012 (קבוע)"
+      timeoutMs: 5000
+      successCriteria: "HTTP 200"
+      responseMapping:
+        token: "tokenPostResponse.token"
+    sendOtpByToken:
+      method: "POST"
+      path: "/authorization/otpByToken/v1.3.0/send"
+      bodyMapping:
+        requestGeneralHeader.requestId: "orderId"
+        tokenRequest.authorizationToken: "<token מהשלב הקודם>"
+        deliveryMethod: "smsByVoice (0=SMS,1=IVR)"
+      timeoutMs: 5000
+      successCriteria: "HTTP 200"
+      responseMapping:
+        otpToken: "<token מהשלב הקודם>"
+        phoneNumber: "SendOtpResponse.PhoneNumber.maskedCellphoneNumber (אורך 10)"
+      errorMapping:
+        "404 + undefined_parameter": "409 + StatusCode=4"
+        "423": "409 + StatusCode=3"
+        "40X/50X": "500 + id=6"
+    validateOtpByToken:
+      method: "POST"
+      path: "/authorization/otpByToken/v1.4.0/validate"
+      bodyMapping:
+        requestGeneralHeader.requestId: "orderId"
+        tokenRequest.authorizationToken: "otpToken"
+        tokenRequest.otp: "otpPassword"
+      timeoutMs: 5000
+      successCriteria: "HTTP 200"
+      responseMapping:
+        ott: "TokenResponse.authorizationToken"
+        encryptionKey: "TokenResponse.tek"
+      errorMapping:
+        "200 + responseCode=invalid_otp_attempt": "409 + StatusCode=7"
+        "423": "409 + StatusCode=8"
+        "401": "403 + StatusCode=33"
+        "40X/50X": "500 + id=6"
+
+x-errorCatalog:
+  - { id: "1", httpCode: 200, message: "Success" }
+  - { id: "4", httpCode: 400, message: "Missing field\\ incorrect input" }
+  - { id: "5", httpCode: 401, message: "Authorization not valid/expired" }
+  - { id: "6", httpCode: 500, message: "Internal Server Error" }
+  - { id: "7", httpCode: 400, message: "Invalid request field [@@]" }
+  - { id: "8", httpCode: 408, message: "The service is temporarily unavailable" }
+  - { id: "19", httpCode: 400, message: "Cannot assign field [<parameter name>] due to a mismatch conversion" }
+  - { id: "20", httpCode: 404, message: "The server was not able to retrieve the requested page" }
+  - { id: "21", httpCode: 500, message: "Failed to create a record" }
+  - { id: "22", httpCode: 500, message: "Failed to update a record" }
+

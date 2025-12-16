@@ -1,0 +1,524 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "הקמת בקשה OTP – כאל (SMS)",
+      "description": "ווידוא תהליך generateOtp עבור מתפעלת כאל עם משלוח קוד OTP ב-SMS.",
+      "testId": "TC-001",
+      "testDescription": "בדיקת ניתוב למתפעלת כאל (cardIssuingSpCode=3), יצירת OTP ושליחה ב-SMS. אימות שהשדות ממופים נכון ל-API של כאל ושחוזרים otpToken ו-phoneNumber כמצופה.",
+      "prerequisites": "לקוח קיים במערכות עם מספר נייד תקף אצל כאל. הרשאת רמה 2 (CA) תקינה. סביבת TST של כאל זמינה.",
+      "stepsToPerform": "1. בצע קריאה POST ל-card-operator/restore-details-gw/otp.\n2. HEADER: variousChannelTypeCode=10001, bankNumber=012, branchNumber=123, accountNumber=1234567, partySerialId=12345678901, partyShortId=012345678, partyIdTypeCode=1, countryId=212.\n3. BODY: activityTypeCode=101, cardIssuingSpCode=3, creditCardSerialId=\"abcdef_1234_abcd_5678_90ab_cdef_1234\", cardIdServiceProvider=\"1234567890123456789\", smsByVoice=0, orderId=\"a3e9f7d2-4b5c-11ee-be56-0242ac120002\".\n4. וודא שהמערכת מפעילה את API של כאל: POST https://tst-api.cal-online.co.il/PartnerAuthentication.Api/api/SendOtp/sendOTP, עם x-access-token תקף (getToken), ושדות ממופים לפי האפיון.\n5. אמת זמן תגובה של כאל < 5000ms.\n6. קבל תשובת 200 מהמתפעלת עם StatusCode=1.",
+      "expectedResult": "סטטוס 200, verify generateOtpResponseDto עם otpToken=token מהמתפעלת ו-phoneNumber=phoneNumber מהמתפעלת. orderId זהה לקלט. אין אובייקט errors."
+    },
+    {
+      "type": "functional",
+      "title": "הקמת בקשה OTP – כאל (קולית/IVR)",
+      "description": "ווידוא תהליך generateOtp עבור כאל עם משלוח קוד OTP בהודעה קולית.",
+      "testId": "TC-002",
+      "testDescription": "בדיקת smsByVoice=1 גורם לשליחת OTP בערוץ IVR אצל כאל.",
+      "prerequisites": "לקוח קיים עם מספר נייד תקף, הרשאת CA רמה 2, סביבת TST של כאל זמינה.",
+      "stepsToPerform": "1. קריאה POST ל-/otp עם אותם ערכי HEADER כמו TC-001.\n2. BODY: activityTypeCode=101, cardIssuingSpCode=3, creditCardSerialId=\"abcdef_1234_abcd_5678_90ab_cdef_1234\", cardIdServiceProvider=\"1234567890123456789\", smsByVoice=1, orderId=\"a3e9f7d2-4b5c-11ee-be56-0242ac120002\".\n3. וודא ב-API של כאל שהשדה message.smsByVoice=1.\n4. אמת קבלת http 200 + StatusCode=1.",
+      "expectedResult": "סטטוס 200 עם otpToken ו-phoneNumber מממשק כאל. OTP נשלח בערוץ IVR. orderId זהה לקלט."
+    },
+    {
+      "type": "functional",
+      "title": "הקמת בקשה OTP – ישראכרט (SMS)",
+      "description": "תהליך generateOtp מלא לישראכרט: קבלת טוקן זמני לפי מזהה ותאריך לידה ושליחת OTP ב-SMS.",
+      "testId": "TC-003",
+      "testDescription": "בדיקה של שני שלבים אצל ישראכרט: 1) token byIdAndDateOfBirth; 2) otpByToken/send. אימות המרות dateOfBirth ל-CYYMMDD, requestTimeStamp, קבועים bankCode=012 ו-companyCode=B ומיפוי ערכי ישראל alpha2CountryCode=IL.",
+      "prerequisites": "לקוח קיים אצל ישראכרט עם תאריך לידה ומספר נייד תקף. הרשאת CA רמה 2. סביבת preprod של ישראכרט זמינה.",
+      "stepsToPerform": "1. קריאה POST ל-/otp.\n2. HEADER: variousChannelTypeCode=10001, bankNumber=012, branchNumber=123, accountNumber=1234567, partySerialId=12345678901, partyShortId=012345678, partyIdTypeCode=1, countryId=212.\n3. BODY: activityTypeCode=101, cardIssuingSpCode=1, creditCardSerialId=\"abcdef_1234_abcd_5678_90ab_cdef_1234\", cardSuffix=\"1234\", birthDate=\"15/04/1998\", smsByVoice=0, orderId=\"a3e9f7d2-4b5c-11ee-be56-0242ac120002\", alpha2CountryCode=\"IL\".\n4. שלב 1: POST https://preprod.api.isracard.co.il/isracard/preprod/authorization/token/v1.2.0/byIdAndDateOfBirth עם:\n   - requestId=orderId מהקלט\n   - requestTimeStamp בפורמט yyyy-MM-dd-HH.mm.ss.SSSSSS לפי Asia/Jerusalem\n   - idNumber=partyShortId\n   - idCode=partyIdTypeCode\n   - cardLastFourDigits=cardSuffix\n   - companyCode=\"B\"\n   - dateOfBirth= \"0980415\" עבור 15/04/1998 (C=0, YY=98, MM=04, DD=15)\n   - activityType=activityTypeCode\n   - alpha2CountryCode=\"IL\"\n   - bankCode=\"012\".\n5. קבל token מהתשובה.\n6. שלב 2: POST https://preprod.api.isracard.co.il/isracard/preprod/authorization/otpByToken/v1.3.0/send עם:\n   - requestGeneralHeader.requestId=orderId\n   - tokenRequest.authorizationToken=token\n   - deliveryMethod=0 (SMS).\n7. אמת http 200 בתשובה השנייה.",
+      "expectedResult": "סטטוס 200, generateOtpResponseDto עם otpToken=token (מממשק ישראכרט) ו-phoneNumber=maskedCellphoneNumber באורך 10 ספרות. orderId זהה לקלט. אין errors."
+    },
+    {
+      "type": "functional",
+      "title": "הקמת בקשה OTP – ישראכרט (IVR)",
+      "description": "שליחת OTP בערוץ IVR אצל ישראכרט באמצעות deliveryMethod=1.",
+      "testId": "TC-004",
+      "testDescription": "בדיקת מסלול ישראכרט כש-BODY.smsByVoice=1. אימות שמועבר deliveryMethod=1 ל-endpoint send ושהתשובה תקינה.",
+      "prerequisites": "אותם תנאים כמו TC-003.",
+      "stepsToPerform": "1. קריאה POST ל-/otp עם אותם HEADER.\n2. BODY: cardIssuingSpCode=1, cardSuffix=\"1234\", birthDate=\"15/04/1998\", smsByVoice=1, alpha2CountryCode=\"IL\", שאר השדות כ-TC-003.\n3. הפעלה לשלב token ולאחר מכן send עם deliveryMethod=1.\n4. אמת http 200 בתשובה השנייה.",
+      "expectedResult": "סטטוס 200, otpToken ו-phoneNumber (maskedCellphoneNumber), orderId זהה לקלט. OTP נשלח בערוץ IVR."
+    },
+    {
+      "type": "functional",
+      "title": "ניתוב ל-MAX – הקמת OTP",
+      "description": "בדיקת ניתוב תקין למתפעלת MAX עבור generateOtp.",
+      "testId": "TC-005",
+      "testDescription": "כאשר cardIssuingSpCode=2, השירות חייב לנתב ל-MAX. נבדק אימות שדות חובה ל-MAX (לפי האפיון: cardIdServiceProvider חובה), והחזרת תשובה או שגיאה בהתאם למה שהמתפעלת מחזירה.",
+      "prerequisites": "לקוח קיים אצל MAX, הרשאת CA, תצורת ניתוב ל-MAX פעילה ב-ESB/LB.",
+      "stepsToPerform": "1. POST ל-/otp עם HEADER תקין.\n2. BODY: activityTypeCode=101, cardIssuingSpCode=2, creditCardSerialId תקין, cardIdServiceProvider=\"1234567890123456789\", smsByVoice=0, orderId תקין.\n3. עקוב אחרי קריאה יוצאת ל-MAX (לוגי/מטריקות) ואמת שמופעלת נקודת הקצה של MAX.\n4. אמת קבלת תשובה תקינה או שגיאה מהמתפעלת.",
+      "expectedResult": "במקרה הצלחה: סטטוס 200 והחזרת otpToken/phoneNumber כפי שהתקבלו מ-MAX. במקרה כישלון: השגיאה כפי שהוגדרה ע\"י המתפעלת או מיפוי גלובלי לפי מדיניות השירות."
+    },
+    {
+      "type": "functional",
+      "title": "חסר שדה חובה – generateOtp",
+      "description": "בדיקת התנהגות במצב חסר שדה חובה בקלט.",
+      "testId": "TC-006",
+      "testDescription": "השמטת שדה חובה (למשל cardIssuingSpCode) ב-BODY צריכה להחזיר 400 עם Id=7 והודעה מתאימה.",
+      "prerequisites": "שירות פעיל. הרשאת CA תקינה.",
+      "stepsToPerform": "1. POST ל-/otp עם HEADER תקין.\n2. BODY ללא cardIssuingSpCode.\n3. שלח בקשה.",
+      "expectedResult": "סטטוס 400, errors עם id=7 ו-message=\"Invalid request field [cardIssuingSpCode]\"."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה ערך מתפעלת – generateOtp",
+      "description": "בדיקת ערך cardIssuingSpCode מחוץ לטווח המותר.",
+      "testId": "TC-007",
+      "testDescription": "ערכים מותרים: 1/2/3 בלבד. שליחת cardIssuingSpCode=4 אמורה להיכשל לפי טבלת הולידציות.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם HEADER תקין.\n2. BODY: cardIssuingSpCode=4 ושאר שדות חובה תקינים.\n3. שלח בקשה.",
+      "expectedResult": "סטטוס 400, errors עם id=7 והודעה מפורטת על הולידציה לא תקינה."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה activityTypeCode – מספרים בלבד",
+      "description": "בדיקה ש-activityTypeCode אינו מקבל תווים לא מספריים.",
+      "testId": "TC-008",
+      "testDescription": "שליחת activityTypeCode=\"10A\" אמורה להיכשל.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם HEADER תקין.\n2. BODY: activityTypeCode=\"10A\", cardIssuingSpCode=3, שאר שדות תקינים.\n3. שלח בקשה.",
+      "expectedResult": "סטטוס 400, errors id=7 עם הודעה על ולידציה מספרית."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה creditCardSerialId – פורמט ESB base16 עם קו תחתון",
+      "description": "בדיקה ש-creditCardSerialId בפורמט הנדרש.",
+      "testId": "TC-009",
+      "testDescription": "פורמט צפוי: xxxxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx עם תווים base16 בלבד. שליחת ערך כולל תו שאינו hex אמורה להיכשל.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. BODY: creditCardSerialId=\"xyz123_@@@@_abcd_5678_90ab_cdef_1234\".\n2. שאר שדות חובה תקינים.\n3. שלח POST ל-/otp.",
+      "expectedResult": "סטטוס 400, errors id=7 עם הודעה מפורטת על סוג הולידציה לפורמט מזהה כרטיס פועלים."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה cardSuffix – 4 ספרות",
+      "description": "בדיקת אורך ותווים עבור cardSuffix אצל ישראכרט.",
+      "testId": "TC-010",
+      "testDescription": "שליחת cardSuffix=\"12AB\" או \"12345\" אמורה להיכשל (מספרים בלבד, אורך 4).",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1.\n2. BODY: cardSuffix=\"12AB\", שאר שדות חובה לישראכרט.\n3. שלח.\n4. חזור עם cardSuffix=\"12345\".\n5. שלח.",
+      "expectedResult": "בשתי הבדיקות: סטטוס 400, errors id=7 עם הודעת ולידציה מתאימה."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה cardIdServiceProvider – 19 ספרות",
+      "description": "בדיקת פורמט מזהה כרטיס מתפעלת ל-CAL/MAX.",
+      "testId": "TC-011",
+      "testDescription": "שליחת cardIdServiceProvider שאינו באורך 19 או כולל תווים שאינם מספרים – כישלון 400.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=3.\n2. BODY: cardIdServiceProvider=\"12345678901234567A\".\n3. שלח.",
+      "expectedResult": "סטטוס 400, errors id=7 עם הודעת ולידציה על cardIdServiceProvider."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה birthDate – פורמט DD/MM/YYYY",
+      "description": "בדיקת תאריך לידה אצל ישראכרט.",
+      "testId": "TC-012",
+      "testDescription": "שליחת birthDate=\"1998-04-15\" אמורה להיכשל.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1.\n2. BODY: birthDate=\"1998-04-15\" ושאר שדות תקינים.\n3. שלח.",
+      "expectedResult": "סטטוס 400, errors id=7 עם הודעת ולידציה על פורמט תאריך."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה smsByVoice – ערכים מותרים 0/1",
+      "description": "בדיקת ערך smsByVoice.",
+      "testId": "TC-013",
+      "testDescription": "שליחת smsByVoice=2 אמורה להיכשל.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם smsByVoice=2.\n2. שאר השדות תקינים.\n3. שלח.",
+      "expectedResult": "סטטוס 400, errors id=7 עם הודעת ולידציה על ערך smsByVoice."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה orderId – UUID תקין",
+      "description": "בדיקת פורמט orderId.",
+      "testId": "TC-014",
+      "testDescription": "שליחת orderId ללא מקפים או באורך שגוי אמורה להיכשל.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם orderId=\"a3e9f7d24b5c11eebe560242ac120002\".\n2. שאר השדות תקינים.\n3. שלח.",
+      "expectedResult": "סטטוס 400, errors id=7 עם הודעת ולידציה על UUID."
+    },
+    {
+      "type": "functional",
+      "title": "שגיאת המרה – Mismatch Conversion (Id=19)",
+      "description": "בדיקת שגיאת סוג נתונים בקלט.",
+      "testId": "TC-015",
+      "testDescription": "כאשר שדה מספרי מועבר כמחרוזת לא ניתנת להמרה, מתקבלת שגיאה עם Id=19.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp.\n2. HEADER: partySerialId=\"ABCDEF\" (במקום Long).\n3. שלח.",
+      "expectedResult": "סטטוס 400, errors id=19 עם message=\"Cannot assign field [partySerialId] due to a mismatch conversion\"."
+    },
+    {
+      "type": "functional",
+      "title": "טיימאאוט ישראכרט – token byIdAndDateOfBirth",
+      "description": "בדיקת מיפוי טיימאאוט 5000ms לשגיאה גלובלית 408 (Id=8).",
+      "testId": "TC-016",
+      "testDescription": "הדמיית עיכוב תשובה בשלב קבלת token מישראכרט.",
+      "prerequisites": "כלי הדמיה לעיכוב תשובה ב-preprod או הגדרות נסיוניות.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1 ושדות תקינים.\n2. הדמיית עיכוב > 5000ms בשירות /authorization/token/…/byIdAndDateOfBirth.\n3. שלח ובדוק תשובה.",
+      "expectedResult": "סטטוס 408, errors id=8 עם message=\"The service is temporarily unavailable\"."
+    },
+    {
+      "type": "functional",
+      "title": "חריגה במספר ניסיונות – ישראכרט token (423)",
+      "description": "מיפוי 423 מישראכרט ל-409 עם StatusCode=3.",
+      "testId": "TC-017",
+      "testDescription": "הדמיית מצב בו מספר ניסיונות זיהוי לקוח חרג מהמותר בשלב token.",
+      "prerequisites": "כלי הדמיה להחזרת 423 ב-token.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1.\n2. הדמיה: תשובת 423 ב-token.\n3. שלח.",
+      "expectedResult": "סטטוס 409, StatusCode=3, הודעת כישלון בהתאם למתפעלת."
+    },
+    {
+      "type": "functional",
+      "title": "ללקוח לא קיים מספר טלפון – ישראכרט send (404)",
+      "description": "מיפוי 404 undefined_parameter ל-409 עם StatusCode=4.",
+      "testId": "TC-018",
+      "testDescription": "הדמיית send מחזיר 404 עם error.code=undefined_parameter.",
+      "prerequisites": "כלי הדמיה להחזרת השגיאה המתוארת.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1.\n2. שלב token תקין.\n3. שלב send מחזיר 404 undefined_parameter.\n4. בדוק תשובת השירות.",
+      "expectedResult": "סטטוס 409, StatusCode=4, ללא otpToken, אובייקט errors בהתאם."
+    },
+    {
+      "type": "functional",
+      "title": "שגיאות 40X/50X – ישראכרט send",
+      "description": "מיפוי שגיאות 40X/50X ל-500 גלובלי (Id=6).",
+      "testId": "TC-019",
+      "testDescription": "בדיקה שהשירות מחזיר 500 Internal Server Error עבור שגיאות 40X/50X שאינן מפורטות אחרת אצל ישראכרט.",
+      "prerequisites": "כלי הדמיה לשגיאת 401/500 ב-send.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1.\n2. שלב token תקין.\n3. שלב send מחזיר 500.\n4. בדוק תשובה.",
+      "expectedResult": "סטטוס 500, errors id=6 עם message=\"Internal Server Error\"."
+    },
+    {
+      "type": "functional",
+      "title": "טיימאאוט כאל – sendOTP",
+      "description": "בדיקת מיפוי טיימאאוט ב-sendOTP של כאל לשגיאה 408 (Id=8).",
+      "testId": "TC-020",
+      "testDescription": "הדמיית TO>5000ms ב-API של כאל.",
+      "prerequisites": "כלי הדמיה לעיכוב תשובה ב-TST.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=3.\n2. הדמיית עיכוב ב-sendOTP.\n3. בדוק תשובת השירות.",
+      "expectedResult": "סטטוס 408, errors id=8."
+    },
+    {
+      "type": "functional",
+      "title": "שגיאת 40X של כאל – החזרה כפי שהתקבל",
+      "description": "כאשר שירות כאל מחזיר 40X, השירות מחזיר את השגיאה כפי שהתקבלה מהמתפעלת.",
+      "testId": "TC-021",
+      "testDescription": "אימות Pass-through לשגיאות 40X של כאל במתודה generateOtp.",
+      "prerequisites": "הדמיית תשובת 4XX ב-sendOTP.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=3.\n2. הפעלת sendOTP מחזירה 4XX (למשל 401/403).\n3. בדוק תשובת השירות.",
+      "expectedResult": "סטטוס זהה לקוד 40X שהתקבל מכאל, גוף שגיאה כפי שהתקבל מהמתפעלת."
+    },
+    {
+      "type": "functional",
+      "title": "שגיאת 50X של כאל – מיפוי ל-500 גלובלי",
+      "description": "בדיקת מיפוי 50X בכאל לשגיאה גלובלית (Id=6).",
+      "testId": "TC-022",
+      "testDescription": "כאל מחזיר 500; השירות צריך להחזיר 500 עם Id=6.",
+      "prerequisites": "הדמיית 500 ב-sendOTP.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=3.\n2. הדמיית 500.\n3. בדוק תשובת השירות.",
+      "expectedResult": "סטטוס 500, errors id=6, message=\"Internal Server Error\"."
+    },
+    {
+      "type": "functional",
+      "title": "מיפוי מספר טלפון – ישראכרט (masked) מול כאל (plain)",
+      "description": "אימות הבדלי מיפוי phoneNumber בתשובות.",
+      "testId": "TC-023",
+      "testDescription": "אצל ישראכרט, phoneNumber=maskedCellphoneNumber; אצל כאל, phoneNumber כשדה רגיל מהמתפעלת.",
+      "prerequisites": "TC-001 ו-TC-003 הצליחו.",
+      "stepsToPerform": "1. הפעל TC-003 וקבל phoneNumber.\n2. הפעל TC-001 וקבל phoneNumber.\n3. השווה תבניות.",
+      "expectedResult": "אצל ישראכרט: מחרוזת באורך 10, מוצנעת/מוסווית. אצל כאל: מספר גלוי כפי שהמתפעלת מחזירה."
+    },
+    {
+      "type": "functional",
+      "title": "alpha2CountryCode – מיפוי IL מ-countryId=212",
+      "description": "בדיקת מיפוי קוד ארץ ל-alpha2CountryCode עבור ישראכרט.",
+      "testId": "TC-024",
+      "testDescription": "countryId=212 אמור להתמפות ל-IL לפי DPT0044. בדוק שה-BODY.alpha2CountryCode=IL נשלח ל-token של ישראכרט.",
+      "prerequisites": "טבלת מיפוי DPT0044 זמינה במערכת.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1 ו-countryId=212.\n2. BODY: alpha2CountryCode=\"IL\".\n3. נטר את בקשת token ובדוק הערך שנשלח.",
+      "expectedResult": "נשלח alpha2CountryCode=IL לשירות token. סטטוס 200."
+    },
+    {
+      "type": "functional",
+      "title": "חסר alpha2CountryCode אצל ישראכרט",
+      "description": "בדיקת שדה alpha2CountryCode חובה לישראכרט.",
+      "testId": "TC-025",
+      "testDescription": "השמטת alpha2CountryCode כאשר cardIssuingSpCode=1 תגרום ל-400 Id=7.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1, ללא alpha2CountryCode.\n2. שלח.",
+      "expectedResult": "סטטוס 400, errors id=7 עם הודעה על שדה חסר."
+    },
+    {
+      "type": "functional",
+      "title": "requestTimeStamp – פורמט ותזמון ישראל",
+      "description": "בדיקה שה-RequestTimeStamp נשלח בפורמט הנדרש ובאזור זמן ישראל.",
+      "testId": "TC-026",
+      "testDescription": "אמת פורמט yyyy-MM-dd-HH.mm.ss.SSSSSS לפי Asia/Jerusalem, כולל שינויי שעון קיץ, בשלב token לישראכרט.",
+      "prerequisites": "שעון שרת מסונכרן ל-Asia/Jerusalem.",
+      "stepsToPerform": "1. POST ל-/otp עם cardIssuingSpCode=1.\n2. בדוק את גוף בקשת token וערך requestTimeStamp.\n3. השווה לפורמט ולשעה הנוכחית בישראל.",
+      "expectedResult": "ערך requestTimeStamp עומד בפורמט הנדרש ובאזור הזמן ישראל."
+    },
+    {
+      "type": "functional",
+      "title": "המרת תאריך לידה ל-CYYMMDD",
+      "description": "בדוק המרת תאריך לידה לפני ואחרי שנת 2000.",
+      "testId": "TC-027",
+      "testDescription": "בדיקה עם birthDate=\"15/04/1998\" => \"0980415\" ו-birthDate=\"02/01/2001\" => \"1010102\".",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עבור ישראכרט עם birthDate=\"15/04/1998\".\n2. אמת ערך שנשלח ל-token.\n3. חזור עם birthDate=\"02/01/2001\".\n4. אמת ערך שנשלח.",
+      "expectedResult": "המרות תואמות לכללי CYYMMDD: C=0 לפני 2000, C=1 מ-2000 ואילך."
+    },
+    {
+      "type": "functional",
+      "title": "קבועים bankCode ו-companyCode – ישראכרט",
+      "description": "אימות קבועים בבקשת token לישראכרט.",
+      "testId": "TC-028",
+      "testDescription": "בדוק שבקשת token כוללת bankCode=\"012\" ו-companyCode=\"B\" כמפורט.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/otp עבור ישראכרט.\n2. בדוק גוף בקשת token.\n3. וודא הקבועים.",
+      "expectedResult": "נשלחים bankCode=012 ו-companyCode=B בבקשה ל-token."
+    },
+    {
+      "type": "functional",
+      "title": "אימות OTP – כאל: הצלחה",
+      "description": "בדיקת מתודה otpByToken במסלול כאל, כולל קבלת jwt ואז מפתח הצפנה.",
+      "testId": "TC-029",
+      "testDescription": "קריאה ל-Authenticate לקבלת jwt (ott), ולאחר מכן GetEncryptedKey לקבלת encryptionKey. מיפוי הערכים לתשובת השירות.",
+      "prerequisites": "otpToken תקף שהתקבל מ-TC-001 או TC-002. הרשאת CA. סביבת TST זמינה.",
+      "stepsToPerform": "1. POST ל-card-operator/restore-details-gw/verify-otp.\n2. HEADER תקין.\n3. BODY: activityTypeCode=101, cardIssuingSpCode=3, otpPassword=\"123456\", otpToken=\"OTP123TOKEN\", orderId=\"a3e9f7d2-4b5c-11ee-be56-0242ac120002\".\n4. הפעלת POST Authenticate עם token=otpToken, password=otpPassword.\n5. קבל jwt.\n6. הפעלת POST GetEncryptedKey עם authorization=jwt.\n7. קבל encryptionKey.\n8. אמת http 200 + StatusCode=1 בשתי הקריאות.",
+      "expectedResult": "סטטוס 200, verifyOtpResponseDto: orderId זהה לקלט, ott=jwt, encryptionKey=encryptionKey, ללא errors."
+    },
+    {
+      "type": "functional",
+      "title": "אימות OTP – ישראכרט: הצלחה",
+      "description": "בדיקת מתודה otpByToken במסלול ישראכרט, כולל validate והחזרת tek ו-authorizationToken.",
+      "testId": "TC-030",
+      "testDescription": "קריאה ל-validate עם authorizationToken=otpToken ו-otp=otpPassword. מיפוי tek=>encryptionKey ו-authorizationToken=>ott.",
+      "prerequisites": "otpToken תקף מ-TC-003/TC-004. הרשאת CA. סביבת preprod זמינה.",
+      "stepsToPerform": "1. POST ל-/verify-otp.\n2. HEADER תקין.\n3. BODY: activityTypeCode=101, cardIssuingSpCode=1, otpPassword=\"123456\", otpToken=\"OTP123TOKEN\", orderId.\n4. הפעלת validate לכתובת v1.4.0/validate עם הנתונים.\n5. קבל tek ו-authorizationToken.\n6. אמת http 200 + StatusCode=1.",
+      "expectedResult": "סטטוס 200, verifyOtpResponseDto: orderId זהה לקלט, ott=authorizationToken, encryptionKey=tek, ללא errors."
+    },
+    {
+      "type": "functional",
+      "title": "חסר שדה חובה – otpByToken",
+      "description": "בדיקה של חסר שדה חובה במתודה verify-otp.",
+      "testId": "TC-031",
+      "testDescription": "השמטת otpPassword אמורה לגרום ל-400 Id=7.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/verify-otp ללא otpPassword.\n2. שאר השדות תקינים.\n3. שלח.",
+      "expectedResult": "סטטוס 400, errors id=7 עם message=\"Invalid request field [otpPassword]\"."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה otpPassword – מספרים בלבד ושימור אפסים מובילים",
+      "description": "בדיקת שהקוד OTP חייב להיות מספרי ושאפסים מובילים נשמרים.",
+      "testId": "TC-032",
+      "testDescription": "שליחת otpPassword=\"000123\" צריכה להתקבל (אם תקף), ושליחת otpPassword=\"12A45\" צריכה להיכשל (400 Id=7).",
+      "prerequisites": "otpToken תקף.",
+      "stepsToPerform": "1. POST ל-/verify-otp עם otpPassword=\"12A45\".\n2. בדוק תשובה.\n3. POST עם otpPassword=\"000123\".\n4. בדוק תשובה.",
+      "expectedResult": "מקרה ראשון: 400 Id=7. מקרה שני: תהליך ממשיך בהתאם לתקפות ה-OTP, ללא איבוד אפסים מובילים."
+    },
+    {
+      "type": "functional",
+      "title": "ולידציה orderId – otpByToken",
+      "description": "בדיקת פורמט UUID עבור orderId במתודה verify-otp.",
+      "testId": "TC-033",
+      "testDescription": "שליחת orderId בפורמט לא תקין אמורה להחזיר 400 Id=7.",
+      "prerequisites": "שירות פעיל.",
+      "stepsToPerform": "1. POST ל-/verify-otp עם orderId=\"INVALID-UUID\".\n2. שלח.",
+      "expectedResult": "סטטוס 400, errors id=7."
+    },
+    {
+      "type": "functional",
+      "title": "טיימאאוט כאל – Authenticate",
+      "description": "בדיקת מיפוי טיימאאוט באימות OTP של כאל ל-408 (Id=8).",
+      "testId": "TC-034",
+      "testDescription": "הדמיית TO>5000ms ב-Authenticate.",
+      "prerequisites": "כלי הדמיה ב-TST.",
+      "stepsToPerform": "1. POST ל-/verify-otp עם cardIssuingSpCode=3.\n2. הדמיית עיכוב ב-Authenticate.\n3. בדוק תשובת השירות.",
+      "expectedResult": "סטטוס 408, errors id=8."
+    },
+    {
+      "type": "functional",
+      "title": "סיסמה שגויה – ישראכרט validate (responseCode=invalid_otp_attempt)",
+      "description": "מיפוי תשובת 200 עם responseCode שגוי ל-409 StatusCode=7.",
+      "testId": "TC-035",
+      "testDescription": "בדיקת מצב בו validate מחזיר responseCode=invalid_otp_attempt.",
+      "prerequisites": "otpToken תקף, OTP שגוי.",
+      "stepsToPerform": "1. POST ל-/verify-otp עם cardIssuingSpCode=1, otpPassword לא נכון.\n2. בדוק תשובה.",
+      "expectedResult": "סטטוס 409, StatusCode=7."
+    },
+    {
+      "type": "functional",
+      "title": "חסימת שימוש – ישראכרט (423)",
+      "description": "מיפוי 423 ב-validate ל-409 StatusCode=8.",
+      "testId": "TC-036",
+      "testDescription": "בדיקת מצב בו לא ניתן להשתמש עקב מספר רב של ניסיונות.",
+      "prerequisites": "כלי הדמיה 423 ב-validate.",
+      "stepsToPerform": "1. POST ל-/verify-otp עם cardIssuingSpCode=1.\n2. הדמיית 423.\n3. בדוק תשובה.",
+      "expectedResult": "סטטוס 409, StatusCode=8."
+    },
+    {
+      "type": "functional",
+      "title": "פג תוקף סיסמא – ישראכרט (401)",
+      "description": "מיפוי 401 ב-validate ל-403 StatusCode=33.",
+      "testId": "TC-037",
+      "testDescription": "בדיקה של OTP שפג תוקפו אצל ישראכרט.",
+      "prerequisites": "otpToken קיים אך OTP פג תוקף.",
+      "stepsToPerform": "1. POST ל-/verify-otp עם cardIssuingSpCode=1.\n2. הדמיית 401.\n3. בדוק תשובה.",
+      "expectedResult": "סטטוס 403, StatusCode=33."
+    },
+    {
+      "type": "functional",
+      "title": "שגיאות 40X/50X – ישראכרט validate",
+      "description": "מיפוי שגיאות כלליות ל-500 גלובלי (Id=6) במתודה validate.",
+      "testId": "TC-038",
+      "testDescription": "בדיקת היגיון מיפוי שגיאות שלא הוגדרו ספציפית.",
+      "prerequisites": "הדמיה 500 או 40X לא ספציפי.",
+      "stepsToPerform": "1. POST ל-/verify-otp עם cardIssuingSpCode=1.\n2. הדמיית 500.\n3. בדוק תשובה.",
+      "expectedResult": "סטטוס 500, errors id=6, message=\"Internal Server Error\"."
+    },
+    {
+      "type": "functional",
+      "title": "בדיקת השבת orderId במתודה generateOtp",
+      "description": "אימות ש-orderId חוזר כפי שהתקבל בקלט.",
+      "testId": "TC-039",
+      "testDescription": "אחרי הצלחת generateOtp, יש לוודא ש-orderId בפלט זהה לקלט.",
+      "prerequisites": "TC-001 או TC-003 בוצעו בהצלחה.",
+      "stepsToPerform": "1. קבל תשובת generateOtp.\n2. השווה orderId לקלט.",
+      "expectedResult": "orderId בפלט זהה לערך שנשלח."
+    },
+    {
+      "type": "functional",
+      "title": "בדיקת השבת orderId במתודה otpByToken",
+      "description": "אימות ש-orderId חוזר כפי שהתקבל בקלט ב-verify-otp.",
+      "testId": "TC-040",
+      "testDescription": "אחרי הצלחת otpByToken, orderId בפלט חייב להיות זהה לקלט.",
+      "prerequisites": "TC-029 או TC-030 בוצעו בהצלחה.",
+      "stepsToPerform": "1. קבל תשובת otpByToken.\n2. השווה orderId לקלט.",
+      "expectedResult": "orderId בפלט זהה לערך שנשלח."
+    },
+    {
+      "type": "functional",
+      "title": "אימות הרשאה – רמה 2 (CA)",
+      "description": "בדיקת גישה ללא הרשאה תיקנית או עם הרשאה שפג תוקפה.",
+      "testId": "TC-041",
+      "testDescription": "קריאה לשירות ללא הרשאת רמה 2 או עם טוקן שפג תוקף צריכה להחזיר 401 Id=5.",
+      "prerequisites": "ביטול או הדמיית פג תוקף של הרשאת CA.",
+      "stepsToPerform": "1. POST ל-/otp ללא הרשאה.\n2. בדוק תשובה.\n3. POST ל-/verify-otp ללא הרשאה.\n4. בדוק תשובה.",
+      "expectedResult": "סטטוס 401, errors id=5 עם message מתאים."
+    },
+    {
+      "type": "non-functional",
+      "title": "ביצועים – זמן תגובה generateOtp תחת עומס",
+      "description": "בדיקת SLA ביצועים תחת עומס בהתאם לנורמות בנק ישראל.",
+      "testId": "TC-042",
+      "testDescription": "מדידת זמן תגובה end-to-end (כולל קריאות למתפעלת) עבור generateOtp ב-500 בקשות בדקה, עם יעד ממוצע < 1500ms ו-p95 < 2500ms.",
+      "prerequisites": "סביבת בדיקות יציבה, כלי עומס (JMeter/Gatling), זמינות מתפעלת.",
+      "stepsToPerform": "1. הרץ עומס של 500 RPS למשך 1 דקה על /otp עם נתונים תקינים (CAL וישראכרט בחלוקה 50/50).\n2. מדוד זמני תגובה, שגיאות ו-timeouts.\n3. אסוף מדדים.",
+      "expectedResult": "עמידה ביעדים: ממוצע < 1500ms, p95 < 2500ms, שיעור שגיאות < 1%."
+    },
+    {
+      "type": "non-functional",
+      "title": "ביצועים – זמן תגובה otpByToken תחת עומס",
+      "description": "בדיקת SLA ביצועים עבור אימות OTP וקבלת מפתח הצפנה.",
+      "testId": "TC-043",
+      "testDescription": "מדידת זמן תגובה end-to-end ל-/verify-otp ב-300 בקשות בדקה, יעד ממוצע < 1500ms, p95 < 2500ms.",
+      "prerequisites": "OTP תקפים שנוצרו מראש, כלי עומס.",
+      "stepsToPerform": "1. צור מראש 300 otpToken תקפים.\n2. הרץ 300 RPS ל-/verify-otp עם נתונים תקינים עבור CAL/ישראכרט.\n3. מדוד זמני תגובה ושגיאות.",
+      "expectedResult": "עמידה ביעדים הביצועיים ושיעור שגיאות נמוך."
+    },
+    {
+      "type": "non-functional",
+      "title": "אבטחה – TLS1.2+ והקשחת תקשורת",
+      "description": "ווידוא שהתקשורת יוצאת ונכנסת מוצפנת לפי תקן בנק ישראל.",
+      "testId": "TC-044",
+      "testDescription": "בדיקה שכל התעבורת HTTPS לשירותי המתפעלת ולשירות עצמו מבוצעת עם TLS1.2 ומעלה, ללא תמיכה בגרסאות חלשות.",
+      "prerequisites": "גישה לנתבי אפליקציה/תצורה אבטחתית.",
+      "stepsToPerform": "1. סרוק את נקודות הקצה של השירות והמתפעלת עם כלי אבטחה (SSL Labs).\n2. וודא פרוטוקולים וצפנים נתמכים.\n3. נסה התחברות עם TLS1.0/1.1.",
+      "expectedResult": "נכשלה התחברות עם TLS1.0/1.1. רק TLS1.2+ נתמך."
+    },
+    {
+      "type": "non-functional",
+      "title": "פרטיות – אי-לוגינג של OTP ומפתח הצפנה",
+      "description": "בדיקת תאימות לחוק הגנת הפרטיות בישראל ועקרונות בנק ישראל.",
+      "testId": "TC-045",
+      "testDescription": "ווידוא שאין רישום ביומני המערכת של otpPassword, otpToken, encryptionKey או פרטי כרטיס מלאים.",
+      "prerequisites": "גישה ליומני אפליקציה ו-APM.",
+      "stepsToPerform": "1. הרץ TC-001, TC-029, TC-030.\n2. נתח לוגים.\n3. חפש ערכי OTP/מפתחות/16 ספרות מלאות.",
+      "expectedResult": "אין מופעים של מידע רגיש ביומנים. קיימים רק מזהים לא רגישים (orderId, StatusCode)."
+    },
+    {
+      "type": "non-functional",
+      "title": "נגישות ותמיכה תרבותית – תוכן SMS/IVR בעברית",
+      "description": "בדיקת שהמסרים ללקוח בעברית תקינה, מיושרת RTL וברורה למשתמשים בישראל.",
+      "testId": "TC-046",
+      "testDescription": "ווידוא שנוסח ה-SMS/IVR בעברית, קריא וב-RTL, ללא תווים באנגלית בלתי נחוצים, ותומך בקריאה של ספרות OTP.",
+      "prerequisites": "גישה לתבניות המסרים אצל המתפעלת או הדמיה.",
+      "stepsToPerform": "1. צור OTP באמצעות TC-003/TC-004/TC-001.\n2. בדוק את נוסח המסרים.\n3. אמת קריאות ספרות (למשל \"הקוד שלך: 123456\").",
+      "expectedResult": "מסרים בעברית תקינה ו-RTL, ברורים למשתמשים בישראל."
+    },
+    {
+      "type": "non-functional",
+      "title": "איתור וניטור – קורלציה לפי orderId",
+      "description": "בדיקת יכולת מעקב מלא לפי orderId בכל רכיבי השרשרת.",
+      "testId": "TC-047",
+      "testDescription": "ווידוא שכל קריאה מתועדת עם orderId בקורלציה (TraceId/SpanId) לצורך חקירה ועמידה בתקנים.",
+      "prerequisites": "כלי ניטור (ELK/APM) פעילים.",
+      "stepsToPerform": "1. הרץ TC-003 ו-TC-030.\n2. בדוק יומנים ומטריקות.\n3. וודא קישוריות בין קריאות פנימה/החוצה לפי orderId.",
+      "expectedResult": "קיימת קורלציה מלאה לפי orderId בכל הלוגים והמדדים."
+    },
+    {
+      "type": "non-functional",
+      "title": "Rate Limiting/Brute Force – ניסיונות OTP מוגבלים",
+      "description": "בדיקה שהמערכת מתמודדת עם ניסיונות רבים בהתאם לנורמות בנק ישראל.",
+      "testId": "TC-048",
+      "testDescription": "שליחת ניסיונות אימות OTP רבים לישראכרט עד לקבלת 423 ומיפוי ל-409 StatusCode=8.",
+      "prerequisites": "יכולת להגדיל ניסיונות ולנטר מספרם.",
+      "stepsToPerform": "1. שלח OTP שגוי שוב ושוב ל-/verify-otp (cardIssuingSpCode=1).\n2. תעד את מספר הניסיונות עד לקבלת 423.\n3. בדוק מיפוי תשובה.",
+      "expectedResult": "לאחר חציית הרף, סטטוס 409 StatusCode=8. אין דליפת מידע רגיש."
+    },
+    {
+      "type": "non-functional",
+      "title": "סקיילביליות – עומס מקבילי גבוה",
+      "description": "בדיקת יכולת המערכת להתמודד עם עומס בו-זמני ללא פגיעה משמעותית בשירות.",
+      "testId": "TC-049",
+      "testDescription": "בחינת 1000 חיבורים מקביליים ל-/otp ו-/verify-otp, בדיקת כשלי ניתוב, זמני תגובה ויציבות.",
+      "prerequisites": "תשתית בדיקות עומס, סביבת מתפעלת זמינה.",
+      "stepsToPerform": "1. צור עומס מקבילי של 1000 חיבורים.\n2. מדוד זמני תגובה, שגיאות, timeouts.\n3. בדוק שימוש במשאבים.",
+      "expectedResult": "עמידה ביציבות, שיעור שגיאות נמוך, אין קריסה או דליפות זיכרון."
+    },
+    {
+      "type": "non-functional",
+      "title": "התאוששות מתקלות – טיימאאוט והחזרת תשובה ידידותית",
+      "description": "בדיקת מסרים ידידותיים במקרי 408/404 ועמידה בדרישות שירות לקוחות בישראל.",
+      "testId": "TC-050",
+      "testDescription": "טיימאאוט/שגיאות ניתוב צריכים להחזיר הודעות ברורות ולוגים מספקים לטיפול.",
+      "prerequisites": "כלי הדמיה לטיימאאוט ושגיאת 404.",
+      "stepsToPerform": "1. הדמיית 408 ב-כאל.\n2. הדמיית 404 ב-ישראכרט.\n3. בדוק ההודעות.\n4. בדוק לוגים.",
+      "expectedResult": "מסרים בהתאם לטבלת השגיאות (Id=8/20), ללא חשיפת פרטים אישיים."
+    },
+    {
+      "type": "non-functional",
+      "title": "לוקליזציה – פורמטי תאריך/זמן ומטבע",
+      "description": "ווידוא שימוש בפורמטי ישראל בתיעוד, לוגים ושדות תאריך.",
+      "testId": "TC-051",
+      "testDescription": "המערכת משתמשת בפורמט dd/MM/yyyy עבור תאריכים למשתמשים ובפורמט הנדרש ל-API חיצוניים. אזור הזמן הוא Asia/Jerusalem.",
+      "prerequisites": "גישה ללוגים ולפלטים.\n",
+      "stepsToPerform": "1. הפעל תרחישים מייצרי לוגים עם תאריכים.\n2. בדוק פורמט התאריכים למשתמשים ולמתפעלת.\n3. ודא אזור זמן.",
+      "expectedResult": "התאמה מלאה ללוקליזציה ישראלית ולדרישות האינטגרציה."
+    },
+    {
+      "type": "non-functional",
+      "title": "ציות לרגולציה – בנק ישראל והגנת הפרטיות",
+      "description": "בדיקה כוללת לעמידה בתקנים ורגולציה מקומית.",
+      "testId": "TC-052",
+      "testDescription": "אימות תהליכי זיהוי ואימות, שמירת סודיות, מנגנוני בקרה, והיעדר אחסון פרטי כרטיס מלאים, בהתאם לדרישות בנק ישראל וחוק הגנת הפרטיות.",
+      "prerequisites": "מסמכי מדיניות, גישה לבקרות אבטחה.",
+      "stepsToPerform": "1. סקירת תהליכי הזדהות.\n2. בדיקת ניהול הרשאות CA רמה 2.\n3. סקירת מדיניות שמירת נתונים.\n4. בדיקת אנונימיזציה/מסיכה.\n",
+      "expectedResult": "עמידה בדרישות הרגולציה, ללא ליקויי פרטיות או אבטחה."
+    }
+  ]
+}

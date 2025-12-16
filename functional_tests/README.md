@@ -65,3 +65,20 @@
 
 ---
 
+**Execution Date:** 12/16/2025, 8:53:29 PM
+
+**Test Unique Identifier:** "hapao"
+
+**Input(s):**
+   1. MS restore-details-gw.docx
+      Path: /Users/iamdm/Downloads/MS restore-details-gw.docx
+
+**Test Output Folder:**
+   1. [hapao.json](hapao/hapao.json)
+   2. [hapao.feature](hapao/hapao.feature)
+   3. [hapao.csv](hapao/hapao.csv)
+   4. [hapao.xlsx](hapao/hapao.xlsx)
+   5. [hapao.yaml](hapao/hapao.yaml)
+
+---
+
