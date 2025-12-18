@@ -65,3 +65,20 @@
 
 ---
 
+**Execution Date:** 12/18/2025, 1:37:15 PM
+
+**Test Unique Identifier:** "roost_test_1766044895"
+
+**Input(s):**
+   1. ecommerce.pdf
+      Path: /Users/iamdm/Desktop/atid/ecommerce.pdf
+
+**Test Output Folder:**
+   1. [roost_test_1766044895.json](roost_test_1766044895/roost_test_1766044895.json)
+   2. [roost_test_1766044895.feature](roost_test_1766044895/roost_test_1766044895.feature)
+   3. [roost_test_1766044895.csv](roost_test_1766044895/roost_test_1766044895.csv)
+   4. [roost_test_1766044895.xlsx](roost_test_1766044895/roost_test_1766044895.xlsx)
+   5. [roost_test_1766044895.yaml](roost_test_1766044895/roost_test_1766044895.yaml)
+
+---
+

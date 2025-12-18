@@ -1,0 +1,1058 @@
+openapi: 3.0.3
+info:
+  title: ממשק API לחנות אונליין - ישראל (ILS, RTL, אבטחה ועמידה בתקנים)
+  version: 1.0.0
+  description: >
+    מפרט OpenAPI עבור תרחישי ה-API המתוארים (הזמנות, מלאי, משלוח, דגלי תכונה, תשלומים, אימיילים, תאימות בין גרסאות).
+    כל ההודעות למשתמש והדוגמאות מותאמות לשפה העברית, מטבע ILS (₪), ומדיניות מע"מ 17%.
+servers:
+  - url: https://api.sandbox.example.com
+    description: סביבת סנדבוקס (מומלץ להגדיר API_BASE_URL בסביבה)
+  - url: https://{host}
+    description: שרת דינמי לפי סביבה (שימוש במשתנה API_BASE_URL)
+    variables:
+      host:
+        default: api.sandbox.example.com
+tags:
+  - name: הזמנות
+    description: ניהול הזמנות, יצירה, ביטול ואידמפוטנטיות
+  - name: מלאי
+    description: קריאת מלאי ומניעת מכירה יתר
+  - name: משלוח
+    description: תעריפים, זמני אספקה וספקי משלוח
+  - name: דגלים
+    description: ניהול Feature Flags לשיטות משלוח ותכונות
+  - name: תשלומים
+    description: חיוב תשלומים, כשל זמני, 3DS
+  - name: מייל
+    description: תיבת דואר בדיקות לאימות מיילי אישור
+  - name: תאימות
+    description: תאימות חוזים בין גרסאות API (v1/v2)
+security:
+  - bearerAuth: []
+paths:
+  /api/orders:
+    post:
+      tags: [הזמנות]
+      summary: יצירת הזמנה חדשה (תומך Idempotency-Key)
+      description: >
+        יוצר הזמנה עם פריטי סל, משלוח ותשלום. תומך אידמפוטנטיות באמצעות כותרת Idempotency-Key למניעת יצירת הזמנה כפולה.
+        הודעות שגיאה מוצגות בעברית בהתאם ל-Accept-Language (למשל he-IL).
+      operationId: createOrder
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+            examples:
+              successCreditCard:
+                summary: הזמנה ILS עם כרטיס אשראי (דמה)
+                value:
+                  customer:
+                    firstName: "דנה"
+                    lastName: "כהן"
+                    email: "dana@test.co.il"
+                    phone: "0541234567"
+                  shipping:
+                    method: "delivery_express"
+                    address:
+                      street: "הרצל 10"
+                      city: "תל אביב"
+                      postcode: "6777655"
+                      country: "IL"
+                  items:
+                    - sku: "RED-HOODIE"
+                      qty: 1
+                      price: 199.00
+                      currency: "ILS"
+                  currency: "ILS"
+                  payment:
+                    method: "credit_card"
+                    token: "tok_test_ok"
+      responses:
+        '201':
+          description: הזמנה נוצרה בהצלחה (כולל פרטי עסקה, מע"מ 17% ומטבע ILS)
+          headers:
+            Idempotency-Key:
+              description: מוחזר כאשר נשלחה בקשה עם Idempotency-Key
+              schema:
+                type: string
+            Idempotent-Replayed:
+              description: אמת אם הוחזרה תשובה מאוחסנת בעקבות Idempotency-Key קיים
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                created:
+                  value:
+                    orderId: "ORD-20250001"
+                    number: "100045"
+                    status: "paid"
+                    currency: "ILS"
+                    amount: 232.83
+                    totals:
+                      subtotal: 199.00
+                      shipping: 29.00
+                      tax:
+                        type: "VAT"
+                        rate: 0.17
+                        amount: 33.83
+                    items:
+                      - sku: "RED-HOODIE"
+                        name: "Red Hoodie"
+                        qty: 1
+                        unitPrice:
+                          amount: 199.00
+                          currency: "ILS"
+                        lineTotal:
+                          amount: 199.00
+                          currency: "ILS"
+                    shipping:
+                      method: "delivery_express"
+                      eta: "1-2 ימי עסקים"
+                      address:
+                        street: "הרצל 10"
+                        city: "תל אביב"
+                        postcode: "6777655"
+                        country: "IL"
+                    customer:
+                      firstName: "דנה"
+                      lastName: "כהן"
+                      email: "dana@test.co.il"
+                      phone: "0541234567"
+                    payment:
+                      method: "credit_card"
+                      transactionId: "TRX-abc123"
+                      last4: "1111"
+                    createdAt: "2025-12-18T10:22:30Z"
+                    locale: "he-IL"
+        '400':
+          description: בקשה שגויה או ולידציה נכשלה (למשל מיקוד לא תקין)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPostcode:
+                  value:
+                    code: "validation_error"
+                    message: "יש להזין מיקוד בן 7 ספרות"
+                    fields:
+                      shipping.address.postcode: "format: ^\\d{7}$"
+        '401':
+          description: טוקן הרשאה חסר/שגוי
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: קונפליקט מלאי / מניעת מכירה יתר
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                oversell:
+                  value:
+                    code: "inventory_conflict"
+                    message: "המוצר אינו זמין"
+        '422':
+          description: שיטת תשלום לא תקינה או לא נבחרה
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPaymentMethod:
+                  value:
+                    code: "invalid_payment_method"
+                    message: "שיטת תשלום לא תקינה או לא נבחרה"
+  /api/orders/{orderId}/cancel:
+    post:
+      tags: [הזמנות]
+      summary: ביטול הזמנה קיימת והחזר לפי מדיניות
+      operationId: cancelOrder
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: מזהה הזמנה (למשל ORD-123)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  description: סיבת ביטול (למשל "לקוח ביקש")
+            examples:
+              cancel:
+                value:
+                  reason: "לקוח ביקש"
+      responses:
+        '200':
+          description: הזמנה בסטטוס canceled ונוצר רישום החזר
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+                  refund:
+                    $ref: '#/components/schemas/Refund'
+              examples:
+                canceled:
+                  value:
+                    order:
+                      orderId: "ORD-123"
+                      status: "canceled"
+                      currency: "ILS"
+                    refund:
+                      refundId: "RF-987"
+                      method: "credit_card"
+                      amount:
+                        amount: 199.00
+                        currency: "ILS"
+                      status: "initiated"
+        '404':
+          description: הזמנה לא נמצאה
+        '409':
+          description: לא ניתן לבטל הזמנה במצב נוכחי
+  /api/inventory/products/{sku}:
+    get:
+      tags: [מלאי]
+      summary: קריאת נתוני מלאי למוצר לפי SKU
+      operationId: getInventoryBySku
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+            example: RED-HOODIE
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: נתוני מלאי למוצר
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryProduct'
+              examples:
+                stock:
+                  value:
+                    sku: "RED-HOODIE"
+                    onHand: 12
+                    reserved: 1
+                    updatedAt: "2025-12-18T09:00:00Z"
+        '404':
+          description: מוצר לא נמצא
+  /api/shipping/rates:
+    post:
+      tags: [משלוח]
+      summary: חישוב עלויות משלוח ו-ETA לפי עיר, מדינה ותכולת הסל
+      operationId: getShippingRates
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [country, items]
+              properties:
+                city:
+                  type: string
+                  description: עיר בישראל לצורך ETA
+                country:
+                  type: string
+                  enum: [IL]
+                methods:
+                  type: array
+                  description: סינון לשיטות ספציפיות
+                  items:
+                    $ref: '#/components/schemas/ShippingMethodId'
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [sku, qty]
+                    properties:
+                      sku:
+                        type: string
+                      qty:
+                        type: integer
+                        minimum: 1
+                      weight:
+                        type: number
+                        format: float
+                        description: ק"ג
+            examples:
+              tel_aviv:
+                value:
+                  city: "תל אביב"
+                  country: "IL"
+                  methods: ["delivery_express"]
+                  items:
+                    - sku: "RED-HOODIE"
+                      qty: 1
+                      weight: 0.5
+      responses:
+        '200':
+          description: רשימת תעריפי משלוח זמינים (ILS, ETA בעברית)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ShippingRate'
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                      description: אזהרות/אלטרנטיבות (למשל כאשר ספק מושבת)
+              examples:
+                express_ta:
+                  value:
+                    rates:
+                      - method: "delivery_express"
+                        label: "שליח אקספרס"
+                        eta: "1-2 ימי עסקים"
+                        price:
+                          amount: 45.00
+                          currency: "ILS"
+                express_disabled_with_fallback:
+                  summary: ספק express מושבת, מוצעת חלופה
+                  value:
+                    rates:
+                      - method: "registered_mail"
+                        label: "דואר רשום"
+                        eta: "3-7 ימי עסקים"
+                        price:
+                          amount: 25.00
+                          currency: "ILS"
+                    warnings:
+                      - "שירות delivery_express אינו זמין זמנית. מוצגת חלופה."
+        '400':
+          description: נתונים חסרים או לא תקינים
+  /api/shipping/methods:
+    get:
+      tags: [משלוח]
+      summary: רשימת שיטות משלוח זמינות למדינה
+      parameters:
+        - name: country
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [IL]
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: רשימת מזהי שיטות משלוח
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  methods:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ShippingMethodId'
+              examples:
+                il_default:
+                  value:
+                    methods: ["local_pickup", "delivery_express", "registered_mail"]
+  /api/flags/{flag}/disable:
+    post:
+      tags: [דגלים]
+      summary: כיבוי Feature Flag
+      parameters:
+        - name: flag
+          in: path
+          required: true
+          schema:
+            type: string
+            example: registered_mail
+      responses:
+        '200':
+          description: הדגל כובה
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flag:
+                    type: string
+                  enabled:
+                    type: boolean
+              examples:
+                disabled:
+                  value:
+                    flag: "registered_mail"
+                    enabled: false
+  /api/flags/{flag}/enable:
+    post:
+      tags: [דגלים]
+      summary: הפעלת Feature Flag
+      parameters:
+        - name: flag
+          in: path
+          required: true
+          schema:
+            type: string
+            example: registered_mail
+      responses:
+        '200':
+          description: הדגל הופעל
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flag:
+                    type: string
+                  enabled:
+                    type: boolean
+              examples:
+                enabled:
+                  value:
+                    flag: "registered_mail"
+                    enabled: true
+  /api/shipping/providers/{provider}/disable:
+    post:
+      tags: [משלוח]
+      summary: השבתה זמנית של ספק משלוח
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            example: delivery_express
+      responses:
+        '200':
+          description: הספק הושבת
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderStatus'
+              examples:
+                disabled:
+                  value:
+                    provider: "delivery_express"
+                    enabled: false
+                    message: "הספק הושבת זמנית"
+  /api/shipping/providers/{provider}/enable:
+    post:
+      tags: [משלוח]
+      summary: הפעלה מחדש של ספק משלוח
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            example: delivery_express
+      responses:
+        '200':
+          description: הספק הופעל
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderStatus'
+              examples:
+                enabled:
+                  value:
+                    provider: "delivery_express"
+                    enabled: true
+                    message: "הספק פעיל"
+  /api/payments/charge:
+    post:
+      tags: [תשלומים]
+      summary: חיוב תשלום (כרטיס אשראי/אחר), תמיכה ב-Retry ו-3DS
+      description: >
+        נקודת קצה לצורך חיוב ישיר. עבור סכומים/תנאים מסוימים ייתכן וידרש 3DS. עבור אסימוני סימולציה יוחזר כשל זמני לצורך בדיקות Retry.
+      operationId: chargePayment
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargeRequest'
+            examples:
+              tempFailure:
+                summary: סימולציית כשל זמני
+                value:
+                  amount: 299.00
+                  currency: "ILS"
+                  method: "credit_card"
+                  token: "tok_simulate_temporary_failure"
+              requires3ds:
+                summary: עסקה הדורשת 3DS
+                value:
+                  amount: 1500.00
+                  currency: "ILS"
+                  method: "credit_card"
+                  token: "tok_requires_3ds"
+      responses:
+        '201':
+          description: חיוב נוצר בהצלחה
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charge'
+              examples:
+                charged:
+                  value:
+                    chargeId: "CHG-001"
+                    status: "succeeded"
+                    amount:
+                      amount: 299.00
+                      currency: "ILS"
+                    transactionId: "TRX-xyz789"
+        '402':
+          description: נדרש 3D Secure (הפניה ל-ACS/OTP)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: requires_3ds
+                  message:
+                    type: string
+                    example: "נדרש אימות 3D Secure"
+                  redirectUrl:
+                    type: string
+                    format: uri
+        '503':
+          description: תקלה זמנית בשער תשלום (Retry-After)
+          headers:
+            Retry-After:
+              description: שניות להמתין לפני נסיון חוזר
+              schema:
+                type: integer
+                example: 5
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                tempFailure:
+                  value:
+                    code: "payment_temporary_failure"
+                    message: "תקלה זמנית בתשלום, נסה שוב או בחר אמצעי אחר"
+  /api/test/mailbox/search:
+    get:
+      tags: [מייל]
+      summary: חיפוש מיילי אישור הזמנה בסביבת בדיקות
+      parameters:
+        - name: orderId
+          in: query
+          required: true
+          schema:
+            type: string
+            example: ORD-200
+        - name: locale
+          in: query
+          required: false
+          schema:
+            type: string
+            example: he-IL
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: הודעות שנמצאו
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmailMessage'
+              examples:
+                approvalHe:
+                  value:
+                    messages:
+                      - id: "MSG-1"
+                        orderId: "ORD-200"
+                        subject: "אישור הזמנה ORD-200"
+                        date: "18/12/2025 12:35"
+                        timezone: "Asia/Jerusalem"
+                        locale: "he-IL"
+                        bodyText: "תודה על הזמנתך. סכום: ₪232.83 כולל מע\"מ 17%."
+                        totals:
+                          currency: "ILS"
+                          amount: 232.83
+                          vat:
+                            rate: 0.17
+                            amount: 33.83
+  /v1/orders:
+    post:
+      tags: [תאימות, הזמנות]
+      summary: יצירת הזמנה - v1 (חוזה תואם)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequestV1'
+            examples:
+              v1Basic:
+                value:
+                  items:
+                    - sku: "RED-HOODIE"
+                      qty: 1
+                  currency: "ILS"
+                  payment:
+                    method: "credit_card"
+                    token: "tok_test_ok"
+      responses:
+        '201':
+          description: נוצר בהצלחה (שדות קריטיים קיימים)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderMinimalResponse'
+  /v2/orders:
+    post:
+      tags: [תאימות, הזמנות]
+      summary: יצירת הזמנה - v2 (תוספות לא שוברות)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+            examples:
+              v2Basic:
+                value:
+                  items:
+                    - sku: "RED-HOODIE"
+                      qty: 1
+                  currency: "ILS"
+                  payment:
+                    method: "credit_card"
+                    token: "tok_test_ok"
+      responses:
+        '201':
+          description: נוצר בהצלחה (שדות קריטיים קיימים + הרחבות)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OrderMinimalResponse'
+                  - type: object
+                    properties:
+                      locale:
+                        type: string
+                        example: he-IL
+                      links:
+                        type: object
+                        properties:
+                          self:
+                            type: string
+                            format: uri
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: מפתח אידמפוטנטיות למניעת יצירת הזמנה כפולה (UUID/טקסט ייחודי עד 255 תווים)
+      schema:
+        type: string
+        maxLength: 255
+        example: "123e4567-e89b-12d3-a456-426614174000"
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: קביעת שפת הודעות/תצוגה (למשל he-IL)
+      schema:
+        type: string
+        example: he-IL
+  schemas:
+    ShippingMethodId:
+      type: string
+      enum: [local_pickup, delivery_express, registered_mail]
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: ILS
+    Address:
+      type: object
+      required: [street, city, country]
+      properties:
+        street:
+          type: string
+          example: "הרב קוק 12/3 קומה 2-א'"
+        city:
+          type: string
+          example: "תל אביב"
+        postcode:
+          type: string
+          description: מיקוד ישראלי בן 7 ספרות
+          pattern: '^\d{7}$'
+          example: "6777655"
+        country:
+          type: string
+          enum: [IL]
+    Customer:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "יואב"
+        lastName:
+          type: string
+          example: "לוי"
+        email:
+          type: string
+          format: email
+          example: "yoav@example.com"
+        phone:
+          type: string
+          description: מספר טלפון ישראלי
+          pattern: '^(?:\+972|0)(?:[23489]\d{7}|5\d{8})$'
+          example: "0529876543"
+    OrderItem:
+      type: object
+      required: [sku, qty]
+      properties:
+        sku:
+          type: string
+          example: RED-HOODIE
+        name:
+          type: string
+          readOnly: true
+          example: "Red Hoodie"
+        qty:
+          type: integer
+          minimum: 1
+          example: 2
+        price:
+          type: number
+          format: float
+          description: מחיר יחידה (כאשר מסופק בבקשה)
+          example: 199.0
+        currency:
+          type: string
+          example: ILS
+        unitPrice:
+          $ref: '#/components/schemas/Money'
+        lineTotal:
+          $ref: '#/components/schemas/Money'
+    ShippingSelection:
+      type: object
+      required: [method]
+      properties:
+        method:
+          $ref: '#/components/schemas/ShippingMethodId'
+        address:
+          $ref: '#/components/schemas/Address'
+    Payment:
+      type: object
+      required: [method]
+      properties:
+        method:
+          type: string
+          enum: [credit_card, paypal]
+        token:
+          type: string
+          description: אסימון תשלום/דמה (Tokenization)
+          example: tok_test_ok
+    OrderCreateRequest:
+      type: object
+      required: [items, currency, payment]
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        shipping:
+          $ref: '#/components/schemas/ShippingSelection'
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        currency:
+          type: string
+          enum: [ILS]
+        payment:
+          $ref: '#/components/schemas/Payment'
+    OrderCreateRequestV1:
+      type: object
+      required: [items, currency, payment]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [sku, qty]
+            properties:
+              sku:
+                type: string
+              qty:
+                type: integer
+        currency:
+          type: string
+          enum: [ILS]
+        payment:
+          $ref: '#/components/schemas/Payment'
+    OrderMinimalResponse:
+      type: object
+      required: [orderId, amount, currency, transactionId]
+      properties:
+        orderId:
+          type: string
+          example: "ORD-555"
+        amount:
+          type: number
+          format: float
+          example: 199.0
+        currency:
+          type: string
+          example: ILS
+        transactionId:
+          type: string
+          example: "TRX-123"
+    Order:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: ORD-20250001
+        number:
+          type: string
+          example: "100045"
+        status:
+          type: string
+          enum: [pending, paid, canceled]
+        currency:
+          type: string
+          example: ILS
+        amount:
+          type: number
+          format: float
+        totals:
+          type: object
+          properties:
+            subtotal:
+              type: number
+              format: float
+            shipping:
+              type: number
+              format: float
+            tax:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: VAT
+                rate:
+                  type: number
+                  format: float
+                  example: 0.17
+                amount:
+                  type: number
+                  format: float
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        shipping:
+          type: object
+          properties:
+            method:
+              $ref: '#/components/schemas/ShippingMethodId'
+            eta:
+              type: string
+              example: "1-2 ימי עסקים"
+            address:
+              $ref: '#/components/schemas/Address'
+        customer:
+          $ref: '#/components/schemas/Customer'
+        payment:
+          type: object
+          properties:
+            method:
+              type: string
+              example: credit_card
+            transactionId:
+              type: string
+            last4:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        locale:
+          type: string
+          example: he-IL
+    InventoryProduct:
+      type: object
+      properties:
+        sku:
+          type: string
+        onHand:
+          type: integer
+        reserved:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+    ShippingRate:
+      type: object
+      properties:
+        method:
+          $ref: '#/components/schemas/ShippingMethodId'
+        label:
+          type: string
+          example: "שליח אקספרס"
+        eta:
+          type: string
+          example: "1-2 ימי עסקים"
+        price:
+          $ref: '#/components/schemas/Money'
+    ProviderStatus:
+      type: object
+      properties:
+        provider:
+          type: string
+        enabled:
+          type: boolean
+        message:
+          type: string
+    Refund:
+      type: object
+      properties:
+        refundId:
+          type: string
+        method:
+          type: string
+          example: credit_card
+        amount:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          enum: [initiated, succeeded, failed]
+    ChargeRequest:
+      type: object
+      required: [amount, currency, method, token]
+      properties:
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          enum: [ILS]
+        method:
+          type: string
+          enum: [credit_card, paypal]
+        token:
+          type: string
+    Charge:
+      type: object
+      properties:
+        chargeId:
+          type: string
+        status:
+          type: string
+          enum: [succeeded, failed, pending]
+        amount:
+          $ref: '#/components/schemas/Money'
+        transactionId:
+          type: string
+    EmailMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        subject:
+          type: string
+        date:
+          type: string
+          description: תאריך בפורמט dd/mm/yyyy HH:mm
+          example: "18/12/2025 12:35"
+        timezone:
+          type: string
+          example: Asia/Jerusalem
+        locale:
+          type: string
+          example: he-IL
+        bodyText:
+          type: string
+        totals:
+          type: object
+          properties:
+            currency:
+              type: string
+              example: ILS
+            amount:
+              type: number
+              format: float
+            vat:
+              type: object
+              properties:
+                rate:
+                  type: number
+                  format: float
+                  example: 0.17
+                amount:
+                  type: number
+                  format: float
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        fields:
+          type: object
+          additionalProperties:
+            type: string
