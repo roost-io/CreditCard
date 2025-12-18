@@ -1,0 +1,968 @@
+openapi: 3.0.3
+info:
+  title: API מסחר אלקטרוני – קטלוג, סל, קופונים, משלוח, קופה והזמנות
+  version: 1.0.0
+  description: >
+    מפרט OpenAPI המבוסס על תרחישי Gherkin שסופקו. הממשק תומך בקטלוג, סל קניות, קופונים,
+    שיטות משלוח, קופה (Checkout) והזמנות, כולל ולידציות, שיטות תשלום, ומדדי מחיר
+    עם מטבע "₪" (ILS) ומע"מ ישראלי (17%) לפי הצורך.
+
+    מאפיינים עיקריים:
+    - שימוש במזהה סשן אורח/משתמש דרך כותרת X-Session-Id עבור התמדה של סל.
+    - שימוש מומלץ בכותרת Idempotency-Key בבקשות POST קריטיות (Checkout/Orders) למניעת כפל הזמנות.
+    - תמיכה בכותרת Accept-Language (he-IL/en-US) לצרכי לוקליזציה הודעות.
+    - מיפוי שיטות משלוח: local_pickup (₪0), delivery_express (₪12.50), registered_mail (₪5.90).
+    - מיפוי שיטות תשלום: bank_transfer (Direct Bank Transfer), cod (Cash on Delivery).
+
+servers:
+  - url: '{API_BASE_URL}'
+    description: >
+      בסיס ה-API לפי משתנה הסביבה API_BASE_URL (כפי שמצויין ב-Background של התרחישים).
+      יש להגדיר כ-HTTPS בלבד.
+    variables:
+      API_BASE_URL:
+        default: https://staging.shop.example.com/api
+        description: >
+          כתובת בסיס לדוגמה. בסביבות ייצור/בדיקות יש להציב את ה-URL המתאים (למשל https://prod.shop.example.com/api).
+
+tags:
+  - name: Catalog
+    description: קטלוג מוצרים, עמודים, מיון ופירוט מוצר
+  - name: Cart
+    description: סל קניות – הוספה, עדכון, מחיקה, שיטות משלוח וסה"כ
+  - name: Coupons
+    description: החלת קופונים והסרתם
+  - name: Shipping
+    description: שיטות משלוח, עלויות וזמני אספקה
+  - name: Checkout
+    description: ולידציות קופה לפני הזמנה
+  - name: Orders
+    description: יצירת הזמנות ושליפתן
+  - name: Payments
+    description: שליפת אמצעי תשלום זמינים
+  - name: Reviews
+    description: ביקורות ודירוגים על מוצרים
+  - name: Health
+    description: בדיקת בריאות שירות
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: בדיקת בריאות השירות
+      description: מחזיר סטטוס תקין לבדיקות ניטור.
+      responses:
+        '200':
+          description: תקין
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /catalog/products:
+    get:
+      tags: [Catalog]
+      summary: שליפת מוצרים עם תמיכה בעמודים ומיון
+      description: >
+        שליפת רשימת מוצרים מהקטלוג. נתמך עימוד (page/page_size), סינון לפי קטגוריה,
+        ומיון כגון price_asc.
+      parameters:
+        - name: page
+          in: query
+          description: מספר עמוד (לדוגמה: 2 לתרחיש פאג'ינציה)
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: page_size
+          in: query
+          description: כמות תוצאות בעמוד
+          schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+        - name: category
+          in: query
+          description: סינון לפי קטגוריה (למשל "Men")
+          schema: { type: string }
+        - name: sort
+          in: query
+          description: מיון (price_asc, price_desc, newest, popular)
+          schema:
+            type: string
+            enum: [price_asc, price_desc, newest, popular]
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: רשימת מוצרים
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+              examples:
+                page2:
+                  summary: עמוד 2 עם "Red Hoodie"
+                  value:
+                    page: 2
+                    page_size: 12
+                    total: 14
+                    results:
+                      - id: 12345
+                        name: Red Hoodie
+                        slug: red-hoodie
+                        category_path: ["Home", "Men"]
+                        price:
+                          amount: 150.0
+                          currency: ILS
+                          display: "₪150.00"
+                        image_url: https://cdn.example.com/images/red-hoodie.jpg
+                        stock_status: in_stock
+
+  /catalog/products/{productId}:
+    get:
+      tags: [Catalog]
+      summary: פירוט מוצר לפי מזהה
+      description: מחזיר פרטי מוצר כולל מחיר במטבע ₪ ופירורי לחם.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema: { type: integer }
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: פרטי מוצר
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              examples:
+                redHoodie:
+                  value:
+                    id: 12345
+                    name: Red Hoodie
+                    slug: red-hoodie
+                    category_path: ["Home", "Men", "Red Hoodie"]
+                    price:
+                      amount: 150.0
+                      currency: ILS
+                      display: "₪150.00"
+                    stock_status: in_stock
+                    images:
+                      - https://cdn.example.com/images/red-hoodie.jpg
+
+  /cart:
+    get:
+      tags: [Cart]
+      summary: שליפת סל לפי סשן
+      description: >
+        מחזיר את הסל הנוכחי עבור X-Session-Id, כולל פריטים, שיטת משלוח, סיכומים, מטבע ₪ ומע"מ.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: סל קיים
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+              examples:
+                withItem:
+                  value:
+                    items:
+                      - item_id: "itm_001"
+                        product_id: 12345
+                        name: Red Hoodie
+                        quantity: 1
+                        unit_price: { amount: 150.0, currency: ILS, display: "₪150.00" }
+                        line_total: { amount: 150.0, currency: ILS, display: "₪150.00" }
+                        image_url: https://cdn.example.com/images/red-hoodie.jpg
+                        stock_status: in_stock
+                    shipping_method: local_pickup
+                    shipping_cost: { amount: 0.0, currency: ILS, display: "₪0" }
+                    subtotal: { amount: 150.0, currency: ILS, display: "₪150.00" }
+                    discount: { amount: 0.0, currency: ILS, display: "₪0" }
+                    tax_lines:
+                      - name: "VAT"
+                        rate: 0.17
+                        amount: { amount: 21.79, currency: ILS, display: "₪21.79" }
+                    total: { amount: 171.79, currency: ILS, display: "₪171.79" }
+                    currency: ILS
+        '404':
+          description: סל לא נמצא (סשן לא קיים)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+    delete:
+      tags: [Cart]
+      summary: ניקוי סל
+      description: מחיקת כל הפריטים והקופונים מהסל עבור הסשן.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+      responses:
+        '204':
+          description: הסל נוקה
+        '404':
+          description: סל לא נמצא
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /cart/items:
+    post:
+      tags: [Cart]
+      summary: הוספת פריט לסל
+      description: >
+        הוספת מוצר לסל לפי product_id וכמות. במקרה של חוסר מלאי תוחזר שגיאה מתאימה.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_id, quantity]
+              properties:
+                product_id:
+                  type: integer
+                  example: 12345
+                quantity:
+                  type: integer
+                  minimum: 1
+                  example: 1
+      responses:
+        '201':
+          description: נוסף פריט והסל המעודכן מוחזר
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '409':
+          description: אזל מהמלאי
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              examples:
+                oos:
+                  value:
+                    code: out_of_stock
+                    message: "אזל מהמלאי"
+        '400':
+          description: בקשה לא חוקית
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /cart/items/{itemId}:
+    put:
+      tags: [Cart]
+      summary: עדכון כמות של פריט בסל
+      description: שינוי כמות והחזרת סל מעודכן כולל חישובי משלוח/מס.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 0
+                  description: אם 0 – הפריט יוסר מהסל
+                  example: 2
+      responses:
+        '200':
+          description: סל מעודכן
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+        '404':
+          description: פריט לא נמצא בסל
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+    delete:
+      tags: [Cart]
+      summary: הסרת פריט מהסל
+      description: >
+        הסרת פריט בודד והחזרת הודעת עדכון. אם הסל ריק – total יהיה "₪0".
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: פריט הוסר והסל עודכן
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Cart updated
+                  cart:
+                    $ref: '#/components/schemas/Cart'
+        '404':
+          description: פריט לא נמצא בסל
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /cart/shipping:
+    get:
+      tags: [Shipping, Cart]
+      summary: שליפת שיטות משלוח זמינות לסל
+      description: >
+        מחזיר את שיטות המשלוח הזמינות לסל הנוכחי כולל עלות זמן אספקה.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+      responses:
+        '200':
+          description: רשימת שיטות משלוח
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  methods:
+                    type: array
+                    items: { $ref: '#/components/schemas/ShippingMethod' }
+              examples:
+                methods:
+                  value:
+                    methods:
+                      - code: local_pickup
+                        label: "Local pickup"
+                        cost: { amount: 0.0, currency: ILS, display: "₪0" }
+                        eta: ""
+                      - code: delivery_express
+                        label: "Delivery Express"
+                        cost: { amount: 12.5, currency: ILS, display: "₪12.50" }
+                        eta: "(1–3 days)"
+                      - code: registered_mail
+                        label: "Registered Mail"
+                        cost: { amount: 5.9, currency: ILS, display: "₪5.90" }
+
+    put:
+      tags: [Shipping, Cart]
+      summary: עדכון שיטת משלוח בסל
+      description: >
+        עדכון שיטת המשלוח (local_pickup, delivery_express, registered_mail) והחזרת הסל המעודכן.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method]
+              properties:
+                method:
+                  type: string
+                  enum: [local_pickup, delivery_express, registered_mail]
+                  example: registered_mail
+      responses:
+        '200':
+          description: סל מעודכן עם שיטת משלוח חדשה
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+              examples:
+                registered:
+                  value:
+                    shipping_method: registered_mail
+                    shipping_cost: { amount: 5.9, currency: ILS, display: "₪5.90" }
+                    # שדות סל נוספים יוחזרו בהתאם
+        '400':
+          description: שיטת משלוח לא חוקית
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /coupons/apply:
+    post:
+      tags: [Coupons]
+      summary: החלת קופון על הסל
+      description: >
+        החלת קופון לפי קוד. הצלחה – מוחזר discount_amount וסל מעודכן. כשל – 400 עם שדה error.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  example: SALE10
+      responses:
+        '200':
+          description: קופון הוחל בהצלחה
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponApplyResponse'
+              examples:
+                success:
+                  value:
+                    code: "SALE10"
+                    message: "Coupon applied"
+                    discount_amount: { amount: 15.0, currency: ILS, display: "₪15.00" }
+                    cart:
+                      discount: { amount: 15.0, currency: ILS, display: "₪15.00" }
+                      total: { amount: 156.79, currency: ILS, display: "₪156.79" }
+        '400':
+          description: קופון לא תקף
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "קופון לא תקף"
+
+  /coupons/{code}:
+    delete:
+      tags: [Coupons]
+      summary: הסרת קופון מהסל
+      description: מסיר קופון פעיל ומחזיר סל מעודכן.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - name: code
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: קופון הוסר
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: "Coupon removed" }
+                  cart: { $ref: '#/components/schemas/Cart' }
+
+  /payment/methods:
+    get:
+      tags: [Payments]
+      summary: שליפת שיטות תשלום זמינות
+      description: >
+        מחזיר רשימת שיטות תשלום זמינות בהתבסס על המדינה/שילוח/סכום בסל.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+      responses:
+        '200':
+          description: רשימת שיטות תשלום
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  methods:
+                    type: array
+                    items: { $ref: '#/components/schemas/PaymentMethod' }
+              examples:
+                default:
+                  value:
+                    methods:
+                      - code: bank_transfer
+                        title: "Direct Bank Transfer"
+                      - code: cod
+                        title: "Cash on Delivery"
+
+  /checkout:
+    post:
+      tags: [Checkout]
+      summary: ולידציות קופה לפני יצירת הזמנה
+      description: >
+        מבצע בדיקות ולידציה עבור פרטי חיוב/משלוח/תשלום לפני יצירת הזמנה.
+        שימוש מומלץ ב-Idempotency-Key כדי להימנע מלחיצות כפולות.
+        במקרה של שגיאות ולידציה – יוחזר 400 עם הודעה קריאה.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+            examples:
+              missingPostcode:
+                summary: חסר מיקוד
+                value:
+                  billing:
+                    first_name: "Meital"
+                    last_name: "Kenzi"
+                    company: "Menora"
+                    country: "IL"
+                    address_1: "Burla yehuda 1"
+                    address_2: "17"
+                    city: "Tel Aviv"
+                    postcode: null
+                    phone: "0544344345"
+                    email: "meitalkenzi@gmail.com"
+                  shipping_method: "registered_mail"
+                  payment_method: "bank_transfer"
+              invalidPayment:
+                summary: אמצעי תשלום לא תקין
+                value:
+                  billing:
+                    first_name: "Meital"
+                    last_name: "Kenzi"
+                    company: "Menora"
+                    country: "IL"
+                    address_1: "Burla yehuda 1"
+                    address_2: "17"
+                    city: "Tel Aviv"
+                    postcode: "316547"
+                    phone: "0544344345"
+                    email: "meitalkenzi@gmail.com"
+                  shipping_method: "registered_mail"
+                  payment_method: "invalid"
+      responses:
+        '200':
+          description: ולידציה עברה בהצלחה, ניתן להמשיך ליצירת הזמנה
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean, example: true }
+                  next_step: { type: string, example: "place_order" }
+        '400':
+          description: שגיאת ולידציה
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              examples:
+                missingPostcode:
+                  value:
+                    code: validation_error
+                    message: "Billing Postcode / ZIP is a required field."
+                    field_errors:
+                      postcode: "required"
+                invalidPayment:
+                  value:
+                    code: validation_error
+                    message: "Invalid payment method"
+
+  /orders:
+    post:
+      tags: [Orders]
+      summary: יצירת הזמנה
+      description: >
+        יוצר הזמנה מסל קיים ושיטת משלוח נבחרת. דורש פרטי חיוב ואמצעי תשלום תקף.
+        מומלץ לספק Idempotency-Key כדי למנוע הזמנות כפולות בלחיצה כפולה.
+      parameters:
+        - $ref: '#/components/parameters/XSessionIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+            examples:
+              successBankTransfer:
+                value:
+                  billing:
+                    first_name: "Dana"
+                    last_name: "Cohen"
+                    country: "IL"
+                    address_1: "Yehuda Halevi 10"
+                    city: "Tel Aviv"
+                    postcode: "6473421"
+                    phone: "0521234567"
+                    email: "dana@example.com"
+                  payment_method: "bank_transfer"
+                  confirm: true
+      responses:
+        '201':
+          description: הזמנה נוצרה בהצלחה
+          headers:
+            Idempotency-Key:
+              description: מוחזר כפי שנשלח, לאיתור כפילויות
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+              examples:
+                created:
+                  value:
+                    order_id: "ord_10001"
+                    status: "processing"
+                    totals:
+                      subtotal: { amount: 150.0, currency: ILS, display: "₪150.00" }
+                      shipping: { amount: 0.0, currency: ILS, display: "₪0" }
+                      discount: { amount: 0.0, currency: ILS, display: "₪0" }
+                      tax: { amount: 21.79, currency: ILS, display: "₪21.79" }
+                      total: { amount: 171.79, currency: ILS, display: "₪171.79" }
+                    created_at: "2025-01-01T10:15:00Z"
+                    payment:
+                      method: bank_transfer
+                      title: "Direct Bank Transfer"
+        '400':
+          description: שגיאת ולידציה/תשלום
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              examples:
+                invalidPayment:
+                  value:
+                    code: validation_error
+                    message: "Invalid payment method"
+        '409':
+          description: בקשה כפולה זוהתה לפי Idempotency-Key – לא נוצרת הזמנה נוספת
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              examples:
+                duplicate:
+                  value:
+                    code: duplicate_request
+                    message: "Order already created for this Idempotency-Key"
+                    details:
+                      existing_order_id: "ord_10001"
+
+  /orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: שליפת פרטי הזמנה
+      description: מחזיר פרטי הזמנה לפי מזהה.
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: פרטי הזמנה
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '404':
+          description: הזמנה לא נמצאה
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /products/{productId}/reviews:
+    get:
+      tags: [Reviews]
+      summary: שליפת ביקורות למוצר
+      description: >
+        מחזיר רשימת ביקורות כולל דירוג ממוצע. נתמך עימוד.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          description: רשימת ביקורות
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  page: { type: integer }
+                  reviews:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rating: { type: integer, minimum: 1, maximum: 5 }
+                        author: { type: string }
+                        content: { type: string }
+                        created_at: { type: string, format: date-time }
+    post:
+      tags: [Reviews]
+      summary: הוספת ביקורת על מוצר
+      description: >
+        הוספת ביקורת ודירוג. אם דורש התחברות – תוחזר שגיאת 401 עם הודעה מתאימה.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating, content]
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5, example: 4 }
+                content: { type: string, example: "מוצר מעולה!" }
+                guest_email: { type: string, format: email, description: נדרש אם מתאפשר לאורחים }
+      responses:
+        '201':
+          description: ביקורת נשמרה
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  review_id: { type: string }
+                  status: { type: string, example: "approved" }
+        '401':
+          description: נדרש להתחבר כדי לדרג
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              examples:
+                mustLogin:
+                  value:
+                    code: auth_required
+                    message: "יש להתחבר כדי לדרג"
+
+components:
+  securitySchemes:
+    SessionId:
+      type: apiKey
+      in: header
+      name: X-Session-Id
+      description: מזהה סשן אורח/משתמש לשימור סל ופעולות קשורות
+    IdempotencyKey:
+      type: apiKey
+      in: header
+      name: Idempotency-Key
+      description: מפתח אידמפוטנטיות למניעת כפילויות ביצירת הזמנה/קופה
+  parameters:
+    XSessionIdHeader:
+      name: X-Session-Id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: מזהה סשן לשיוך הסל (נוצר בצד הלקוח או בשרת)
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+        example: he-IL
+      description: העדפת שפה לתגובות (he-IL/en-US)
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        example: 3d9c3f5b-6c7e-4a1b-a5a4-8b2f0e2b2c1a
+      description: מומלץ בבקשות POST קריטיות למניעת הזמנות כפולות
+  schemas:
+    Money:
+      type: object
+      properties:
+        amount: { type: number, format: float, example: 12.5 }
+        currency:
+          type: string
+          enum: [ILS]
+          example: ILS
+        display:
+          type: string
+          example: "₪12.50"
+    ShippingMethod:
+      type: object
+      properties:
+        code:
+          type: string
+          enum: [local_pickup, delivery_express, registered_mail]
+        label:
+          type: string
+          example: "Delivery Express"
+        cost:
+          $ref: '#/components/schemas/Money'
+        eta:
+          type: string
+          example: "(1–3 days)"
+    CartItem:
+      type: object
+      properties:
+        item_id: { type: string }
+        product_id: { type: integer }
+        name: { type: string }
+        quantity: { type: integer, minimum: 0 }
+        unit_price: { $ref: '#/components/schemas/Money' }
+        line_total: { $ref: '#/components/schemas/Money' }
+        image_url: { type: string, format: uri }
+        stock_status:
+          type: string
+          enum: [in_stock, out_of_stock]
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CartItem' }
+        shipping_method:
+          type: string
+          enum: [local_pickup, delivery_express, registered_mail, null]
+          nullable: true
+        shipping_cost: { $ref: '#/components/schemas/Money' }
+        subtotal: { $ref: '#/components/schemas/Money' }
+        discount: { $ref: '#/components/schemas/Money' }
+        tax_lines:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string, example: "VAT" }
+              rate: { type: number, example: 0.17 }
+              amount: { $ref: '#/components/schemas/Money' }
+        total: { $ref: '#/components/schemas/Money' }
+        currency:
+          type: string
+          enum: [ILS]
+        coupon_lines:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string, example: "SALE10" }
+              amount: { $ref: '#/components/schemas/Money' }
+    CouponApplyResponse:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        discount_amount: { $ref: '#/components/schemas/Money' }
+        cart: { $ref: '#/components/schemas/Cart' }
+    BillingAddress:
+      type: object
+      required: [first_name, last_name, country, address_1, city, postcode, phone, email]
+      properties:
+        first_name: { type: string }
+        last_name: { type: string }
+        company: { type: string, nullable: true }
+        country: { type: string, example: "IL" }
+        address_1: { type: string }
+        address_2: { type: string, nullable: true }
+        city: { type: string }
+        postcode: { type: string, nullable: true }
+        phone: { type: string }
+        email: { type: string, format: email }
+    CheckoutRequest:
+      type: object
+      required: [billing, shipping_method, payment_method]
+      properties:
+        billing: { $ref: '#/components/schemas/BillingAddress' }
+        shipping_method:
+          type: string
+          enum: [local_pickup, delivery_express, registered_mail]
+        payment_method:
+          type: string
+          description: >
+            קוד אמצעי תשלום (bank_transfer, cod). ערכים אחרים ייחשבו כלא תקפים.
+          example: bank_transfer
+    OrderCreateRequest:
+      type: object
+      required: [billing, payment_method, confirm]
+      properties:
+        billing: { $ref: '#/components/schemas/BillingAddress' }
+        payment_method:
+          type: string
+          enum: [bank_transfer, cod]
+        confirm:
+          type: boolean
+          description: אישור סופי ליצירת הזמנה
+          example: true
+    Order:
+      type: object
+      properties:
+        order_id: { type: string, example: "ord_10001" }
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
+          example: processing
+        totals:
+          type: object
+          properties:
+            subtotal: { $ref: '#/components/schemas/Money' }
+            shipping: { $ref: '#/components/schemas/Money' }
+            discount: { $ref: '#/components/schemas/Money' }
+            tax: { $ref: '#/components/schemas/Money' }
+            total: { $ref: '#/components/schemas/Money' }
+        created_at: { type: string, format: date-time }
+        payment:
+          type: object
+          properties:
+            method: { type: string, example: bank_transfer }
+            title: { type: string, example: "Direct Bank Transfer" }
+    PaymentMethod:
+      type: object
+      properties:
+        code:
+          type: string
+          enum: [bank_transfer, cod]
+        title:
+          type: string
+          example: "Cash on Delivery"
+    Product:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        category_path:
+          type: array
+          items: { type: string }
+        price: { $ref: '#/components/schemas/Money' }
+        stock_status:
+          type: string
+          enum: [in_stock, out_of_stock]
+        images:
+          type: array
+          items: { type: string, format: uri }
+    ProductList:
+      type: object
+      properties:
+        page: { type: integer }
+        page_size: { type: integer }
+        total: { type: integer }
+        results:
+          type: array
+          items: { $ref: '#/components/schemas/Product' }
+    ErrorResponse:
+      type: object
+      properties:
+        code: { type: string, example: validation_error }
+        message: { type: string, example: "Invalid payment method" }
+        field_errors:
+          type: object
+          additionalProperties: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+
+security:
+  - SessionId: []
