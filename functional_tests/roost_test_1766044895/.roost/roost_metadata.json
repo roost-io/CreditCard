@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "roost_test_1766044895",
+    "created_at": "2025-12-18T08:07:15.127Z",
+    "updated_at": "2025-12-18T08:07:15.127Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "ecommerce.pdf",
+        "fileURI": "/var/tmp/Roost/RoostGPT/hapo-functional-test/1766044895/functional_tests/roost_test_1766044895/ecommerce.pdf",
+        "fileSha": "7454ebf59c"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}
