@@ -1,0 +1,347 @@
+openapi: 3.0.0
+info:
+  title: Credit Card Due Reminder Notifications API
+  description: API for sending payment due reminder notifications to credit card customers
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  
+servers:
+  - url: https://api.example.com
+    description: Production server
+  - url: https://staging-api.example.com
+    description: Staging server
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+paths:
+  /api/notifications/due-reminders:
+    post:
+      summary: Send payment due reminder notification
+      description: Sends a notification to a customer about an upcoming credit card payment due
+      operationId: sendDueReminder
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DueReminderRequest'
+            examples:
+              validRequest:
+                value:
+                  accountId: "ACC123"
+                  notificationType: "PAYMENT_DUE"
+      responses:
+        '200':
+          description: Notification sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DueReminderResponse'
+              examples:
+                successResponse:
+                  value:
+                    status: "SUCCESS"
+                    notificationId: "NOT-123e4567-e89b-12d3-a456-426614174000"
+                    deliveryStatus: "SENT"
+        '400':
+          description: Bad request - invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidAccountId:
+                  value:
+                    status: "ERROR"
+                    code: "INVALID_ACCOUNT_ID"
+                    message: "The provided account ID is invalid or malformed"
+                missingRequiredField:
+                  value:
+                    status: "ERROR"
+                    code: "MISSING_REQUIRED_FIELD"
+                    message: "Required field 'notificationType' is missing"
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    status: "ERROR"
+                    code: "UNAUTHORIZED"
+                    message: "Authentication required"
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  value:
+                    status: "ERROR"
+                    code: "FORBIDDEN"
+                    message: "Insufficient permissions to send notifications"
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                accountNotFound:
+                  value:
+                    status: "ERROR"
+                    code: "ACCOUNT_NOT_FOUND"
+                    message: "Account with the specified ID was not found"
+        '429':
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  value:
+                    status: "ERROR"
+                    code: "RATE_LIMIT_EXCEEDED"
+                    message: "Too many requests, please try again later"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                internalError:
+                  value:
+                    status: "ERROR"
+                    code: "INTERNAL_ERROR"
+                    message: "An internal server error occurred"
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serviceUnavailable:
+                  value:
+                    status: "ERROR"
+                    code: "SERVICE_UNAVAILABLE"
+                    message: "The notification service is currently unavailable"
+
+  /api/notifications/status/{notificationId}:
+    get:
+      summary: Get notification status
+      description: Retrieves the current status of a previously sent notification
+      operationId: getNotificationStatus
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: ID of the notification to check
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notification status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationStatusResponse'
+        '400':
+          description: Bad request - invalid notification ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    DueReminderRequest:
+      type: object
+      required:
+        - accountId
+        - notificationType
+      properties:
+        accountId:
+          type: string
+          description: Unique identifier for the customer account
+          example: "ACC123"
+          minLength: 5
+          maxLength: 50
+        notificationType:
+          type: string
+          description: Type of notification to send
+          enum: [PAYMENT_DUE]
+          example: "PAYMENT_DUE"
+        preferredChannel:
+          type: string
+          description: Optional preferred notification channel
+          enum: [EMAIL, SMS, PUSH, ALL]
+          default: ALL
+      additionalProperties: false
+    
+    DueReminderResponse:
+      type: object
+      required:
+        - status
+        - notificationId
+        - deliveryStatus
+      properties:
+        status:
+          type: string
+          description: Status of the notification request
+          enum: [SUCCESS, PARTIAL_SUCCESS, PENDING, FAILED]
+          example: "SUCCESS"
+        notificationId:
+          type: string
+          description: Unique identifier for the sent notification
+          format: uuid
+          example: "NOT-123e4567-e89b-12d3-a456-426614174000"
+        deliveryStatus:
+          type: string
+          description: Current delivery status of the notification
+          enum: [SENT, DELIVERED, READ, FAILED, PENDING]
+          example: "SENT"
+        channels:
+          type: array
+          description: List of channels the notification was sent through
+          items:
+            type: string
+            enum: [EMAIL, SMS, PUSH]
+          example: ["EMAIL", "SMS"]
+      additionalProperties: false
+    
+    NotificationStatusResponse:
+      type: object
+      required:
+        - notificationId
+        - accountId
+        - status
+        - timestamp
+      properties:
+        notificationId:
+          type: string
+          description: Unique identifier for the notification
+          format: uuid
+          example: "NOT-123e4567-e89b-12d3-a456-426614174000"
+        accountId:
+          type: string
+          description: Account ID associated with the notification
+          example: "ACC123"
+        status:
+          type: string
+          description: Current status of the notification
+          enum: [SENT, DELIVERED, READ, FAILED, PENDING]
+          example: "DELIVERED"
+        timestamp:
+          type: string
+          description: Timestamp of the last status update
+          format: date-time
+          example: "2023-10-15T14:30:00Z"
+        channels:
+          type: object
+          description: Status by delivery channel
+          properties:
+            email:
+              type: string
+              enum: [SENT, DELIVERED, READ, FAILED, PENDING]
+              example: "DELIVERED"
+            sms:
+              type: string
+              enum: [SENT, DELIVERED, READ, FAILED, PENDING]
+              example: "SENT"
+            push:
+              type: string
+              enum: [SENT, DELIVERED, READ, FAILED, PENDING]
+              example: "READ"
+      additionalProperties: false
+    
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          description: Error status
+          enum: [ERROR]
+          example: "ERROR"
+        code:
+          type: string
+          description: Error code
+          example: "INVALID_ACCOUNT_ID"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The provided account ID is invalid or malformed"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+      additionalProperties: false
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key authentication
+
+x-components:
+  securityRequirements:
+    - Input validation to prevent injection attacks (CWE-20)
+    - Proper authentication and authorization (CWE-306, CWE-862)
+    - Rate limiting to prevent DoS attacks (CWE-400)
+    - Data encryption in transit (CWE-319)
+    - Proper error handling without leaking sensitive information (CWE-209)
+    - Protection against CSRF attacks (CWE-352)
+    - Secure handling of sensitive financial data (CWE-312)
+    - Proper logging and monitoring (CWE-778)
+    - Input sanitization to prevent XSS (CWE-79)
