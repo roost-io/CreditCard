@@ -1,0 +1,7 @@
+statuses
+"available"
+"pending"
+"sold"
+"available,pending,sold"
+"pending,sold"
+"available,sold"
