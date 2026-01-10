@@ -1,0 +1,94 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "User Registration and Consent",
+      "description": "Verify successful user registration and consent for accessing financial data.",
+      "testId": "TC-001",
+      "testDescription": "Sarah registers on the app and provides consent to access her financial data.",
+      "prerequisites": "Sarah has the app installed on her mobile device.",
+      "stepsToPerform": "1. Open the app.\n2. Enter registration details (name, email, password).\n3. Submit the registration form.\n4. Grant consent for accessing financial data.",
+      "expectedResult": "Sarah's account is created successfully, and she grants consent for data access."
+    },
+    {
+      "type": "functional",
+      "title": "Access Financial Details",
+      "description": "Verify the app retrieves financial details using Open Banking APIs.",
+      "testId": "TC-002",
+      "testDescription": "The app uses Open Banking APIs to fetch Sarah's financial details from multiple banks.",
+      "prerequisites": "Sarah has granted necessary permissions for data access.",
+      "stepsToPerform": "1. Trigger data fetch using Open Banking APIs.\n2. Retrieve credit limits, balances, due dates, and minimum payment information.",
+      "expectedResult": "The app successfully retrieves and displays Sarah's financial details."
+    },
+    {
+      "type": "functional",
+      "title": "Consolidated Dashboard Display",
+      "description": "Verify the app displays a consolidated dashboard with all financial details.",
+      "testId": "TC-003",
+      "testDescription": "The app consolidates and displays all of Sarah's financial details on a single dashboard.",
+      "prerequisites": "Financial details have been successfully retrieved.",
+      "stepsToPerform": "1. Navigate to the dashboard.\n2. View consolidated financial information.",
+      "expectedResult": "The dashboard displays all of Sarah's bank and credit card accounts with up-to-date information."
+    },
+    {
+      "type": "functional",
+      "title": "Payment Scheduling and Automation",
+      "description": "Verify the app allows scheduling and automation of credit card payments.",
+      "testId": "TC-004",
+      "testDescription": "Sarah sets up monthly auto-payments for her credit cards through the app.",
+      "prerequisites": "Sarah's financial details are available in the app.",
+      "stepsToPerform": "1. Access payment scheduling feature.\n2. Set up monthly auto-payments for each credit card.\n3. Confirm the setup.",
+      "expectedResult": "The app successfully schedules and automates the payments as per Sarah's preferences."
+    },
+    {
+      "type": "functional",
+      "title": "Payment Confirmation and Alerts",
+      "description": "Verify the app sends payment confirmations and alerts for upcoming payments.",
+      "testId": "TC-005",
+      "testDescription": "The app sends notifications for successful payments and alerts for upcoming payments or issues.",
+      "prerequisites": "Auto-payments are set up in the app.",
+      "stepsToPerform": "1. Wait for a scheduled payment to be processed.\n2. Check for confirmation notification.\n3. Monitor for alerts on upcoming payments or issues.",
+      "expectedResult": "Sarah receives confirmation notifications and alerts as expected."
+    },
+    {
+      "type": "non-functional",
+      "title": "App Usability",
+      "description": "Ensure the app provides a user-friendly interface.",
+      "testId": "TC-006",
+      "testDescription": "Evaluate the app's interface for ease of use and intuitive navigation.",
+      "prerequisites": "The app is installed and functional.",
+      "stepsToPerform": "1. Navigate through different sections of the app.\n2. Attempt common tasks like viewing the dashboard and setting up payments.",
+      "expectedResult": "The app is easy to navigate and use, with clear instructions and intuitive design."
+    },
+    {
+      "type": "non-functional",
+      "title": "Performance Under Load",
+      "description": "Test the app's performance under high load conditions.",
+      "testId": "TC-007",
+      "testDescription": "Simulate multiple users accessing the app simultaneously to test performance.",
+      "prerequisites": "The app is deployed and accessible.",
+      "stepsToPerform": "1. Simulate multiple users performing various operations.\n2. Monitor app response times and stability.",
+      "expectedResult": "The app maintains acceptable performance levels without crashing or slowing down significantly."
+    },
+    {
+      "type": "non-functional",
+      "title": "Data Security",
+      "description": "Ensure sensitive data is stored and transmitted securely.",
+      "testId": "TC-008",
+      "testDescription": "Verify that the app encrypts sensitive data and protects it from unauthorized access.",
+      "prerequisites": "The app is handling sensitive financial data.",
+      "stepsToPerform": "1. Review data storage and transmission methods.\n2. Attempt unauthorized access to sensitive data.",
+      "expectedResult": "Sensitive data is encrypted and secure, preventing unauthorized access."
+    },
+    {
+      "type": "non-functional",
+      "title": "Cross-Platform Compatibility",
+      "description": "Verify the app's compatibility across different platforms and devices.",
+      "testId": "TC-009",
+      "testDescription": "Test the app on various devices and operating systems to ensure consistent functionality.",
+      "prerequisites": "The app is available on multiple platforms.",
+      "stepsToPerform": "1. Install and run the app on different devices (iOS, Android).\n2. Perform key operations on each device.",
+      "expectedResult": "The app functions consistently across all tested platforms and devices."
+    }
+  ]
+}
