@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentPlanProposalRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openapi-spring</a> &gt; <a href="index.source.html" class="el_package">org.openapitools.model</a> &gt; <span class="el_source">PaymentPlanProposalRequest.java</span></div><h1>PaymentPlanProposalRequest.java</h1><pre class="source lang-java linenums">package org.openapitools.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.openapitools.model.PaymentPlanProposalRequestPaymentPlan;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.*;
+import javax.annotation.Generated;
+
+/**
+ * PaymentPlanProposalRequest
+ */
+
+@JsonTypeName(&quot;paymentPlanProposal_request&quot;)
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;,
+		date = &quot;2024-04-19T17:24:41.195299+05:30[Asia/Kolkata]&quot;, comments = &quot;Generator version: 7.4.0&quot;)
+public class PaymentPlanProposalRequest {
+
+	private String outstandingBalance;
+
+	private PaymentPlanProposalRequestPaymentPlan paymentPlan;
+
+	private String cardLast4;
+
+	public PaymentPlanProposalRequest() {
+<span class="nc" id="L34">		super();</span>
+<span class="nc" id="L35">	}</span>
+
+	/**
+	 * Constructor with only required parameters
+	 */
+	public PaymentPlanProposalRequest(String outstandingBalance, PaymentPlanProposalRequestPaymentPlan paymentPlan,
+<span class="nc" id="L41">			String cardLast4) {</span>
+<span class="nc" id="L42">		this.outstandingBalance = outstandingBalance;</span>
+<span class="nc" id="L43">		this.paymentPlan = paymentPlan;</span>
+<span class="nc" id="L44">		this.cardLast4 = cardLast4;</span>
+<span class="nc" id="L45">	}</span>
+
+	public PaymentPlanProposalRequest outstandingBalance(String outstandingBalance) {
+<span class="nc" id="L48">		this.outstandingBalance = outstandingBalance;</span>
+<span class="nc" id="L49">		return this;</span>
+	}
+
+	/**
+	 * Get outstandingBalance
+	 * @return outstandingBalance
+	 */
+	@NotNull
+	@Schema(name = &quot;outstandingBalance&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;outstandingBalance&quot;)
+	public String getOutstandingBalance() {
+<span class="nc" id="L60">		return outstandingBalance;</span>
+	}
+
+	public void setOutstandingBalance(String outstandingBalance) {
+<span class="nc" id="L64">		this.outstandingBalance = outstandingBalance;</span>
+<span class="nc" id="L65">	}</span>
+
+	public PaymentPlanProposalRequest paymentPlan(PaymentPlanProposalRequestPaymentPlan paymentPlan) {
+<span class="nc" id="L68">		this.paymentPlan = paymentPlan;</span>
+<span class="nc" id="L69">		return this;</span>
+	}
+
+	/**
+	 * Get paymentPlan
+	 * @return paymentPlan
+	 */
+	@NotNull
+	@Valid
+	@Schema(name = &quot;paymentPlan&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;paymentPlan&quot;)
+	public PaymentPlanProposalRequestPaymentPlan getPaymentPlan() {
+<span class="nc" id="L81">		return paymentPlan;</span>
+	}
+
+	public void setPaymentPlan(PaymentPlanProposalRequestPaymentPlan paymentPlan) {
+<span class="nc" id="L85">		this.paymentPlan = paymentPlan;</span>
+<span class="nc" id="L86">	}</span>
+
+	public PaymentPlanProposalRequest cardLast4(String cardLast4) {
+<span class="nc" id="L89">		this.cardLast4 = cardLast4;</span>
+<span class="nc" id="L90">		return this;</span>
+	}
+
+	/**
+	 * Get cardLast4
+	 * @return cardLast4
+	 */
+	@NotNull
+	@Size(min = 4, max = 4)
+	@Schema(name = &quot;cardLast4&quot;, requiredMode = Schema.RequiredMode.REQUIRED)
+	@JsonProperty(&quot;cardLast4&quot;)
+	public String getCardLast4() {
+<span class="nc" id="L102">		return cardLast4;</span>
+	}
+
+	public void setCardLast4(String cardLast4) {
+<span class="nc" id="L106">		this.cardLast4 = cardLast4;</span>
+<span class="nc" id="L107">	}</span>
+
+	@Override
+	public boolean equals(Object o) {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (this == o) {</span>
+<span class="nc" id="L112">			return true;</span>
+		}
+<span class="nc bnc" id="L114" title="All 4 branches missed.">		if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L115">			return false;</span>
+		}
+<span class="nc" id="L117">		PaymentPlanProposalRequest paymentPlanProposalRequest = (PaymentPlanProposalRequest) o;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		return Objects.equals(this.outstandingBalance, paymentPlanProposalRequest.outstandingBalance)</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">				&amp;&amp; Objects.equals(this.paymentPlan, paymentPlanProposalRequest.paymentPlan)</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				&amp;&amp; Objects.equals(this.cardLast4, paymentPlanProposalRequest.cardLast4);</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="nc" id="L125">		return Objects.hash(outstandingBalance, paymentPlan, cardLast4);</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="nc" id="L130">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L131">		sb.append(&quot;class PaymentPlanProposalRequest {\n&quot;);</span>
+<span class="nc" id="L132">		sb.append(&quot;    outstandingBalance: &quot;).append(toIndentedString(outstandingBalance)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L133">		sb.append(&quot;    paymentPlan: &quot;).append(toIndentedString(paymentPlan)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L134">		sb.append(&quot;    cardLast4: &quot;).append(toIndentedString(cardLast4)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L135">		sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L136">		return sb.toString();</span>
+	}
+
+	/**
+	 * Convert the given object to string with each line indented by 4 spaces (except the
+	 * first line).
+	 */
+	private String toIndentedString(Object o) {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (o == null) {</span>
+<span class="nc" id="L145">			return &quot;null&quot;;</span>
+		}
+<span class="nc" id="L147">		return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
