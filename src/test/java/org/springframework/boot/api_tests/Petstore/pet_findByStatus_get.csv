@@ -1,0 +1,6 @@
+status
+"['available']"
+"['pending']"
+"['sold']"
+"['available','sold']"
+"['pending','available']"
