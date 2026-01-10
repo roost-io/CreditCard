@@ -1,0 +1,11 @@
+METHOD^|^URL^|^REQ_HEADERS^|^REQ_BODY^|^RESPONSE_CODE^|^RESPONSE_BODY
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^Content-Type: application/json^|^{
+  "event": "BOOKING_CANCELED",
+  "details": {}
+}^|^200^|^{
+  "control": {
+    "code": 200,
+    "message": "Ok",
+    "type": "S"
+  }
+}

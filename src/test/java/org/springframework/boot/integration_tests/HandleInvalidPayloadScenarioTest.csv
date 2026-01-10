@@ -1,0 +1,2 @@
+METHOD^|^URL^|^REQ_HEADERS^|^REQ_BODY^|^RESPONSE_CODE^|^RESPONSE_BODY
+POST^|^/listener/workOrderAttributeValueChangeEvent^|^{"Content-Type":"application/json"}^|^{"invalidField":"invalidValue"}^|^400^|^{"message":"Bad Request"}
