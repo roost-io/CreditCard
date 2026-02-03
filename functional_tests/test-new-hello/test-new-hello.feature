@@ -254,3 +254,59 @@ Feature: EvolvePay Platform Management
     And I attempt to click on the "Profile" navigation link
     Then I should be redirected to the login page
     And I should see a message "Your session has expired due to inactivity. Please log in again."
+
+  @ui @remittance
+  Scenario: [UI] Tier 2 User Successfully Sends an International Remittance
+    Given I am logged in as a "Tier 2 (Verified)" user with sufficient funds
+    And I have a saved beneficiary for international transfer
+    When I navigate to the "International Transfer" page
+    And I select the beneficiary
+    And I enter an amount to send
+    And I review the exchange rate and fees on the confirmation screen
+    And I click the "Confirm Transfer" button
+    Then I should see a success message with a transaction reference number
+    And the transfer should appear in my international transfer history with a "Pending" status
+
+  @ui @remittance
+  Scenario: [UI] Tier 1 User is Blocked from International Remittance
+    Given I am logged in as a "Tier 1 (Unverified)" user
+    When I attempt to navigate to the "International Transfer" page
+    Then the "International Transfer" option should be disabled or not visible
+    And I should be shown a message stating I need to be a Tier 2 user
+
+  @ui @remittance
+  Scenario: [UI] User Adds and Saves a New Beneficiary
+    Given I am logged in as a "Tier 2 (Verified)" user
+    When I navigate to the "Beneficiaries" management page
+    And I click "Add New Beneficiary"
+    And I fill in all required beneficiary details
+    And I click the "Save Beneficiary" button
+    Then I should see a confirmation message "Beneficiary saved successfully."
+    And the new beneficiary should appear in the list of saved beneficiaries
+
+  @ui @remittance
+  Scenario: [UI] User Deletes an Existing Beneficiary
+    Given I am logged in as a "Tier 2 (Verified)" user and have a saved beneficiary
+    When I navigate to the "Beneficiaries" management page
+    And I select a beneficiary from the list
+    And I click the "Delete" option
+    And I confirm the deletion
+    Then the beneficiary should be removed from the list of saved beneficiaries
+    And I should see a success message "Beneficiary successfully removed."
+
+  @ui @remittance
+  Scenario: [UI] Verify Display of Exchange Rate and Fees Before Transfer Confirmation
+    Given I am logged in as a "Tier 2 (Verified)" user
+    When I initiate an international transfer and proceed to the confirmation screen
+    Then the screen must clearly display the send amount and the exchange rate
+    And the screen must clearly display a breakdown of all transaction fees
+    And the screen must clearly display the total amount to be debited
+
+  @ui @remittance
+  Scenario: [UI] Verify International Transfer History and Pagination
+    Given I am logged in and have a history of more than 25 international transfers
+    When I navigate to the "International Transfer History" page
+    Then the page displays a list of the first 25 past international transfers
+    And pagination controls are visible
+    When I click the "Next" page button
+    Then the next set of transactions should be displayed on the second page

@@ -20,6 +20,8 @@ tags:
     description: Endpoints for ordering and managing prepaid cards.
   - name: Transactions
     description: Endpoints for retrieving transaction history.
+  - name: Remittance
+    description: Endpoints for managing international transfers and beneficiaries.
 
 paths:
   /users/register:
@@ -283,6 +285,223 @@ paths:
               example:
                 message: "Card not found."
 
+  /remittance/beneficiaries:
+    get:
+      tags:
+        - Remittance
+      summary: Get list of beneficiaries
+      description: Retrieves a list of saved beneficiaries for the authenticated Tier 2 user.
+      operationId: getBeneficiaries
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: A list of saved beneficiaries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BeneficiaryResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden. User must be Tier 2 to access remittance features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User must be Tier 2 verified to manage beneficiaries."
+    post:
+      tags:
+        - Remittance
+      summary: Add a new beneficiary
+      description: Allows a Tier 2 user to add and save a new beneficiary for international transfers.
+      operationId: addBeneficiary
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: The details of the new beneficiary to add.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiaryRequest'
+      responses:
+        '201':
+          description: Beneficiary saved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeneficiaryResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden. User must be Tier 2 to access remittance features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User must be Tier 2 verified to manage beneficiaries."
+
+  /remittance/beneficiaries/{beneficiaryId}:
+    delete:
+      tags:
+        - Remittance
+      summary: Delete a beneficiary
+      description: Allows a Tier 2 user to delete a saved beneficiary.
+      operationId: deleteBeneficiary
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: beneficiaryId
+          in: path
+          required: true
+          description: The unique identifier of the beneficiary to delete.
+          schema:
+            type: string
+          example: "benef_12345"
+      responses:
+        '200':
+          description: Beneficiary deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Beneficiary successfully removed."
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden. User must be Tier 2 to access remittance features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User must be Tier 2 verified to manage beneficiaries."
+        '404':
+          description: The specified beneficiary was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Beneficiary not found."
+
+  /remittance/transfers:
+    post:
+      tags:
+        - Remittance
+      summary: Send an international transfer
+      description: Allows a Tier 2 user to send an international remittance to a saved beneficiary.
+      operationId: sendInternationalTransfer
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Details of the transfer, including the beneficiary and amount.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemittanceTransferRequest'
+      responses:
+        '202':
+          description: Transfer accepted and is being processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemittanceTransferResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden. User must be Tier 2 to access remittance features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User must be Tier 2 verified to send international transfers."
+    get:
+      tags:
+        - Remittance
+      summary: Get international transfer history
+      description: Retrieves a paginated list of international transfers for the authenticated user.
+      operationId: getInternationalTransferHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: The page number for pagination.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: The number of items to return per page.
+          schema:
+            type: integer
+            default: 25
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: A paginated list of international transfers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRemittanceTransfersResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden. User must be Tier 2 to access remittance features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User must be Tier 2 verified to view transfer history."
+
+  /remittance/transfers/quote:
+    post:
+      tags:
+        - Remittance
+      summary: Get a remittance quote
+      description: Provides a quote with the current exchange rate and fees for an international transfer.
+      operationId: getRemittanceQuote
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: The amount and destination for the transfer quote.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemittanceQuoteRequest'
+      responses:
+        '200':
+          description: Quote details including exchange rate and fees.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemittanceQuoteResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden. User must be Tier 2 to access remittance features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User must be Tier 2 verified to get a quote."
+
 components:
   securitySchemes:
     BearerAuth:
@@ -458,6 +677,153 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Transaction'
+
+    BeneficiaryRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          example: "Jane Doe"
+        accountNumber:
+          type: string
+          example: "GB29NWBK60161331926819"
+        bankName:
+          type: string
+          example: "Global Bank Ltd"
+        country:
+          type: string
+          example: "GB"
+      required:
+        - fullName
+        - accountNumber
+        - bankName
+        - country
+
+    BeneficiaryResponse:
+      type: object
+      properties:
+        beneficiaryId:
+          type: string
+          example: "benef_123456789"
+        fullName:
+          type: string
+          example: "Jane Doe"
+        accountNumber:
+          type: string
+          example: "GB29NWBK60161331926819"
+        bankName:
+          type: string
+          example: "Global Bank Ltd"
+        country:
+          type: string
+          example: "GB"
+
+    RemittanceQuoteRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: float
+          description: The amount to send in the source currency.
+          example: 1000.00
+        sourceCurrency:
+          type: string
+          example: "USD"
+        destinationCurrency:
+          type: string
+          example: "EUR"
+      required:
+        - amount
+        - sourceCurrency
+        - destinationCurrency
+
+    RemittanceQuoteResponse:
+      type: object
+      properties:
+        exchangeRate:
+          type: number
+          format: float
+          example: 0.92
+        fee:
+          type: number
+          format: float
+          example: 5.00
+        totalDebitAmount:
+          type: number
+          format: float
+          description: Total amount to be debited from the sender's account.
+          example: 1005.00
+        recipientReceivesAmount:
+          type: number
+          format: float
+          description: Amount the recipient will receive in the destination currency.
+          example: 920.00
+
+    RemittanceTransferRequest:
+      type: object
+      properties:
+        beneficiaryId:
+          type: string
+          example: "benef_123456789"
+        amount:
+          type: number
+          format: float
+          example: 1000.00
+        currency:
+          type: string
+          example: "USD"
+      required:
+        - beneficiaryId
+        - amount
+        - currency
+
+    RemittanceTransferResponse:
+      type: object
+      properties:
+        transactionReference:
+          type: string
+          example: "RMT_abcdef123456"
+        status:
+          type: string
+          example: "Pending"
+        message:
+          type: string
+          example: "Your international transfer has been initiated."
+
+    RemittanceTransferHistoryItem:
+      type: object
+      properties:
+        transactionReference:
+          type: string
+          example: "RMT_abcdef123456"
+        beneficiaryName:
+          type: string
+          example: "Jane Doe"
+        amountSent:
+          type: number
+          format: float
+          example: 1000.00
+        sentCurrency:
+          type: string
+          example: "USD"
+        status:
+          type: string
+          enum: [Pending, Completed, Failed]
+          example: "Completed"
+        date:
+          type: string
+          format: date-time
+          example: "2025-09-20T10:00:00Z"
+
+    PaginatedRemittanceTransfersResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemittanceTransferHistoryItem'
 
     ErrorResponse:
       type: object
