@@ -1,0 +1,5 @@
+requestBody
+"[{""id"":1,""username"":""johndoe"",""firstName"":""John"",""lastName"":""Doe"",""email"":""john.doe@example.com"",""password"":""123pass"",""phone"":""+123456789"",""userStatus"":1}]"
+"[{""id"":2,""username"":""janedoe"",""firstName"":""Jane"",""lastName"":""Doe"",""email"":""jane.doe@example.com"",""password"":""abcXYZ"",""phone"":""+987654321"",""userStatus"":2}]"
+"[{""id"":3,""username"":""alexsmith"",""firstName"":""Alex"",""lastName"":""Smith"",""email"":""alex.smith@example.com"",""password"":""pass123"",""phone"":""+789456123"",""userStatus"":3}]"
+"[{""id"":4,""username"":""terryjones"",""firstName"":""Terry"",""lastName"":""Jones"",""email"":""terry.jones@example.com"",""password"":""safePass"",""phone"":""+456987321"",""userStatus"":4}]"

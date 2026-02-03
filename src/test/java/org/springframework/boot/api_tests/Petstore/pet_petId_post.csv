@@ -1,0 +1,5 @@
+petId,name,status
+"12345",`Fluffy`,`available`
+"67890",`Max`,`sold`
+"33333",`Bella`,`pending`
+"44444",`Charlie`,`available`

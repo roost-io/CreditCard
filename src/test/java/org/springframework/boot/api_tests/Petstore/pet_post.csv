@@ -1,0 +1,4 @@
+requestBody
+"{""name"":""doggie"",""photoUrls"":[""https://example.com/dog.jpg""],""status"":""available""}"
+"{""name"":""kitty"",""photoUrls"":[""https://example.com/cat.jpg""],""status"":""sold"",""tags"":[]}"
+"{""name"":""parrot"",""photoUrls"":[""https://example.com/parrot.jpg""],""status"":""pending""}"
