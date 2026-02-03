@@ -1,0 +1,23 @@
+body
+`[`
+`{`
+`id: 1,`
+`username: 'john_doe',`
+`firstName: 'John',`
+`lastName: 'Doe',`
+`email: 'john.doe@example.com',`
+`password: 'password123',`
+`phone: '1234567890',`
+`userStatus: 1`
+`},`
+`{`
+`id: 2,`
+`username: 'jane_doe',`
+`firstName: 'Jane',`
+`lastName: 'Doe',`
+`email: 'jane.doe@example.com',`
+`password: 'password456',`
+`phone: '9876543210',`
+`userStatus: 0`
+`}`
+`]`
