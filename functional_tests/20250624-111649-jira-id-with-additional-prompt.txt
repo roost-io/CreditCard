@@ -1,0 +1,56 @@
+**Functional Test Cases**
+
+1. **Credit Card Due Reminder**
+   - **Input:** Credit Card Due Date is 01/12/2022
+   - **Expected Output:** Reminder is sent on 30/11/2022
+   - **Edge Case:** If the due date falls on a holiday, the reminder should still be sent one day prior.
+
+2. **Overdue Balance Alert**
+   - **Input:** Payment due date has passed (e.g., it's 02/12/2022 and due date was 01/12/2022)
+   - **Expected Output:** Alert should be sent on 02/12/2022
+
+3. **Collection Notification**
+   - **Input:** Account is significantly delinquent
+   - **Expected Output:** Collection Notification is sent detailing the amount owed and additional charges.
+   - **Edge Case:** Ensure accurate account classification to avoid sending notices to accounts just days past due.
+
+4. **Payment Plan Proposal**
+   - **Input:** User informs about inability to pay.
+   - **Expected Output:** A payment plan proposal is offered with reduced interest rates or fees.
+   - **Edge Case:** This feature should not trigger for users in good standing or with minor delinquency.
+
+5. **Collection Agency Involvement**
+   - **Input:** Cardholder fails to respond to previous notifications and reminders
+   - **Expected Output:** Collection agency is involved in the process
+   - **Edge Case:** Ensure collection agency involvement threshold is accurate, avoiding agency involvement just days after the payment due date.
+
+6. **Legal Action Initiation**
+   - **Input:** Extreme cases of non-payment or default.
+   - **Expected Output:** Legal action is initiated
+   - **Edge Case:** There should be a rigorous confirmation procedure before initiating legal action to prevent undeserved legal hassles to the user.
+
+**Non-Functional Test Cases**
+
+1. **Performance Testing**
+   - **Test Case:** Verify the system's ability to handle the load of sending notifications to all users.
+   - **Expected Output:** The alert system works swiftly and promptly even with thousands of cardholders.
+
+2. **Usability Testing**
+   - **Test Case:** Verify if the notification messages are clear and understandable to the cardholders.
+   - **Expected Output:** Notifications with clear and user-friendly language.
+
+3. **Security Testing**
+   - **Test Case:** Ensure that sensitive cardholder data is protected during interactions.
+   - **Expected Output:** Secure and reliable notification delivery platform.
+
+4. **Compatibility Testing**
+   - **Test Case:** Ensure the notifications are delivered effectively across all different device types that cardholders may use (PCs, mobile phones, tablets).
+   - **Expected Output:** Notifications are sent reliably without delays.
+
+5. **Recovery Testing**
+   - **Test Case:** Test if the system can recover from crashes, hardware failures, and other similar problems without losing any critical data.
+   - **Expected Output:** System recovers without data loss.
+
+6. **Reliability Testing**
+   - **Test Case:** Test if the system is able to perform its functions continuously for a long period of time without any disruption.
+   - **Expected Output:** Continuous and uninterrupted system performance.
