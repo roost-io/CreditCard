@@ -1,0 +1,75 @@
+**Functional Test Cases**
+
+1. **Credit Card Due Reminder Notification**
+   - **Input:** Cardholder with an upcoming payment due date.
+   - **Expected Output:** Automated notification sent to the cardholder with the last 4 digits of the credit card number.
+   - **Edge Cases:** 
+     - Cardholder has multiple credit cards; ensure the correct card is identified.
+     - Notification is sent even if the due date falls on a weekend or holiday.
+
+2. **Overdue Balance Alert**
+   - **Input:** Cardholder misses the payment due date.
+   - **Expected Output:** Alert sent to the cardholder with the last 4 digits of the credit card number, detailing overdue balance and consequences.
+   - **Edge Cases:**
+     - Cardholder has made a partial payment; ensure the alert reflects the correct overdue amount.
+     - Alert is sent even if the cardholder is on a payment plan.
+
+3. **Collection Notification**
+   - **Input:** Account becomes significantly delinquent.
+   - **Expected Output:** Formal collection notification sent with the last 4 digits of the credit card number, detailing the amount owed and additional charges.
+   - **Edge Cases:**
+     - Notification is sent to the correct contact information if the cardholder has updated their details.
+     - Ensure notification is not sent if the account is under dispute.
+
+4. **Payment Plan Proposal**
+   - **Input:** Cardholder unable to pay the full overdue balance.
+   - **Expected Output:** Proposal sent with a structured repayment schedule and the last 4 digits of the credit card number.
+   - **Edge Cases:**
+     - Proposal includes accurate interest rates or fees.
+     - Proposal is sent even if the cardholder has multiple overdue accounts.
+
+5. **Collection Agency Involvement**
+   - **Input:** Cardholder fails to respond to previous notifications.
+   - **Expected Output:** Collection agency is involved, provided with the last 4 digits of the credit card number.
+   - **Edge Cases:**
+     - Ensure data is securely transferred to the collection agency.
+     - Verify that the agency has the correct contact information for the cardholder.
+
+6. **Legal Action Initiation**
+   - **Input:** Extreme cases of non-payment or default.
+   - **Expected Output:** Legal documentation includes the last 4 digits of the credit card number.
+   - **Edge Cases:**
+     - Ensure legal documentation is accurate and complete.
+     - Verify that legal action is not initiated if the account is under dispute or negotiation.
+
+**Non-Functional Test Cases**
+
+1. **Performance Testing**
+   - **Scenario:** System handles a large volume of notifications and alerts simultaneously.
+   - **Expected Output:** Notifications and alerts are sent without delay or system crash.
+   - **Edge Cases:**
+     - System performance during peak times, such as end-of-month billing cycles.
+
+2. **Security Testing**
+   - **Scenario:** Ensure only the last 4 digits of the credit card number are included in communications.
+   - **Expected Output:** No full credit card numbers are displayed or shared in plain text.
+   - **Edge Cases:**
+     - Test for vulnerabilities such as CWE-200 (Information Exposure) and CWE-522 (Insufficiently Protected Credentials).
+
+3. **Usability Testing**
+   - **Scenario:** Cardholders can easily understand notifications and alerts.
+   - **Expected Output:** Notifications are clear, concise, and provide necessary information.
+   - **Edge Cases:**
+     - Test for readability on different devices and screen sizes.
+
+4. **Reliability Testing**
+   - **Scenario:** System consistently sends notifications and alerts without failure.
+   - **Expected Output:** High reliability with minimal downtime or errors.
+   - **Edge Cases:**
+     - System recovery after a failure or outage.
+
+5. **Compliance Testing**
+   - **Scenario:** Ensure all notifications and processes comply with relevant regulations and standards.
+   - **Expected Output:** Compliance with data protection laws and financial regulations.
+   - **Edge Cases:**
+     - Changes in regulations are promptly reflected in the system processes.
