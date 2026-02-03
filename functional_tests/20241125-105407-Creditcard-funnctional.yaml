@@ -1,0 +1,120 @@
+openapi: 3.0.0
+info:
+  title: Credit Card Due Reminder API
+  version: 1.0.0
+  description: API for managing credit card due date reminders
+
+servers:
+  - url: https://api.example.com/v1
+
+paths:
+  /api/reminders/{cardId}:
+    get:
+      summary: Get reminder details for a specific credit card
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The last 4 digits of the credit card number
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  last_four_digits:
+                    type: string
+                  due_date:
+                    type: string
+                    format: date
+                  cardholder_name:
+                    type: string
+        '404':
+          description: Reminder not found
+  
+  /api/reminders/send:
+    post:
+      summary: Send a reminder to a cardholder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credit_card_number:
+                  type: string
+                  pattern: '^[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}$'
+      responses:
+        '200':
+          description: Reminder sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  sent_to:
+                    type: string
+                    format: email
+        '400':
+          description: Bad request
+
+  /api/reminders/check:
+    post:
+      summary: Check for upcoming due dates and generate reminders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                check_date:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Check completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reminders_generated:
+                    type: integer
+        '400':
+          description: Bad request
+
+components:
+  schemas:
+    Reminder:
+      type: object
+      properties:
+        credit_card_number:
+          type: string
+          pattern: '^[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}$'
+        last_four_digits:
+          type: string
+        due_date:
+          type: string
+          format: date
+        cardholder_name:
+          type: string
+        cardholder_email:
+          type: string
+          format: email
+
+security:
+  - ApiKeyAuth: []
+
+securitySchemes:
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: X-API-Key
