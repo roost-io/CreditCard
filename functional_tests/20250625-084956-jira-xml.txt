@@ -1,0 +1,84 @@
+# Functional Test Cases
+
+- **Test Case 1: Fetch BambooHR Employees**
+  - **Input Values:** Valid BambooHR API key, subdomain, and fields to retrieve (e.g., 'firstName', 'workEmail').
+  - **Expected Output:** Successfully fetch active employees with specified fields from BambooHR.
+  - **Edge Cases:** 
+    - Invalid API key should return an error.
+    - No active employees should return an empty array.
+
+- **Test Case 2: Check Okta User Exists**
+  - **Input Values:** Valid email address of an existing user in Okta.
+  - **Expected Output:** Return the Okta user object for the provided email.
+  - **Edge Cases:**
+    - Non-existing email should return null.
+    - Invalid email format should return an error.
+
+- **Test Case 3: Create Okta User Profile**
+  - **Input Values:** Valid BambooHR employee object with fields like firstName, lastName, workEmail.
+  - **Expected Output:** Return a valid Okta user profile object.
+  - **Edge Cases:**
+    - Missing email in employee object should raise an error.
+    - Employee with missing optional fields like mobilePhone should still return a valid profile.
+
+- **Test Case 4: Create Okta User**
+  - **Input Values:** Valid Okta user profile created from BambooHR employee data.
+  - **Expected Output:** Successfully create a user in Okta and return the created user object.
+  - **Edge Cases:**
+    - Duplicate email should raise an error.
+    - Invalid user profile format should raise an error.
+
+- **Test Case 5: Update Existing Okta User**
+  - **Input Values:** Valid Okta user ID and updated profile data.
+  - **Expected Output:** Successfully update the existing Okta user and return updated user object.
+  - **Edge Cases:**
+    - Invalid user ID should raise an error.
+    - Profile with invalid data should raise an error.
+
+- **Test Case 6: Assign User to Groups**
+  - **Input Values:** Valid Okta user ID, department, and job title.
+  - **Expected Output:** User should be assigned to appropriate groups based on department and role.
+  - **Edge Cases:**
+    - Invalid user ID should raise an error.
+    - Non-existing department should not assign to any group.
+
+- **Test Case 7: Provision Users**
+  - **Input Values:** Options for provisioning (e.g., dryRun, updateExisting).
+  - **Expected Output:** Successfully provision users from BambooHR to Okta with a summary of processed, created, and updated users.
+  - **Edge Cases:**
+    - Network failure should log an error and continue processing.
+    - Invalid provisioning options should raise an error.
+
+- **Test Case 8: Sync Single Employee**
+  - **Input Values:** Valid BambooHR employee ID.
+  - **Expected Output:** Successfully sync a single employee from BambooHR to Okta.
+  - **Edge Cases:**
+    - Non-existing employee ID should raise an error.
+    - Employee not active should log a message and skip processing.
+
+# Non-Functional Test Cases
+
+- **Test Case 1: Performance Testing for Fetching Employees**
+  - **Input Values:** Large number of employees in BambooHR.
+  - **Expected Output:** Employees should be fetched within acceptable time limits.
+  - **Edge Cases:** System should not time out or crash under load.
+
+- **Test Case 2: Security Testing for API Authentication**
+  - **Input Values:** Invalid API keys for BambooHR and Okta.
+  - **Expected Output:** System should reject invalid API keys and log unauthorized access attempts.
+  - **Edge Cases:** System should not expose sensitive error messages.
+
+- **Test Case 3: Scalability Testing for User Provisioning**
+  - **Input Values:** Large batch of users to be provisioned from BambooHR to Okta.
+  - **Expected Output:** System should handle large batches efficiently without degradation in performance.
+  - **Edge Cases:** System should not fail or slow down with increasing number of users.
+
+- **Test Case 4: Reliability Testing for Network Failures**
+  - **Input Values:** Simulated network interruptions during API calls.
+  - **Expected Output:** System should gracefully handle network failures and retry operations.
+  - **Edge Cases:** System should maintain data integrity and consistency despite failures.
+
+- **Test Case 5: Usability Testing for Log Messages**
+  - **Input Values:** Various operations like fetching employees, creating users.
+  - **Expected Output:** Log messages should be clear, informative, and easily understandable.
+  - **Edge Cases:** Log messages should not contain sensitive information.
