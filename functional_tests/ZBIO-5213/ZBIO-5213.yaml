@@ -1,0 +1,703 @@
+openapi: 3.0.3
+info:
+  title: Credit Card Collection Lifecycle API
+  description: API for notification, masking, escalation, audit, agency handoff, legal compliance in credit card collection.
+  version: 1.0.0
+  contact:
+    email: support@collectionservice.com
+servers:
+  - url: https://api.collectionservice.com/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CardLastFour:
+      name: cardLastFour
+      in: query
+      description: Last four digits of cardholder's card
+      required: true
+      schema:
+        type: string
+        pattern: '^\d{4}$'
+    AccountId:
+      name: accountId
+      in: path
+      description: Unique identifier for cardholder account
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    Notification:
+      type: object
+      properties:
+        notificationType:
+          type: string
+          enum: [Reminder, Overdue, Collection, Payment Plan, Legal Notice, Agency, Custom]
+        cardLastFour:
+          type: string
+          pattern: '^\d{4}$'
+        channel:
+          type: array
+          items:
+            type: string
+            enum: [Email, SMS, App, Portal, Postal Mail]
+        recipients:
+          type: array
+          items:
+            type: string
+        content:
+          type: object
+          properties:
+            dueAmount:
+              type: number
+              format: float
+            dueDate:
+              type: string
+              format: date
+            overdueBalance:
+              type: number
+              format: float
+            escalationWarning:
+              type: string
+            paymentTerms:
+              type: string
+            timeline:
+              type: string
+            lawfulWarning:
+              type: string
+            feeBreakdown:
+              type: string
+            region:
+              type: string
+        auditLogId:
+          type: string
+        delivered:
+          type: boolean
+      required:
+        - notificationType
+        - cardLastFour
+        - channel
+        - delivered
+
+    MaskingValidationResult:
+      type: object
+      properties:
+        maskValid:
+          type: boolean
+        validatedChannels:
+          type: array
+          items:
+            type: string
+        details:
+          type: string
+      required:
+        - maskValid
+        - validatedChannels
+
+    AgencyFeedTransmission:
+      type: object
+      properties:
+        cardLastFour:
+          type: string
+        amount:
+          type: number
+        legalStatus:
+          type: string
+        transmissionStatus:
+          type: string
+          enum: [success, failure, retry]
+        errorCode:
+          type: string
+          nullable: true
+        auditLogId:
+          type: string
+      required:
+        - cardLastFour
+        - amount
+        - legalStatus
+        - transmissionStatus
+
+    LegalDocumentGeneration:
+      type: object
+      properties:
+        cardLastFour:
+          type: string
+        templateId:
+          type: string
+        legalActionTriggered:
+          type: boolean
+        escalationTrail:
+          type: array
+          items:
+            type: string
+        auditLogId:
+          type: string
+
+    NotificationSuppressionResult:
+      type: object
+      properties:
+        suppressed:
+          type: boolean
+        cardLastFour:
+          type: string
+        suppressionReason:
+          type: string
+        auditLogId:
+          type: string
+
+    PaymentPlanProposal:
+      type: object
+      properties:
+        eligible:
+          type: boolean
+        accountState:
+          type: string
+        amount:
+          type: number
+        cardLastFour:
+          type: string
+        proposalAction:
+          type: string
+          enum: [offered, attempted, revoked]
+        uiMessage:
+          type: string
+        stateResult:
+          type: string
+        auditLogId:
+          type: string
+
+    LegalEscalationBlockResult:
+      type: object
+      properties:
+        blocked:
+          type: boolean
+        sequenceError:
+          type: string
+        cardLastFour:
+          type: string
+        auditLogId:
+          type: string
+
+    AuditLogEntry:
+      type: object
+      properties:
+        logType:
+          type: string
+        cardLastFour:
+          type: string
+        userRole:
+          type: string
+        stage:
+          type: string
+        content:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+    ChannelConfig:
+      type: object
+      properties:
+        primary:
+          type: string
+        secondary:
+          type: string
+        overrideChannel:
+          type: string
+        currentChannel:
+          type: string
+        cardLastFour:
+          type: string
+        notificationType:
+          type: string
+        auditLogId:
+          type: string
+
+    FailedNotification:
+      type: object
+      properties:
+        cardLastFour:
+          type: string
+        notificationType:
+          type: string
+        channel:
+          type: string
+        errorReason:
+          type: string
+        alternateChannel:
+          type: string
+        auditLogId:
+          type: string
+
+paths:
+  /notifications:
+    post:
+      summary: Send a collection notification to specified channels.
+      operationId: sendCollectionNotification
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Notification details including masking and channel
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      responses:
+        '201':
+          description: Notification sent successfully with masking enforcement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '400':
+          description: Invalid input or masking validation failed
+        '403':
+          description: Unauthorized/Compliance error
+
+  /notifications/masking/validate:
+    post:
+      summary: Validate masking in outbound communication/document/logs.
+      operationId: validateMasking
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Masking validation request
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notifType:
+                  type: string
+                cardLastFour:
+                  type: string
+                channels:
+                  type: array
+                  items:
+                    type: string
+              required: [notifType, cardLastFour, channels]
+      responses:
+        '200':
+          description: Masking validation result across channels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaskingValidationResult'
+        '400':
+          description: Masking failed or unauthorized PII detected
+
+  /alerts:
+    post:
+      summary: Trigger escalation alerts at regulatory threshold
+      operationId: triggerAlert
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Alert trigger and escalation details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountId:
+                  type: string
+                threshold:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                alertType:
+                  type: string
+                channels:
+                  type: array
+                  items:
+                    type: string
+                cardLastFour:
+                  type: string
+                escalation:
+                  type: string
+              required: [accountId, threshold, date, alertType, channels, cardLastFour, escalation]
+      responses:
+        '201':
+          description: Alert sent with masking, escalation, override/suppression
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notificationId:
+                    type: string
+                  deliveredChannels:
+                    type: array
+                    items:
+                      type: string
+                  cardLastFour:
+                    type: string
+                  escalation:
+                    type: string
+                  maskingStatus:
+                    type: boolean
+                  auditLogId:
+                    type: string
+
+  /agency/feed:
+    post:
+      summary: Trigger collection agency feed transmission (handoff).
+      operationId: triggerAgencyFeed
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Agency feed details with transmission, masking and error handling
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgencyFeedTransmission'
+      responses:
+        '200':
+          description: Agency feed transmission successful or failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgencyFeedTransmission'
+        '400':
+          description: PII or unmasked data detected, transmission blocked
+
+  /legal/notification:
+    post:
+      summary: Generate legal notification and document post escalation.
+      operationId: generateLegalNotification
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Legal document generation after agency fails, masking enforced.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LegalDocumentGeneration'
+      responses:
+        '201':
+          description: Legal document/notification generated, masking enforced, audit updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegalDocumentGeneration'
+        '400':
+          description: Masking not enforced or template error
+
+  /notifications/suppression:
+    post:
+      summary: Suppress notifications on opt-out or account closure event
+      operationId: suppressNotification
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Notification suppression trigger with masking/audit
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountId:
+                  type: string
+                accountState:
+                  type: string
+                notifStatus:
+                  type: string
+                triggerEvent:
+                  type: string
+                cardLastFour:
+                  type: string
+              required: [accountId, accountState, notifStatus, triggerEvent]
+      responses:
+        '200':
+          description: Notification suppression logged, masking validated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSuppressionResult'
+
+  /paymentplan/proposal:
+    post:
+      summary: Handle payment plan proposal eligibility, notification and rollback.
+      operationId: paymentPlanProposal
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Payment plan proposal request including eligibility and masking.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentPlanProposal'
+      responses:
+        '200':
+          description: Payment plan response, masking enforced, audit updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentPlanProposal'
+        '400':
+          description: Proposal denied or not eligible
+
+  /legal/block:
+    post:
+      summary: Enforce legal escalation block when agency step missing.
+      operationId: legalEscalationBlock
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Legal escalation block trigger
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountId:
+                  type: string
+                escalationState:
+                  type: string
+                cardLastFour:
+                  type: string
+              required: [accountId, escalationState]
+      responses:
+        '200':
+          description: Legal escalation blocked, masking enforced, audit updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegalEscalationBlockResult'
+
+  /audit/logs:
+    get:
+      summary: Retrieve audit log entries for cardholder notifications and escalations
+      operationId: getAuditLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardLastFour'
+        - name: userRole
+          in: query
+          schema:
+            type: string
+        - name: stage
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit log entries with masking compliance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
+  /config/channels:
+    post:
+      summary: Configure/override alert channels for future notifications and audit logging
+      operationId: configureChannels
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Channel configuration with audit logging and masking
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelConfig'
+      responses:
+        '200':
+          description: Channel configuration updated, audit logged, masking enforced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannelConfig'
+
+  /notifications/failed:
+    post:
+      summary: Register a failed/missed notification, audit/log, activate fallback channel.
+      operationId: handleFailedNotification
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Failed notification details, error reason and fallback channel
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FailedNotification'
+      responses:
+        '200':
+          description: Failure logged, fallback triggered, masking validated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedNotification'
+
+  /notifications/content/lawful:
+    post:
+      summary: Validate notification content for lawful disclosure and UI compliance.
+      operationId: validateLawfulContent
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Request template and content validation for overdue/collection notifications
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                region:
+                  type: string
+                daysLate:
+                  type: integer
+                cardLastFour:
+                  type: string
+              required: [region, daysLate, cardLastFour]
+      responses:
+        '200':
+          description: Content validated, masking enforced, lawful disclosure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  maskingValid:
+                    type: boolean
+                  lawfulDisclosure:
+                    type: boolean
+                  contentFields:
+                    type: array
+                    items:
+                      type: string
+                  uiOverrideBlocked:
+                    type: boolean
+
+  /notifications/manualoverride:
+    post:
+      summary: Manual escalation/override in UI with customization and masking enforcement
+      operationId: manualOverrideNotification
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Request for manual override and customization by agent
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentId:
+                  type: string
+                accountId:
+                  type: string
+                cardLastFour:
+                  type: string
+                fieldsToEdit:
+                  type: array
+                  items:
+                    type: string
+                edits:
+                  type: object
+                reason:
+                  type: string
+              required: [agentId, accountId, cardLastFour, fieldsToEdit, edits]
+      responses:
+        '200':
+          description: Override processed, masking enforced, edit compliance and audit logged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  overrideId:
+                    type: string
+                  maskingEnforced:
+                    type: boolean
+                  allowedEdits:
+                    type: array
+                    items:
+                      type: string
+                  deniedEdits:
+                    type: array
+                    items:
+                      type: string
+                  agentId:
+                    type: string
+                  timestamp:
+                    type: string
+
+  /paymentplan/rollback:
+    post:
+      summary: Handle payment plan proposal rollback and UI status with masking.
+      operationId: rollbackPaymentPlanProposal
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Payment plan rollback request
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountId:
+                  type: string
+                state:
+                  type: string
+                amount:
+                  type: number
+                planCount:
+                  type: integer
+                action:
+                  type: string
+                cardLastFour:
+                  type: string
+              required: [accountId, state, amount, planCount, action, cardLastFour]
+      responses:
+        '200':
+          description: Rollback processed, masking enforced, UI status delivered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rollbackStatus:
+                    type: string
+                  maskingEnforced:
+                    type: boolean
+                  uiMessage:
+                    type: string
+
+tags:
+  - name: notifications
+    description: Operations related to notification delivery, masking, audit, escalation
+  - name: agency
+    description: Agency handoff, feed transmission, masking and error handling
+  - name: legal
+    description: Legal action, escalation, masking and compliance
+  - name: audit
+    description: Audit log, inspection, regulatory compliance
+  - name: config
+    description: Alert channel configuration and override management
+  - name: paymentplan
+    description: Payment plan proposal, eligibility, rollback
+
