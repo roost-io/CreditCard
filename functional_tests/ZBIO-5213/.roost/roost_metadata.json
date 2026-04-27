@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "ZBIO-5213",
+    "created_at": "2026-04-27T07:28:44.376Z",
+    "updated_at": "2026-04-27T07:28:44.376Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "ZBIO-5213.txt",
+        "fileURI": "/var/tmp/Roost/RoostGPT/demo-functional-test/41909e28-4686-472a-9026-216085391028/functional_tests/ZBIO-5213/ZBIO-5213.txt",
+        "fileSha": "0e017aaae1"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}

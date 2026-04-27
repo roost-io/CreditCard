@@ -1,0 +1,1051 @@
+openapi: 3.0.3
+info:
+  title: Credit Card Collection Workflow API
+  version: 1.1.0
+  description: |
+    API specification for credit card due, collection, masking, notification, compliance, and state management workflows.
+servers:
+  - url: https://api.finorg.example.com
+    description: Production Base URL
+  - url: https://sandbox.finorg.example.com
+    description: Sandbox Environment
+
+tags:
+  - name: Collections
+  - name: Notifications
+  - name: Auditing
+  - name: PaymentPlans
+  - name: Legal
+  - name: AgencyIntegration
+  - name: Roles & Access
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  parameters:
+    CardLast4:
+      name: card_last4
+      in: path
+      required: true
+      description: Last 4 digits of the masked card number
+      schema:
+        type: string
+        pattern: '^\d{4}$'
+    EntityId:
+      name: entity_id
+      in: path
+      required: true
+      description: Collection entity unique identifier
+      schema:
+        type: string
+    Channel:
+      name: channel
+      in: query
+      required: false
+      description: Notification channel (Email, SMS, UI, Download, etc)
+      schema:
+        type: string
+        enum: [SMS, Email, UI, Download]
+    Locale:
+      name: locale
+      in: query
+      required: false
+      description: Locale/language setting for notification (English, Spanish, etc)
+      schema:
+        type: string
+    Role:
+      name: role
+      in: header
+      description: User role for access control
+      schema:
+        type: string
+        enum: [Customer, Bank Staff, Collection Agent, Legal Handler, System Admin, Unauthorized User]
+    IntegrationState:
+      name: integration_state
+      in: query
+      required: false
+      description: Integration state (up, down, up after retry)
+      schema:
+        type: string
+        enum: [up, down, up after retry]
+    Broker:
+      name: broker
+      in: query
+      required: false
+      description: Notification broker (Twilio, SendGrid)
+      schema:
+        type: string
+        enum: [Twilio, SendGrid]
+    IncorrectContact:
+      name: incorrect_contact
+      in: query
+      required: false
+      description: Incorrect contact info (for negative test paths)
+      schema:
+        type: string
+
+  schemas:
+    MaskedCard:
+      type: string
+      pattern: '^\d{4}$'
+      description: Last 4 digits of card, fully masked elsewhere
+    Balance:
+      type: number
+      description: Account balance, boundary values validated
+    Fee:
+      type: number
+      description: Fee/penalty calculated
+    PlanStatus:
+      type: string
+      enum: [eligible, ineligible, pending, accepted, rejected]
+
+    CollectionEntity:
+      type: object
+      required:
+        - masked_card
+        - balance
+      properties:
+        entity_id:
+          type: string
+        masked_card:
+          $ref: '#/components/schemas/MaskedCard'
+        balance:
+          $ref: '#/components/schemas/Balance'
+        fee_applied:
+          $ref: '#/components/schemas/Fee'
+        state:
+          type: string
+          description: Account workflow state
+        audit:
+          type: object
+          description: Audit information
+          properties:
+            actor:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            action:
+              type: string
+            masked_card:
+              $ref: '#/components/schemas/MaskedCard'
+    Notification:
+      type: object
+      required:
+        - masked_card
+        - content
+        - channel
+      properties:
+        notification_id:
+          type: string
+        masked_card:
+          $ref: '#/components/schemas/MaskedCard'
+        content:
+          type: string
+        channel:
+          type: string
+        status:
+          type: string
+          enum: [sent, suppressed, failed, delivered, masked, blocked]
+        locale:
+          type: string
+
+    ErrorMasked:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+          description: Error description with masking
+        masked_card:
+          $ref: '#/components/schemas/MaskedCard'
+        audit:
+          $ref: '#/components/schemas/CollectionEntity/properties/audit'
+
+    AuditLog:
+      type: object
+      required:
+        - actor
+        - action
+        - masked_card
+        - timestamp
+      properties:
+        log_id:
+          type: string
+        actor:
+          type: string
+        action:
+          type: string
+        masked_card:
+          $ref: '#/components/schemas/MaskedCard'
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: string
+
+paths:
+  /api/collections/{entity_id}:
+    get:
+      tags: [Collections]
+      summary: Retrieve a collection entity, masked card, and compliance info
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - $ref: '#/components/parameters/Role'
+      responses:
+        '200':
+          description: Collection entity fetched successfully, masked data only
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionEntity'
+        '403':
+          description: Access denied, masked error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+    put:
+      tags: [Collections]
+      summary: Update a collection entity, enforcing masking and compliance
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - $ref: '#/components/parameters/Role'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionEntity'
+      responses:
+        '200':
+          description: Entity updated, masked digits confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionEntity'
+        '400':
+          description: Invalid input, masking error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+        '403':
+          description: Unauthorized update attempt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+    post:
+      tags: [Collections]
+      summary: Create a new collection record, masking enforced
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - $ref: '#/components/parameters/Role'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionEntity'
+      responses:
+        '201':
+          description: Created collection entity, masked digits in response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionEntity'
+        '400':
+          description: Bad input, masked error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+        '403':
+          description: Unauthorized create attempt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/state:
+    get:
+      tags: [Collections]
+      summary: Get account state by masked card digits
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Role'
+      responses:
+        '200':
+          description: Account state returned with masking and compliance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  state:
+                    type: string
+                  balance:
+                    $ref: '#/components/schemas/Balance'
+                  fee_applied:
+                    $ref: '#/components/schemas/Fee'
+                  audit:
+                    $ref: '#/components/schemas/CollectionEntity/properties/audit'
+        '404':
+          description: Account not found, masked error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+    patch:
+      tags: [Collections]
+      summary: State transition and masked notification/action
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Role'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_action
+                - next_state
+              properties:
+                user_action:
+                  type: string
+                next_state:
+                  type: string
+                justification:
+                  type: string
+                  description: Reason for state change, manual hold, override
+      responses:
+        '200':
+          description: State changed, with masked notification/logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  previous_state:
+                    type: string
+                  new_state:
+                    type: string
+                  fee_applied:
+                    $ref: '#/components/schemas/Fee'
+                  notification:
+                    $ref: '#/components/schemas/Notification'
+                  audit:
+                    $ref: '#/components/schemas/CollectionEntity/properties/audit'
+        '403':
+          description: Unauthorized action, masked error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/notifications:
+    get:
+      tags: [Notifications]
+      summary: Retrieve all notifications for masked card
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Channel'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Array of masked notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '404':
+          description: No notifications found, masked error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+    post:
+      tags: [Notifications]
+      summary: Trigger notification for masked card
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Channel'
+        - $ref: '#/components/parameters/Locale'
+        - $ref: '#/components/parameters/Role'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                scheduled_date:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Notification created, masked digits in delivery channel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '422':
+          description: Notification suppressed, masking/validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/audit:
+    get:
+      tags: [Auditing]
+      summary: Fetch audit trail for actions on masked card
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Role'
+      responses:
+        '200':
+          description: Audit log array, only masked digits present
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+        '451':
+          description: Retention expired/redacted, access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/payment-plan:
+    get:
+      tags: [PaymentPlans]
+      summary: Get payment plan proposal and eligibility for masked card
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      responses:
+        '200':
+          description: Returned payment plan eligibility and masked status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  plan_status:
+                    $ref: '#/components/schemas/PlanStatus'
+                  balance:
+                    $ref: '#/components/schemas/Balance'
+                  notification:
+                    $ref: '#/components/schemas/Notification'
+        '404':
+          description: No eligible payment plan, plan suppressed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+    post:
+      tags: [PaymentPlans]
+      summary: Accept/reject payment plan for masked card
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Role'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accept:
+                  type: boolean
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Payment plan status updated, masking in logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  plan_status:
+                    $ref: '#/components/schemas/PlanStatus'
+                  notification:
+                    $ref: '#/components/schemas/Notification'
+                  audit:
+                    $ref: '#/components/schemas/AuditLog'
+        '403':
+          description: Action denied, masked error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/legal:
+    post:
+      tags: [Legal]
+      summary: Trigger legal action, document generation with masking
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Role'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  description: Legal action to initiate
+      responses:
+        '201':
+          description: Legal docs created, masked digits and roles enforced
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  documents:
+                    type: array
+                    items:
+                      type: string
+                  notification:
+                    $ref: '#/components/schemas/Notification'
+        '403':
+          description: Unauthorized legal action attempt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/legal/documents:
+    get:
+      tags: [Legal]
+      summary: Fetch legal documents, access control and masking compliance
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Role'
+      responses:
+        '200':
+          description: Legal documents with masked digits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '403':
+          description: Blocked access attempt, masking enforced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/agency-handoff:
+    post:
+      tags: [AgencyIntegration]
+      summary: Trigger agency handoff, handle failure, masking enforced
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/IntegrationState'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Reason for handoff/escalation
+      responses:
+        '200':
+          description: Handoff confirmed, masked comms
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  status:
+                    type: string
+                  notification:
+                    $ref: '#/components/schemas/Notification'
+        '503':
+          description: Integration failed, masked logs and retry path
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+        '403':
+          description: Unauthorized or blocked handoff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/fee-calculate:
+    post:
+      tags: [Collections]
+      summary: Calculate fee/penalty, handle overrides and masking
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Role'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                balance:
+                  $ref: '#/components/schemas/Balance'
+                override:
+                  type: boolean
+                  description: Staff override flag
+      responses:
+        '200':
+          description: Fee calculated or overridden, masking in notifications/logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  balance:
+                    $ref: '#/components/schemas/Balance'
+                  fee_applied:
+                    $ref: '#/components/schemas/Fee'
+                  audit:
+                    $ref: '#/components/schemas/AuditLog'
+        '400':
+          description: Boundary or invalid balance, error masking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/notifications/templates:
+    get:
+      tags: [Notifications]
+      summary: Fetch notification templates with masking tokens
+      security: [bearerAuth: [], apiKey: []]
+      responses:
+        '200':
+          description: Template array, masking tokens validated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    template_id:
+                      type: string
+                    content:
+                      type: string
+                    masked_token:
+                      type: string
+        '403':
+          description: Access denied, masked error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+    post:
+      tags: [Notifications]
+      summary: Create/edit notification template and validate masking
+      security: [bearerAuth: [], apiKey: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                masked_token:
+                  type: string
+                locale:
+                  type: string
+      responses:
+        '201':
+          description: Template created/edited with masking
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  template_id:
+                    type: string
+                  content:
+                    type: string
+                  masked_token:
+                    type: string
+        '400':
+          description: Template validation error, masking enforced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/notifications/broker:
+    post:
+      tags: [Notifications]
+      summary: Route notification via third-party broker, masking ensured
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/Broker'
+        - $ref: '#/components/parameters/CardLast4'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      responses:
+        '200':
+          description: Broker notification dispatched, masked digits in payload/logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '502':
+          description: Transmission fails, masked error log and retry path
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/consent:
+    patch:
+      tags: [Notifications]
+      summary: Withdraw or reinstate consent, update audit and masking
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                withdraw:
+                  type: boolean
+                  description: Withdraw consent flag
+      responses:
+        '200':
+          description: Consent updated, comms suppressed or enabled, masking in output/logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  notification_status:
+                    type: string
+                  audit:
+                    $ref: '#/components/schemas/AuditLog'
+        '403':
+          description: Consent update denied, masking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/linked-products:
+    post:
+      tags: [Collections]
+      summary: Apply linked product payment, impact collection state, masking in update
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_type:
+                  type: string
+                payment_amount:
+                  type: number
+      responses:
+        '200':
+          description: State recalculated, notifications suppressed and masked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  state:
+                    type: string
+                  notification:
+                    $ref: '#/components/schemas/Notification'
+
+  /api/accounts/{card_last4}/appeal:
+    post:
+      tags: [Legal]
+      summary: Submit legal case appeal, workflow reopens with masking
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                appeal_reason:
+                  type: string
+      responses:
+        '200':
+          description: Appeal submitted, workflow and masked comms/logs updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  state:
+                    type: string
+                  log:
+                    $ref: '#/components/schemas/AuditLog'
+
+  /api/accounts/{card_last4}/dispute:
+    post:
+      tags: [Collections]
+      summary: Raise dispute, freeze escalation and enforce masking
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Dispute registered, escalation frozen, logs masked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  state:
+                    type: string
+                  log:
+                    $ref: '#/components/schemas/AuditLog'
+
+  /api/accounts/{card_last4}/dashboard:
+    get:
+      tags: [Collections]
+      summary: Fetch dashboard data, masking on UI documents
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      responses:
+        '200':
+          description: Dashboard data, masked digits throughout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  masked_card:
+                    $ref: '#/components/schemas/MaskedCard'
+                  overview:
+                    type: object
+                  documents:
+                    type: array
+                    items:
+                      type: string
+
+  /api/accounts/{card_last4}/notification-history:
+    get:
+      tags: [Notifications]
+      summary: Retrieve notification history, masked and localized content
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Notification history for account, with masking and localization
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+
+  /api/accounts/{card_last4}/audit-download:
+    get:
+      tags: [Auditing]
+      summary: Export/download audit logs, masking and retention policy applied
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      responses:
+        '200':
+          description: Downloadable masked audit log
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '451':
+          description: Retention expired, access denied or redacted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/payment:
+    post:
+      tags: [Collections]
+      summary: Process payment, validate masking, error handling
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Payment processed, masked receipt and logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '400':
+          description: Invalid input (negative/zero/excess), error masking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/override:
+    post:
+      tags: [Collections]
+      summary: Apply manual escalation hold/override, masking enforced in logs
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                justification:
+                  type: string
+      responses:
+        '200':
+          description: Override applied, masking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLog'
+        '403':
+          description: Blocked manual handoff, masked error/log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  /api/accounts/{card_last4}/retry-notification:
+    post:
+      tags: [Notifications]
+      summary: Retry notification/fallback after delivery failure, masking persists
+      security: [bearerAuth: [], apiKey: []]
+      parameters:
+        - $ref: '#/components/parameters/CardLast4'
+        - $ref: '#/components/parameters/Channel'
+      responses:
+        '200':
+          description: Retry performed, masking ensured in logs/comms
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '404':
+          description: Notification not found or misaddressed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMasked'
+
+  # Additional endpoints and parameters can be added for coverage of deep-link UI, downloadable docs, cross-product impact, boundary scenarios, RBAC changes, localization, and regulatory reporting.
