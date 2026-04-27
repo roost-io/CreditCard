@@ -1,0 +1,31 @@
+Credit card due collection lifecycle transitions and masking
+Overdue balance escalation fee calculation and integration error handling
+Role-based notification trigger and masking enforcement
+Notification generation, multi-channel delivery, and masking
+User actions and system state transitions for payment plan and collections
+Notification misdelivery and masked correction workflow
+Payment plan proposal eligibility and masking at boundary values
+Collection agency handoff integration failure and masking
+Legal action document creation, notification, masking, and access control
+Invalid payment input and secure error messaging workflow
+Notification suppression upon early payment and masking
+Manual override of collection escalation and masking
+Disputed overdue amount and temporary suspension with masking
+Parallel due and collection workflows for multiple cards per user
+Post-legal closure notification, retention and masking enforcement
+End-to-end UI masking validation for overdue and escalation journey
+Audit log and retention validation for all states, actions, and masked digits
+Penalty, fee, and interest assessment with boundary and negative values
+Integration error handling, retry, and masked comm/logs
+Payment plan, partial payment, reversal, recovery and masking
+Sequential overdue notices, timing, masking, and suppression logic
+Localization/regulatory formatting for multilingual notifications with masked digits
+Dynamic role change handling, notification masking, and access control
+Retroactive fee change, notification content update, and full masking
+Third-party broker (Twilio, SendGrid) notification consistency and masking
+Delayed payment after collection notification and suppression of agency escalation
+Notification template editing and preview masking
+Linked loan repayment impacting overdue card state, masking, notification suppression
+Legal case reopening after customer appeal with masked communication validation
+User communication consent withdrawal with notification suppression and masking
+Collection entity API operations with masking and compliance checks
