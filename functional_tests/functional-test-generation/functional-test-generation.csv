@@ -1,0 +1,31 @@
+End-to-end registration, verification, MFA login, 3-step application, approval for FICO > 680, and masked PAN returned by summary
+Application decision PENDING and DECLINED with duplicate application control and signature requirement
+Login lockout after five failures, rate limiting, MFA enforcement, and remember_me cookie TTL
+Refresh token rotation with single-use invalidation and concurrent refresh behavior
+Application sequencing, conditional employment fields, sin_consent enforcement, and X-App-Session 30-minute expiry
+Application Step 1 address and identity validation failures and success
+Application Step 3 validation for invalid product id, malformed e_signature, and marketing_opt_in default/explicit
+CSRF enforcement and SameSite=Strict cross-site POST rejection across endpoints
+Transactions exchange rate precision, zero amount, foreign fee rounding, and non-essential over-limit rejection
+Essential MCC 5% over-limit buffer boundary approvals and rejections vs non-essential MCC
+Freeze card prevents transactions, unfreeze via OTP, essential buffer boundary, and 60-minute frequency limit with MFA requirement
+Report card stolen is irreversible, forbids PIN and status changes, denies transactions, schedules replacement, and handles duplicates
+List transactions with date boundaries, pagination limits, category filter, and owner-only access
+Payments validation for minimum amount, bank account validity, date scheduling, owner-only access, and success cases
+Account summary include_rewards toggle, owner-only access enforcement, not-found and unauthorized handling
+Foreign purchase, fee and rewards, statements JSON/PDF, payment CSRF negative/positive, late fee webhook idempotency, session timeout and right to rescind
+ADB interest calculation and grace period across consecutive cycles
+Rewards accrual 1x with floor for non-travel and 3x for travel MCC in CAD
+Set PIN with OTP success, mismatch/format errors, OTP invalid, and allowed while Frozen
+Freeze/Unfreeze OTP attempt limits, resend OTP resets attempts, and successful transitions
+Owner-only card controls and report-lost: IDOR prevention and invalid status value handling
+WebSocket live transaction feed authentication, event delivery, unauthorized connection, and reconnect
+Registration field validations and duplicate email handling with secure cookie attributes
+Registration password complexity and leap-year age validation
+Email verification invalid/tampered, expired, resend rate-limit, and successful activation
+Credit limit change audit trail immutability and visibility, and role-based access
+Notifications webhook validation, multi-channel delivery, and idempotency per-account scope
+Right to rescind deletion leads to 404 on subsequent endpoints and idempotent DELETE
+Dashboard displays masked PAN and no PII leakage
+Application Step 1 draft auto-save every 60 seconds, restore, sanitize, and cleanup after submission
+Session timeout warning at 13 minutes and expiry at 15 minutes
