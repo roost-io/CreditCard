@@ -1,0 +1,29 @@
+End-to-End Applicant Journey with Security Controls (Register -> Verify -> Login MFA -> Application -> APPROVED -> Token Rotation -> CSRF Enforcement -> PIN -> Summary -> Session Timeout)
+Registration Validations and Case-Insensitive Email Uniqueness
+Authentication Lockout, Rate Limit, Remember Me TTL, Logout Invalidation
+Refresh Token Rotation Concurrency Across Tabs and CSRF Session Binding
+Access Control and CSRF Enforcement Matrix with SameSite=Strict
+Foreign Currency Purchase, Rewards, Pagination, CSRF, Rate Limit, Statements and Grace
+Transaction Field Validation and FX Precision
+Valid Small-Value FX with Rounding and Listing Page Validation
+Transactions Date/Time Boundaries, UTC/DST, per_page Max, Stable Pagination
+Rewards Accrual Boundary and MCC Classification with Floor Rounding
+Transaction Rate-Limit Recovery via MFA
+WebSocket Live Feed Resilience and Authorization
+Card Controls Freeze/Unfreeze with OTP and CSRF, Transactions Blocked While Frozen
+Report Card STOLEN with Delivery Address Override, OTP, Audit, Irreversibility
+Payments, Late Fee, Interest/Grace, Scheduling, CSRF, Rescind Window
+Payments CUSTOM Boundary and CSRF
+Statement Calculations Boundary: Interest Rounding, Grace, Late Fee UTC Boundary, Not Found
+Application Step Order Enforcement, Session Token Validation, PENDING and DECLINED
+Application Step 2 Credit Pull: sin_consent Enforcement, 503 Retry Idempotency, Session Expiry
+Application Step 1 Validation, Autosave Privacy and Cross-User Isolation
+Notifications Webhook Validation, PII Masking, Severity Rendering
+Transaction Currency and Field Validation with Success at Precision Boundaries
+CSRF Regeneration After Refresh Rotation
+Phone OTP Verification Flow with Expiry, Resend Throttle, Attempts Remaining
+Web-Based PIN Set Edge Cases: Numeric Format, Leading Zeros, OTP Expiry, Attempts Throttle, CSRF
+Audit Trail for Credit Limit Changes and Access Control
+Right to Rescind Security Sweep Post-Delete
+Session Timeout Warning - Stay Signed In Flow and Auto-Logout
+PAN Masking and Iframe Tokenization Compliance Across Portal Surfaces
