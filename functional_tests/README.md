@@ -65,3 +65,20 @@
 
 ---
 
+**Execution Date:** 4/28/2026, 7:19:28 AM
+
+**Test Unique Identifier:** "functional-test-aegis"
+
+**Input(s):**
+   1. Aegis_WebCC_SRS.pdf
+      Path: /var/tmp/Roost/RoostGPT/functional-test-aegis/d6bf0345-379c-48af-b81d-1f8f88aaab5e/Aegis_WebCC_SRS.pdf
+
+**Test Output Folder:**
+   1. [functional-test-aegis.json](functional-test-aegis/functional-test-aegis.json)
+   2. [functional-test-aegis.feature](functional-test-aegis/functional-test-aegis.feature)
+   3. [functional-test-aegis.csv](functional-test-aegis/functional-test-aegis.csv)
+   4. [functional-test-aegis.xlsx](functional-test-aegis/functional-test-aegis.xlsx)
+   5. [functional-test-aegis.docx](functional-test-aegis/functional-test-aegis.docx)
+
+---
+
