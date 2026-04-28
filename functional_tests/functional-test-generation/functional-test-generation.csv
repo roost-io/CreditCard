@@ -1,0 +1,33 @@
+Approved end-to-end: Registration to rescind with card controls, FX transaction, payments, notifications, and rescind window
+Application session expiration with save/resume and Step 3 signature validation
+Application decision boundaries for FICO thresholds
+Registration invalid field validations and weak password handling
+Registration valid then duplicate email rejection
+Transactions validation errors and CSRF enforcement
+Essential buffer boundary and FX fee precision
+Transaction frequency rate limiting with step-up MFA retry
+Cross-account/card owner-only enforcement returns 403 with no leakage
+Owner can access own summary while non-owner cannot
+Notifications webhook invalid inputs and authorization checks
+Notifications webhook idempotency scoping per account and across channels
+Notifications webhook message length and channel-scoped idempotency per account
+Email verification lifecycle with blocked pre-verification login and resend
+Refresh token rotation under multi-tab concurrency with CSRF continuity
+Transactions history category filters, date-range validation, and paging
+Login lockout, per-IP rate limiting, refresh rotation, CSRF cross-site protection, inactivity timeout, and PAN masking
+Authorized subscription to own account, forbidden cross-account, schema validation, reconnect and dedupe
+WebSocket unauthorized handshake and subscribe/unsubscribe lifecycle
+Payment scheduling boundaries: min amount, past-date rejection, same-day immediate, and FULL_BALANCE
+MINIMUM and STATEMENT_BALANCE payments and precision enforcement
+Report lost/stolen irreversible flow, OTP failures, invalid transitions, and PIN format enforcement
+Report lost/stolen with delivery address override validation and replacement confirmation
+Refresh token TTL expiry, 401 on refresh, re-authentication, and CSRF continuity
+Summary include_rewards toggle, rewards floor verification, and owner-only enforcement
+Step 2 idempotency and cross-application session token misuse
+CSRF token binding and invalid-token rejection across endpoints
+Essential over-limit buffer lifecycle with recovery after payment
+Transactions maximum amount and FX exchange_rate precision with REQ-006 rounding
+Trusted device remember_me 30-day TTL and MFA suppression on known device
+Rescind on exact Day 14 with CSRF enforcement and post-closure behavior
+Ensure no PII leakage on error payloads and UI across modules
+Draft auto-save at 60s, sanitized localStorage, resume, submit clears draft, and inactivity warning

@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "functional-test-generation",
+    "created_at": "2026-04-28T06:03:40.059Z",
+    "updated_at": "2026-04-28T06:03:40.059Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "functional-test-generation.txt",
+        "fileURI": "/var/tmp/Roost/RoostGPT/functional-test-generation/712daf43-8ed8-4c93-b878-021d857b68ce/functional_tests/functional-test-generation/functional-test-generation.txt",
+        "fileSha": "cf83e1357e"
+      },
+      {
+        "fileName": "Aegis_WebCC_SRS.pdf",
+        "fileURI": "/var/tmp/Roost/RoostGPT/functional-test-generation/712daf43-8ed8-4c93-b878-021d857b68ce/functional_tests/functional-test-generation/Aegis_WebCC_SRS.pdf",
+        "fileSha": "dcebdb1a12"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}
