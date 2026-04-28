@@ -65,3 +65,20 @@
 
 ---
 
+**Execution Date:** 4/28/2026, 6:03:40 AM
+
+**Test Unique Identifier:** "functional-test-generation"
+
+**Input(s):**
+   1. Aegis_WebCC_SRS.pdf
+      Path: /var/tmp/Roost/RoostGPT/functional-test-generation/712daf43-8ed8-4c93-b878-021d857b68ce/Aegis_WebCC_SRS.pdf
+
+**Test Output Folder:**
+   1. [functional-test-generation.json](functional-test-generation/functional-test-generation.json)
+   2. [functional-test-generation.feature](functional-test-generation/functional-test-generation.feature)
+   3. [functional-test-generation.csv](functional-test-generation/functional-test-generation.csv)
+   4. [functional-test-generation.xlsx](functional-test-generation/functional-test-generation.xlsx)
+   5. [functional-test-generation.docx](functional-test-generation/functional-test-generation.docx)
+
+---
+
