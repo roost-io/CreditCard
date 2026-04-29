@@ -1,0 +1,153 @@
+Portal base URL reachable over HTTPS and served via CDN
+API base URL /v2 reachable over HTTPS and enforces TLS 1.3 minimum using <tls_mode>
+API v2 endpoint is reachable over HTTPS (network level)
+Register user succeeds (201) and returns onboarding artifacts
+Registering the same email twice indicates the account now exists
+Register rejects when agree_terms is false and succeeds when corrected
+Register returns 409 EMAIL_EXISTS when email already registered
+Register returns 422 WEAK_PASSWORD for weak passwords
+Registration first_name validation (alpha-only and length 2-50)
+Registration rejects malformed email formats
+Registration password complexity and boundary length enforcement
+Registration date_of_birth format and age >= 18 enforcement
+Registration rejects non-E.164 phone_number formats
+Registration ssn_last4 must be exactly 4 numeric digits
+Registration missing required field returns 400 with error, field, message
+Login success returns access_token, refresh_token, expires_in and token works on a protected endpoint
+Tampered access token is rejected for protected endpoint
+Login returns 401 INVALID_CREDENTIALS for wrong password
+Login with MFA enabled accepts optional 6-digit TOTP mfa_code
+Account locks after 5 failed login attempts and returns 403 ACCOUNT_LOCKED + unlock_at
+Login rate limit returns 429 RATE_LIMITED with retry_after after exceeding 10 req/min per IP
+Login fails for unknown email and does not issue tokens
+Login device_id UUID v4 validation when provided
+remember_me=true extends refresh token TTL to 30 days (observable via cookie/token metadata)
+Token refresh returns new access_token and refresh_token (rotation enforced)
+Token refresh invalidates old refresh token after successful refresh (single-use)
+Token refresh requires refresh_token field (missing/empty fails; valid succeeds)
+Auth tokens stored in HttpOnly, Secure cookies and not accessible via document.cookie
+Auth tokens are never stored in localStorage or sessionStorage
+Credit application auto-save occurs every 60 seconds to localStorage draft
+Draft auto-save does not store auth tokens in localStorage
+PAN displayed in browser only as masked format
+Card fields use iframe tokenisation and no raw PAN in DOM
+CSRF cookie policy SameSite=Strict is enforced for portal sessions
+Portal session expires after 15 minutes of inactivity
+Portal shows 2-minute warning modal before auto-logout
+Application Step 1 succeeds and returns application_id and session_token
+Step 1 full_legal_name boundary validation (100 accepted, 101 rejected)
+Step 1 email must match authenticated user email (reject mismatch)
+Step 1 returns 409 DUPLICATE_APPLICATION when active application already in progress
+Step 1 phone_number must be E.164 (accept valid, reject invalid)
+Step 1 address.street max 100 chars boundary
+Step 1 address.city max 60 chars boundary
+Step 1 province must be 2-char ISO 3166-2 code
+Step 1 postal_code must match Canadian format A1A 1A1
+Step 1 id_type enum enforcement
+Step 1 id_number alphanumeric max 20 chars boundary
+Step 1 validation failure returns 400 with error, field, message
+Application Step 2 succeeds with X-App-Session and returns PENDING_REVIEW and fico_pull_id
+Step 2 rejects when EMPLOYED but employer_name missing
+Step 2 gross_annual_income boundary validation
+Step 2 rejects when sin_consent is false or omitted; succeeds when true
+Enforce sequential completion: Step 2 cannot be completed without X-App-Session from Step 1
+Step 2 returns 401 SESSION_EXPIRED when session_token is invalid
+Validate X-App-Session required and expiry boundary (29:59 succeeds; 30:01 expires)
+Step 2 other_income defaults to 0.00 when omitted
+Step 2 monthly_rent boundary allows 0.00 but rejects negative
+Step 2 existing_debt_payments enforces Decimal(10,2) precision
+Step 2 missing required field returns 400 with error, field, message
+Step 3 approved decision returns credit_limit and card_number_masked
+Step 3 pending decision includes review_eta_hours
+Step 3 declined decision includes reason_code
+Step 3 rejects missing/malformed e_signature with 400 SIGNATURE_REQUIRED
+Step 3 marketing_opt_in defaults to false when omitted (if observable)
+Decision boundary at FICO 680 returns PENDING and includes review_eta_hours
+Decision boundary at FICO 599 returns DECLINED and includes reason_code
+Step 3 card_product_id must come from GET /v2/products
+Initiate transaction approved path returns transaction_id, available_credit, auth_code
+Essential service over-limit within 5% buffer returns over_limit_flag true
+Initiate transaction returns 402 INSUFFICIENT_FUNDS with available_credit
+Initiate transaction returns 403 CARD_INACTIVE when card not Active or Frozen
+Initiate transaction rejects transaction_amount <= 0 with 422 INVALID_AMOUNT
+Initiate transaction requires exchange_rate when currency_code != CAD
+Transaction frequency limit triggers 429 FREQ_EXCEEDED with mfa_required true on 11th transaction
+Transaction frequency boundary does not trigger FREQ_EXCEEDED at exactly 10 transactions
+Foreign transaction fee calculation applies 1.03 multiplier to (amount × exchange_rate)
+Foreign fee is itemised separately as foreign_fee_amount in response
+List transactions default from_date is billing cycle start (fixture-based)
+List transactions rejects invalid date range with 400 INVALID_DATE_RANGE when to_date < from_date
+List transactions enforces per_page max 100 boundary
+List transactions returns 403 FORBIDDEN when account not owned by user
+List transactions page min 1 boundary and default page=1
+List transactions category filter accepts enum values and rejects unknown
+Initiate transaction currency_code defaults to CAD when omitted
+Initiate transaction transaction_type enum validation
+Initiate transaction description max 255 chars boundary
+Initiate transaction enforces account_id ownership (IDOR protection)
+Initiate transaction transaction_amount Decimal(10,2) precision validation
+Initiate transaction merchant_name max 100 chars boundary
+Initiate transaction merchant_id alphanumeric max 32 chars boundary
+Initiate transaction requires 4-digit mcc_code
+Get account summary success returns required fields
+Get account summary include_rewards defaults to false when omitted
+Get account summary returns 403 FORBIDDEN for non-owned account
+Freeze card succeeds with valid confirm_otp
+Unfreeze card succeeds with valid confirm_otp
+Card status update rejects invalid transition with 400 INVALID_TRANSITION and allowed_transitions
+Card status update fails with 401 OTP_FAILED and attempts_remaining
+Card status reason max 255 chars (accept) vs 256 (reject); successful change is audit-logged
+Card status update requires 6-digit confirm_otp format
+Report card lost/stolen blocks card and schedules replacement
+Report lost/stolen returns 409 ALREADY_BLOCKED if card already Blocked or Closed
+Report lost/stolen accepts last_known_use in ISO 8601 UTC
+Report lost/stolen rejects unknown loss_type and does not block the card
+Report lost/stolen accepts optional delivery_address override
+Set virtual PIN succeeds with encrypted 4-digit PIN, matching confirm_pin, and session_otp
+Set virtual PIN returns 400 PIN_MISMATCH when confirm_pin does not match new_pin
+Set virtual PIN returns 400 PIN_FORMAT when PIN is not exactly 4 numeric digits
+Set virtual PIN returns 403 CARD_BLOCKED when card is Blocked
+Set PIN requires session_otp and rejects missing/incorrect OTP
+Set PIN transmits new_pin encrypted (client payload does not contain plaintext PIN)
+Retrieve statement defaults to JSON and returns required statement fields
+Retrieve statement in PDF when format=PDF
+Retrieve statement returns 404 NOT_FOUND when statement missing (JSON or PDF)
+Interest computed using ADB formula for a known statement fixture
+Interest scales with Days_in_Billing_Cycle boundaries (28/30/31)
+Late fee charged when payment_received_date > due_date + 2 days
+Late fee boundary - no late fee when payment_received_date equals due_date + 2 days
+Rewards accrual for Travel MCC uses floor(amount × 3) (fixture-based)
+Rewards rounding uses floor() and never round/ceil (fixture-based)
+Statement accuracy - sum(transaction_amount[]) equals total_spend within ±0.01
+Make immediate payment (scheduled_date omitted) returns payment_id and new_balance_estimate (CSRF enforced)
+Make scheduled payment returns scheduled_date in response
+Payment amount minimum boundary (1.00 accepted; 0.99 rejected)
+Payment below minimum_payment_due returns 400 BELOW_MINIMUM with minimum_payment_due
+Payment requires bank_account_id from /v2/bank-accounts
+Payment rejects unlinked bank_account_id with 422 INVALID_BANK_ACCOUNT
+Payment_type enum validation
+Payment amount max equals total_balance (at-max accepted; just-over rejected)
+State-changing endpoints reject missing/invalid X-CSRF-Token
+CSRF token required even when Authorization uses Bearer token
+Full PAN never transmitted to frontend (HAR scan)
+Selected API responses do not include raw PAN fields or PAN-like sequences
+Notifications webhook accepts valid payload and returns notification_id and delivered_at
+Notifications webhook rejects unknown alert_type or channel with 400 INVALID_ALERT_TYPE
+Notifications webhook enforces message_body max length boundary
+Notifications webhook idempotency duplicate idempotency_key returns 409 DUPLICATE_NOTIFICATION
+Notifications webhook enforces idempotency_key UUID v4 format
+Notifications webhook enforces alert_type enum
+Notifications webhook enforces severity enum INFO/WARNING/CRITICAL
+WebSocket endpoint reachable for live transaction feed
+Right to rescind allowed within 14 days via DELETE /v2/accounts/{id}
+Right to rescind rejected after day 14
+Portal and API used by forms negotiate TLS 1.3 (no TLS 1.2 downgrade)
+OAuth 2.0 Authorization Code Flow with PKCE is observable during portal login
+API p95 latency meets ≤ 1500 ms target for GET /summary under representative load
+Portal Time-to-Interactive (TTI) meets ≤ 3s on 4G (5 runs)
+API gateway sustains 5000 requests/sec while maintaining response correctness for GET /summary
+Auto-scaling triggers at 70% CPU utilization and service remains available
+Credit_limit changes create immutable audit log entry with required fields
+E2E Register -> Login -> Step1 -> Step2 -> Step3 approved
+E2E Login -> Initiate transaction -> Verify it appears in list
+E2E Freeze card -> attempt transaction -> 403 CARD_INACTIVE with card_status -> unfreeze cleanup
