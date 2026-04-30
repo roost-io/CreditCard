@@ -1,0 +1,35 @@
+Send Automated Due Reminder Notification With Masked Card Digits
+Validate No Full Card Number is Exposed in Due Reminder Notification Artifacts
+Send Overdue Alert Notification After Missed Payment Date
+Do Not Send Overdue Alert If Payment Was Made Before Due Date
+Collection Notification Sent for Significantly Delinquent Accounts
+Collection Notifications Display Only Last 4 Digits in All Channels
+Payment Plan Proposal Triggered for Unable-to-Pay Cardholder
+Payment Plan Proposal Notification Complies With Card Masking
+Payment Plan Proposal Not Sent if Balance Is Paid in Full
+Escalate to Collection Agency After Failed Notifications
+Transmit Only Last 4 Digits to Collection Agency
+Agency Handoff Blocked for Ineligible Accounts
+Legal Action Triggered for Defaulted Accounts
+Legal Documentation Must Include Only Last 4 Digits of Card Number
+Masking Validation for All Lifecycle Communications
+No Full Card Number in Internal Audit Logs
+Flag and Reject Notification With Incorrect Masking
+Block Outbound Communication Containing Full Card Number
+Notification Contains Correct Fields and Message Structure
+Reject Notification If Required Fields Missing
+Notification Sent Only To Authorized Cardholder
+Collection Agency Access Limited to Assigned Accounts Only
+Log and Retry Failed Notification Transmission With PII Masking
+Raise Incident for Undeliverable Collection Notifications
+Prevent Escalation If Data Error Detected
+Audit Log Integrity for Legal and Collection Events
+Valid State Transitions From Due → Overdue → Collections
+Failed Payment Plan Acceptance Reverts To Collections
+Block Re-entry Into Payment Plan After Legal Action Initiation
+Boundary Test - Collection Notification Triggered Exactly At Overdue Days Threshold
+Boundary Test - Legal Escalation Triggered Only At Threshold Day
+API Sends Only Approved Fields To Collection Agency
+No Duplicate Agency Handoffs For Single Account
+Outbound Notification Data Must Match Customer and Account
+Full Lifecycle: Due Reminder → Overdue → Collections → Payment Plan → Agency → Legal
