@@ -65,3 +65,20 @@
 
 ---
 
+**Execution Date:** 5/1/2026, 1:28:08 PM
+
+**Test Unique Identifier:** "test-big-pdf"
+
+**Input(s):**
+   1. banking regulations israel.pdf
+      Path: /var/tmp/Roost/RoostGPT/test-big-pdf/33ec8519-68a7-4cea-a419-7f87c7235984/banking regulations israel.pdf
+
+**Test Output Folder:**
+   1. [test-big-pdf.json](test-big-pdf/test-big-pdf.json)
+   2. [test-big-pdf.feature](test-big-pdf/test-big-pdf.feature)
+   3. [test-big-pdf.csv](test-big-pdf/test-big-pdf.csv)
+   4. [test-big-pdf.xlsx](test-big-pdf/test-big-pdf.xlsx)
+   5. [test-big-pdf.docx](test-big-pdf/test-big-pdf.docx)
+
+---
+

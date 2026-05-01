@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "test-big-pdf",
+    "created_at": "2026-05-01T13:28:08.606Z",
+    "updated_at": "2026-05-01T13:28:08.606Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "test-big-pdf.txt",
+        "fileURI": "/var/tmp/Roost/RoostGPT/test-big-pdf/33ec8519-68a7-4cea-a419-7f87c7235984/functional_tests/test-big-pdf/test-big-pdf.txt",
+        "fileSha": "cf83e1357e"
+      },
+      {
+        "fileName": "banking regulations israel.pdf",
+        "fileURI": "/var/tmp/Roost/RoostGPT/test-big-pdf/33ec8519-68a7-4cea-a419-7f87c7235984/functional_tests/test-big-pdf/banking regulations israel.pdf",
+        "fileSha": "41acaf0ec6"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}

@@ -1,0 +1,26 @@
+Login with various credentials
+Registration Form Field Boundary Validation
+Email Format Validation During Registration
+Mandatory Field Validation During Registration
+Registration with Existing Email
+Password Minimum Complexity Enforcement
+Show/hide password toggle functionality
+Successful logout from dashboard
+Attempt login with account in restricted state
+Registration with whitespace in username
+Resend email verification link from login prompt
+Confirmation email contains correct verification link and expiry details
+Mandatory password length boundaries in password reset flow
+Username maximum and minimum length validation
+Password upper boundary validation during registration
+Registration with all special characters in password
+Registration with password reset notification email structure and audit logging
+Audit log records successful registration event
+Email not verified blocks login and triggers verification prompt
+Password reset with expired link
+Password change from profile with various current password values
+Full user registration and email verification flow
+Forgot password and set new password flow
+Account lock after multiple failed login attempts and unlock after password reset
+Automatic logout after session timeout
+Session timeout enforcement at exact threshold
