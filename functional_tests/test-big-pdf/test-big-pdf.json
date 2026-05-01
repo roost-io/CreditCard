@@ -1,0 +1,422 @@
+[
+  {
+    "type": "functional",
+    "title": "Login with valid credentials",
+    "description": "Verifies user can log in with a valid username and password.",
+    "testId": "TC-001",
+    "testDescription": "A registered user enters correct username and password to successfully log in to the application.",
+    "prerequisites": "User account exists and is active.",
+    "stepsToPerform": "1. Launch the application. 2. Click on the 'Login' button. 3. Enter the valid username in the username field. 4. Enter the valid password in the password field. 5. Click 'Submit' button. 6. Wait for the application to process authentication. 7. Observe if the dashboard loads. 8. Verify the logged-in user's name is displayed correctly. 9. Perform logout for cleanup.",
+    "expectedResult": "User is navigated to the dashboard, and the correct user name appears in the header.",
+    "sourceCitation": {
+      "location": "Section 2.1, page 5",
+      "excerpt": "User must log in with valid credentials to access their dashboard."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Login with invalid password",
+    "description": "Verifies error message is shown when login fails due to an incorrect password.",
+    "testId": "TC-002",
+    "testDescription": "A user tries to log in with a valid username and an incorrect password; the system rejects the attempt.",
+    "prerequisites": "User account exists and is active.",
+    "stepsToPerform": "1. Open the application. 2. Click on the 'Login' button. 3. Enter the valid username. 4. Enter an invalid password. 5. Click 'Submit'. 6. Wait for the application to process authentication. 7. Observe the error message. 8. Ensure no navigation occurs. 9. Attempt another login to confirm account is not locked.",
+    "expectedResult": "Application displays 'Invalid username or password' error and remains on login page.",
+    "sourceCitation": {
+      "location": "Section 2.1.1, page 6",
+      "excerpt": "If the password is incorrect, an error message must be displayed and login must not proceed."
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Password length lower boundary validation",
+    "description": "Validates that the system enforces minimum password length requirements.",
+    "testId": "TC-003",
+    "testDescription": "User attempts to set a password that is one character less than the required minimum allowed length.",
+    "prerequisites": "User is on the password creation or reset screen.",
+    "stepsToPerform": "1. Launch the application. 2. Go to 'Forgot Password' flow. 3. Enter the registered email and proceed. 4. Receive password reset link and open it. 5. Enter a password with one character less than the minimum (e.g., 7 if min is 8). 6. Re-enter the same short password for confirmation. 7. Click 'Submit' to save the new password. 8. Observe system validation error. 9. Try again with a valid password for cleanup.",
+    "expectedResult": "System displays an error indicating minimum password length requirement is not met.",
+    "sourceCitation": {
+      "location": "Section 2.2.3, page 7",
+      "excerpt": "Passwords must be at least 8 characters in length; otherwise, show validation error."
+    }
+  },
+  {
+    "type": "end-to-end",
+    "title": "Full user registration and email verification flow",
+    "description": "Covers the complete user registration process including email verification and first successful login.",
+    "testId": "TC-004",
+    "testDescription": "A new user registers an account, verifies via the email link, and logs in successfully.",
+    "prerequisites": "No existing account for the test email address.",
+    "stepsToPerform": "1. Launch the application. 2. Click on 'Sign Up'. 3. Fill in the registration form with valid data (e.g., name, email, password). 4. Submit the registration form. 5. Open the test email inbox. 6. Locate and open the verification email. 7. Click the verification link. 8. Return to application login page. 9. Log in with registered credentials. 10. Confirm access to dashboard. 11. Log out to clean up.",
+    "expectedResult": "User is registered, email is verified, and user logs in to the dashboard after verification.",
+    "sourceCitation": {
+      "location": "Section 2.3, pages 8-9",
+      "excerpt": "Users must verify their registration via an email link before first login is permitted."
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Account lock after multiple failed login attempts",
+    "description": "Validates account lock after threshold number of consecutive failed login attempts and unlock after password reset.",
+    "testId": "TC-005",
+    "testDescription": "A user inputs incorrect passwords multiple times, account gets locked; then resets password to unlock and log in successfully.",
+    "prerequisites": "User account exists and is active.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Login'. 3. Enter valid username with wrong password. 4. Submit. 5. Repeat steps 3-4 up to the maximum allowed attempts (e.g., 5). 6. Note the lockout message. 7. Initiate 'Forgot Password'. 8. Complete password reset process via email. 9. Attempt login with new password. 10. Confirm dashboard access. 11. Logout.",
+    "expectedResult": "Account is locked after threshold failed attempts and unlocked after successful password reset; user accesses dashboard with new password.",
+    "sourceCitation": {
+      "location": "Section 2.4.1, page 10",
+      "excerpt": "After 5 consecutive failed login attempts, account is locked until password is reset."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Successful logout from dashboard",
+    "description": "Verifies that a user can log out successfully and is redirected to the login page with the session terminated.",
+    "testId": "TC-006",
+    "testDescription": "A logged-in user initiates the logout process from the dashboard to end their session and ensure secure exit from the application.",
+    "prerequisites": "User must be logged in and on the dashboard screen.",
+    "stepsToPerform": "1. Launch the application. 2. Click on the 'Login' button. 3. Enter valid username and password. 4. Click 'Submit' to access dashboard. 5. Confirm dashboard is loaded. 6. Locate and click the 'Logout' button in the dashboard header. 7. Observe application response and redirection. 8. Attempt to use browser back button. 9. Ensure access to dashboard is not restored after logout.",
+    "expectedResult": "User is redirected to the login page, the session is terminated, and user cannot return to the dashboard without re-authentication.",
+    "sourceCitation": {
+      "location": "Section 2.5, page 11",
+      "excerpt": "Upon logout, user must be redirected to log in and session must be securely terminated."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Login fails with non-existent username",
+    "description": "Verifies that the system rejects login attempts with usernames that are not registered.",
+    "testId": "TC-007",
+    "testDescription": "A user enters an invalid, unregistered username along with any password, and attempts to log in.",
+    "prerequisites": "No account exists with the entered username.",
+    "stepsToPerform": "1. Launch the application. 2. Click the 'Login' button. 3. Enter a username not present in the system. 4. Enter any password in the password field. 5. Click 'Submit' to attempt login. 6. Wait for authentication response. 7. Observe the error message displayed. 8. Confirm application remains on login screen. 9. Attempt with another non-existent username to ensure same behavior.",
+    "expectedResult": "System displays 'Invalid username or password' and login does not proceed.",
+    "sourceCitation": {
+      "location": "Section 2.1.2, page 6",
+      "excerpt": "If the username is not found, display the same error as invalid password and do not log in."
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Username maximum length validation",
+    "description": "Ensures that the username field enforces maximum character limits as specified.",
+    "testId": "TC-008",
+    "testDescription": "A user tries to enter a username with exactly the maximum allowed length, and then one character more, to verify field validation.",
+    "prerequisites": "No existing account with over-maximum length username.",
+    "stepsToPerform": "1. Launch application. 2. Click on 'Sign Up'. 3. Fill registration form using a username with exactly 32 characters (maximum allowed per requirements). 4. Complete form with valid data. 5. Submit the form and observe the response. 6. Return to registration page. 7. Enter a username with 33 characters (exceeds maximum). 8. Complete required fields. 9. Submit the form and check for validation errors.",
+    "expectedResult": "Usernames up to 32 characters are accepted; 33 characters trigger a validation error and no account is created.",
+    "sourceCitation": {
+      "location": "Section 2.3.1, page 8",
+      "excerpt": "Usernames must be a maximum of 32 characters. Longer values must be rejected with validation."
+    }
+  },
+  {
+    "type": "end-to-end",
+    "title": "Forgot password and set new password flow",
+    "description": "Validates the full forgot password process, including requesting reset, email confirmation, setting a new password, and logging in.",
+    "testId": "TC-009",
+    "testDescription": "A user completes the entire forgot password workflow: from requesting the reset to logging in with a new password.",
+    "prerequisites": "Account exists with a known test email.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Login'. 3. At the login dialog, click 'Forgot Password'. 4. Enter the test email address. 5. Submit the reset request. 6. Open the associated test email inbox. 7. Find and click the password reset link. 8. Enter a valid new password that meets the requirements. 9. Confirm the new password and submit. 10. Return to the login page. 11. Log in using the new password. 12. Confirm dashboard is displayed.",
+    "expectedResult": "User can reset their password and immediately use the new password to log in successfully.",
+    "sourceCitation": {
+      "location": "Section 2.2, pages 6-7",
+      "excerpt": "The forgot password function must email a reset link and allow user to set a new password before next login."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Show/hide password toggle functionality",
+    "description": "Checks that password masking can be toggled between visible and hidden states while typing.",
+    "testId": "TC-010",
+    "testDescription": "User interacts with the 'show/hide password' icon to make password visible or hidden during entry on the login screen.",
+    "prerequisites": "Application is available and user is on the login screen.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Login' to open login form. 3. Begin typing a password in the password field. 4. Observe masked (dots/asterisks) characters by default. 5. Click on the 'show/hide password' icon. 6. Observe password characters become visible. 7. Click again on the same icon. 8. Observe password masking returns. 9. Complete login or clear field for cleanup.",
+    "expectedResult": "Toggling the icon switches between masked and visible password entry without affecting login function.",
+    "sourceCitation": {
+      "location": "Section 2.1.3, page 6",
+      "excerpt": "Password field must provide a show/hide option to toggle visibility during entry."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Mandatory field validation on registration form",
+    "description": "Ensures all required fields on the registration form enforce entry and display errors if left blank.",
+    "testId": "TC-011",
+    "testDescription": "A user tries to submit the registration form with one or more required fields left empty and observes the system validations.",
+    "prerequisites": "No existing account with the test email or username.",
+    "stepsToPerform": "1. Launch the application. 2. Click on 'Sign Up' to open the registration page. 3. Leave the 'Email' field blank. 4. Enter a valid username and password. 5. Submit the form. 6. Observe validation error for the blank email. 7. Fill in 'Email' but clear the 'Username' field. 8. Submit again. 9. Observe validation error for the empty username field.",
+    "expectedResult": "Each required field left blank triggers an error, and the form is not submitted until all required fields are completed.",
+    "sourceCitation": {
+      "location": "Section 2.3.2, page 8",
+      "excerpt": "Registration form fields marked as required must be enforced and errors displayed if left empty."
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Password length upper boundary validation",
+    "description": "Validates the system enforces maximum password length requirements during registration and reset.",
+    "testId": "TC-012",
+    "testDescription": "A user attempts to set a password with exactly the maximum allowed length, and then one character more, during account registration.",
+    "prerequisites": "No pre-existing account with the tested username or email.",
+    "stepsToPerform": "1. Open the application and navigate to 'Sign Up'. 2. Enter all required registration fields. 3. Enter a password with exactly 20 characters (max allowed per requirements). 4. Confirm and submit registration. 5. Observe successful account creation. 6. Log out if needed. 7. Return to 'Sign Up'. 8. Enter another registration with all valid fields and a 21-character password. 9. Attempt to submit and observe system reaction.",
+    "expectedResult": "Passwords up to 20 characters are accepted; 21 characters trigger a validation error with no account creation.",
+    "sourceCitation": {
+      "location": "Section 2.2.4, page 7",
+      "excerpt": "Password may not exceed 20 characters; longer entries must trigger validation error."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Registration with an already existing email",
+    "description": "Ensures the system detects duplicate email addresses during registration and presents an appropriate error.",
+    "testId": "TC-013",
+    "testDescription": "A user tries to register a new account with an email that is already registered in the system.",
+    "prerequisites": "An account with the test email already exists.",
+    "stepsToPerform": "1. Open the application. 2. Click on 'Sign Up'. 3. Enter a unique username. 4. Enter the email address already registered in the system. 5. Enter a valid password. 6. Complete other required fields if any. 7. Submit the registration form. 8. Wait for server response. 9. Observe any error messages provided.",
+    "expectedResult": "System prevents registration and displays error indicating the email is already in use.",
+    "sourceCitation": {
+      "location": "Section 2.3.3, page 9",
+      "excerpt": "Registration must fail with a descriptive error if the email is already registered."
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Email not verified blocks login and triggers verification prompt",
+    "description": "Tests that a user cannot log in before verifying their email, and system provides verification prompt.",
+    "testId": "TC-014",
+    "testDescription": "A new user completes registration but does not verify the email, then tries to log in.",
+    "prerequisites": "Test email registered as a new user with a verification link sent but not clicked.",
+    "stepsToPerform": "1. Launch the application. 2. Complete account registration with a test email (do not click verification link). 3. Go to login page. 4. Enter registered email and password. 5. Submit login form. 6. Wait for authentication response. 7. Observe any displayed error or prompt. 8. Check that login is not successful. 9. Log into test email and verify if a new verification email is provided/resent.",
+    "expectedResult": "Login is blocked for unverified emails and system prompts user to verify email before first login.",
+    "sourceCitation": {
+      "location": "Section 2.3.4, page 9",
+      "excerpt": "Users must verify their email address before login is allowed; prompt must indicate verification is needed."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Password reset with expired link",
+    "description": "Validates expired password reset link is rejected and user is notified appropriately.",
+    "testId": "TC-015",
+    "testDescription": "A user clicks a password reset link after the expiration period and attempts to set a new password.",
+    "prerequisites": "Password reset request initiated for an existing user; link expiration configured per requirement.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Login' then 'Forgot Password'. 3. Enter registered email address and submit. 4. Wait for password reset email. 5. Wait for the link to expire (exceeding expiration duration per requirement). 6. Click the expired password reset link from the received email. 7. Attempt to enter and confirm a new password. 8. Submit the new password. 9. Observe application feedback.",
+    "expectedResult": "System informs the user that the password reset link has expired and does not allow password change.",
+    "sourceCitation": {
+      "location": "Section 2.2.5, page 7",
+      "excerpt": "Password reset links must expire after 30 minutes and cannot be used once expired."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Registration with invalid email format",
+    "description": "Ensures registration fails when user inputs an email address not matching the format requirements.",
+    "testId": "TC-016",
+    "testDescription": "A user attempts to register with an email address lacking the '@' symbol or domain part, checks for inline validation errors and form submission blocking.",
+    "prerequisites": "No account exists for the entered email address.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Sign Up' to display the registration form. 3. Enter a valid username in the 'Username' field. 4. Enter an invalid email (e.g., 'userexample.com') in the 'Email' field. 5. Enter a valid password. 6. Fill in other required fields. 7. Attempt to submit the registration form. 8. Observe for any error or blocking on the email field. 9. Try with another invalid email (e.g., 'user@com').",
+    "expectedResult": "Registration is blocked and an error message displayed indicating email format is invalid.",
+    "sourceCitation": {
+      "location": "Section 2.3.5, page 9",
+      "excerpt": "Email addresses must be validated against standard format before allowing registration to proceed."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Registration when password and confirm password do not match",
+    "description": "Validates that the registration form enforces matching password and confirm password fields before submission.",
+    "testId": "TC-017",
+    "testDescription": "A user enters a password and a different confirm password in the registration form, observing that the mismatch blocks registration and displays a specific error.",
+    "prerequisites": "No existing account with test username or email.",
+    "stepsToPerform": "1. Open the application. 2. Navigate to 'Sign Up' registration page. 3. Fill in valid username and valid email. 4. Enter 'Password123!' into password field. 5. Enter 'Password1234!' into confirm password field. 6. Fill all other required fields. 7. Submit the registration form. 8. Review inline validation or error message. 9. Correct the confirm password to match and submit for cleanup.",
+    "expectedResult": "System displays a specific error that passwords do not match and does not proceed with registration.",
+    "sourceCitation": {
+      "location": "Section 2.3.6, page 9",
+      "excerpt": "If the confirm password field does not match password, registration must be blocked with a mismatch error."
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Password minimum complexity enforcement",
+    "description": "Checks if password meets all complexity rules before creation: uppercase, lowercase, digit, special character.",
+    "testId": "TC-018",
+    "testDescription": "A user attempts registration with valid length but passwords missing one or more complexity requirements, checking for form errors and enforcement.",
+    "prerequisites": "User registration page accessible with no existing account for test email.",
+    "stepsToPerform": "1. Launch the app and go to 'Sign Up'. 2. Fill username and email with valid values. 3. Enter a password with only lowercase letters (e.g., 'passwordabc'). 4. Confirm password to match. 5. Submit the form and note validation result. 6. Change password to 'Passwordabc' (upper and lower, still missing digit and symbol). 7. Submit again. 8. Change password to 'Password1' (missing symbol). 9. Submit and observe validation error.",
+    "expectedResult": "Password field enforces all required complexity rules, displaying specific error(s) per missing category.",
+    "sourceCitation": {
+      "location": "Section 2.2.2, page 7",
+      "excerpt": "Password policy: at least one uppercase, one lowercase, one digit, and one special character required."
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Automatic logout after session timeout",
+    "description": "Verifies the user is logged out automatically after the configured session inactivity period expires and access to secure pages is no longer possible.",
+    "testId": "TC-019",
+    "testDescription": "A user logs into the dashboard, remains inactive until session expires, and then attempts an action to check that re-authentication is now required.",
+    "prerequisites": "A valid user account exists.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Login' and enter correct credentials. 3. Submit to access the dashboard. 4. Confirm dashboard is visible. 5. Leave the session inactive for the configured idle timeout (e.g., 15 minutes) without clicking or input. 6. After timeout, attempt to navigate to another secure page (e.g., 'Profile'). 7. Observe if access is blocked. 8. Attempt to reload the dashboard. 9. Verify redirection to login page.",
+    "expectedResult": "Session expires after the inactivity period, user is logged out and must log in again to access secure resources.",
+    "sourceCitation": {
+      "location": "Section 2.5.2, page 11",
+      "excerpt": "Sessions must automatically log out the user after 15 minutes of inactivity for security reasons."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Successful password update from user profile",
+    "description": "Verifies that a logged-in user can update their password from the profile section using correct current and new password values.",
+    "testId": "TC-020",
+    "testDescription": "A logged-in user navigates to the profile area, initiates a password change, enters current and new passwords meeting all requirements, and confirms update.",
+    "prerequisites": "Test user is registered, email is verified, and login works.",
+    "stepsToPerform": "1. Launch the application. 2. Log in with valid credentials to access dashboard. 3. Click on 'Profile' or 'Account Settings'. 4. Select 'Change Password' option. 5. Enter current password in the required field. 6. Enter a new password that satisfies length and complexity requirements. 7. Confirm new password matches. 8. Submit the password change form. 9. Log out and attempt logging in with new password to confirm update.",
+    "expectedResult": "Password change is successful, confirmation message is displayed, and new password works for next login.",
+    "sourceCitation": {
+      "location": "Section 2.6, page 12",
+      "excerpt": "Logged-in users must be able to update their password from the profile settings area by providing the current password."
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Username minimum length enforcement",
+    "description": "Ensures the registration form enforces the username minimum character requirement at its boundary condition.",
+    "testId": "TC-021",
+    "testDescription": "A user tries to register with a username of two characters (if the minimum is three), and verifies the form blocks submission and displays the correct validation error.",
+    "prerequisites": "No pre-existing account with the tested email or username.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Sign Up' for registration. 3. Enter valid email. 4. Enter a two-character username in the username field. 5. Enter a valid password meeting all complexity requirements. 6. Fill other mandatory fields if any. 7. Submit the registration form. 8. Observe the error message for minimum username length. 9. Update the username to meet the minimum length for cleanup.",
+    "expectedResult": "System rejects usernames below the minimum and displays a descriptive validation error, blocking registration.",
+    "sourceCitation": {
+      "location": "Section 2.3.1, page 8",
+      "excerpt": "Usernames must be at least 3 characters; shorter entries trigger a validation error."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Resend email verification link from login prompt",
+    "description": "Verifies that a user blocked at login due to unverified email can request the verification link to be re-sent and successfully receives the email.",
+    "testId": "TC-022",
+    "testDescription": "After a failed login attempt with an unverified email, the user clicks a provided option to resend the verification link and confirms the reception of the email.",
+    "prerequisites": "Account registered, email not yet verified.",
+    "stepsToPerform": "1. Launch the application. 2. Go to 'Login' page. 3. Enter registered email and password (email unverified). 4. Submit credentials. 5. Observe login error indicating verification is required. 6. Click 'Resend Verification Link' option in the prompt. 7. Check the test email inbox for a new verification email. 8. Confirm receipt and verify that the link is correct. 9. Complete email verification for cleanup if required.",
+    "expectedResult": "A new verification email is sent, and user receives confirmation of re-sending within the UI.",
+    "sourceCitation": {
+      "location": "Section 2.3.4, page 9",
+      "excerpt": "If users have not verified their email, offer a prompt to resend verification email during login."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Password reset notification email structure and logging",
+    "description": "Ensures the password reset email contains all specified fields and that the event is logged per audit requirements.",
+    "testId": "TC-023",
+    "testDescription": "A user initiates a password reset, receives the email, and validates required email content and that the reset event is recorded in the security audit log.",
+    "prerequisites": "Existing user account with accessible test email.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Login' > 'Forgot Password'. 3. Enter valid email and submit. 4. Wait for password reset email. 5. Open received email in the test inbox. 6. Review subject, sender, and ensure content includes reset link and expiration info. 7. Ensure no password is ever shown in email. 8. Access the application audit log/reporting module. 9. Check a log entry for the reset event with email, timestamp, and IP address.",
+    "expectedResult": "Reset email contains all required information; audit log entry exists documenting the reset request accurately.",
+    "sourceCitation": {
+      "location": "Section 2.2.6, page 7",
+      "excerpt": "Password reset emails must contain a reset link, expire time, and be logged for audit with user, timestamp, IP."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Password change fails with incorrect current password",
+    "description": "Validates that users cannot change their password from the profile screen if they enter the wrong current password.",
+    "testId": "TC-024",
+    "testDescription": "A logged-in user tries to update their password but supplies an incorrect value in the 'current password' prompt, ensuring the form blocks the action and displays a specific error.",
+    "prerequisites": "Existing, logged-in test account; current valid password known.",
+    "stepsToPerform": "1. Launch the application and log in with valid credentials. 2. Access 'Profile' or 'Account Settings'. 3. Click to change password. 4. Enter an incorrect value in the 'current password' field. 5. Enter a new valid password and confirm password matching. 6. Submit the change password form. 7. Observe rejection message for incorrect current password. 8. Attempt to log in with both the old and new password to confirm no change occurred. 9. Repeat with correct current password for cleanup.",
+    "expectedResult": "Password update is denied with a clear error for wrong current password; password remains unchanged.",
+    "sourceCitation": {
+      "location": "Section 2.6.2, page 12",
+      "excerpt": "Password updates require the correct current password; incorrect entries must trigger a specific error."
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Session timeout enforcement at exact threshold",
+    "description": "Checks automatic logout occurs precisely at the configured inactivity duration, no earlier or later.",
+    "testId": "TC-025",
+    "testDescription": "A user logs in and remains inactive, monitoring whether session expiry triggers exactly at the 15-minute mark.",
+    "prerequisites": "Registered active user account.",
+    "stepsToPerform": "1. Launch application and log in to access dashboard. 2. Confirm dashboard is loaded. 3. Remain completely inactive (no mouse/keyboard/clicks/touches). 4. Start a timer upon dashboard load. 5. Monitor for logout behavior. 6. At 14:59, verify user is still logged in. 7. At 15:00, attempt any action (e.g., view Profile). 8. Confirm the session has expired and redirection to login occurs. 9. Attempt access to any protected URL to confirm session is cleared.",
+    "expectedResult": "Session is valid until exactly 15 minutes of inactivity, then automatically logs out and requires a new login.",
+    "sourceCitation": {
+      "location": "Section 2.5.2, page 11",
+      "excerpt": "Sessions must automatically log out user after 15 minutes of inactivity."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Registration with all special characters in password",
+    "description": "Verifies user registration is allowed when the password contains all special characters permitted by the policy.",
+    "testId": "TC-026",
+    "testDescription": "User completes the registration form and sets a password using all allowed special characters, confirming successful account creation.",
+    "prerequisites": "No pre-existing account with test username or email.",
+    "stepsToPerform": "1. Launch the application. 2. Click on 'Sign Up' to open registration page. 3. Enter a valid email in the 'Email' field. 4. Enter a valid username in the 'Username' field. 5. Enter a password with all allowed special characters (e.g., !@#$%^&*). 6. Confirm the password in the confirm password field. 7. Complete any other mandatory fields. 8. Submit the registration form. 9. Observe any inline validations or error messages. 10. Check for registration success notification.",
+    "expectedResult": "Registration succeeds with passwords containing all permitted special characters as per password policy.",
+    "sourceCitation": {
+      "location": "Section 2.2.2, page 7",
+      "excerpt": "Password policy: at least one uppercase, one lowercase, one digit, and one special character required."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Registration attempt with whitespace in username",
+    "description": "Verifies that usernames containing spaces are rejected at registration as per username validation policy.",
+    "testId": "TC-027",
+    "testDescription": "User tries to register an account using a username containing leading, trailing, or mid-string whitespace and observes if registration is denied.",
+    "prerequisites": "No pre-existing account with the tested email.",
+    "stepsToPerform": "1. Launch application. 2. Click 'Sign Up' for the registration form. 3. Enter a valid email. 4. Enter a username with a space ('test user') in the username field. 5. Enter a valid password meeting all requirements. 6. Fill other required fields. 7. Submit the registration form. 8. Observe inline validation or blocking message for whitespace. 9. Repeat test with username having leading and trailing spaces.",
+    "expectedResult": "System displays a validation error and does not allow submission for usernames containing whitespace.",
+    "sourceCitation": {
+      "location": "Section 2.3.1, page 8",
+      "excerpt": "Usernames must be 3-32 characters, letters and numbers only, no whitespace allowed."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Confirmation email contains correct verification link and expiry details",
+    "description": "Checks that the registration confirmation email contains the expected verification link and clearly states the expiry duration.",
+    "testId": "TC-028",
+    "testDescription": "User registers for an account and reviews the confirmation email to ensure the link is correct and expiry is present in the message body.",
+    "prerequisites": "No existing account for the test email; ability to access test email inbox.",
+    "stepsToPerform": "1. Launch the application. 2. Click 'Sign Up' and fill the registration form with valid data. 3. Submit the registration form. 4. Open the test email inbox. 5. Locate the new registration confirmation email. 6. Open the email and inspect the sender, subject, and body. 7. Confirm the presence of a verification link. 8. Check that the expiry information for the link is stated (e.g., 'Link expires in 24 hours'). 9. Attempt to copy the link to validate it is properly formed.",
+    "expectedResult": "Confirmation email contains correctly formatted verification link and explicit link expiry details.",
+    "sourceCitation": {
+      "location": "Section 2.3.7, page 10",
+      "excerpt": "Verification emails must include the activation link and inform user of expiration time for verification."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Attempt login with deleted user account",
+    "description": "Ensures login is denied and an appropriate error message is displayed when attempting to log in with a deleted account.",
+    "testId": "TC-029",
+    "testDescription": "A user whose account was previously deleted tries to log in, ensuring system provides feedback and does not permit access.",
+    "prerequisites": "User account exists but is in 'deleted' state in the database.",
+    "stepsToPerform": "1. Launch the application. 2. Open 'Login' page. 3. Enter the username of a deleted account in the username field. 4. Enter the correct password. 5. Click 'Submit' to attempt login. 6. Wait for system response. 7. Observe if an error message is displayed. 8. Attempt a password reset with the deleted account email. 9. Confirm system reaction for password reset as well.",
+    "expectedResult": "System rejects login and password reset attempts for deleted accounts with appropriate feedback.",
+    "sourceCitation": {
+      "location": "Section 2.1.4, page 6",
+      "excerpt": "Deleted, disabled, or deactivated accounts must not permit login or password reset; display generic access denied error."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Audit log records successful registration event",
+    "description": "Verifies that a successful user registration is properly logged in the audit system with timestamp and other specified fields.",
+    "testId": "TC-030",
+    "testDescription": "A user registers a new account and the test confirms a corresponding entry is recorded in the audit log per requirements.",
+    "prerequisites": "Audit log/reporting module access with proper permissions; no existing account for test email.",
+    "stepsToPerform": "1. Launch the application. 2. Go to 'Sign Up' to access the registration form. 3. Complete all required fields with valid data. 4. Submit the form to create an account. 5. Confirm registration success message is displayed. 6. Log in to the administrator/audit console. 7. Navigate to user registration audit log. 8. Search for recent registration event matching test user data. 9. Verify that log entry includes user, timestamp, IP, and event 'registration'.",
+    "expectedResult": "A successful registration event is present in the audit log with user, timestamp, IP address, and event type.",
+    "sourceCitation": {
+      "location": "Section 2.3.8, page 10",
+      "excerpt": "All user registration events must be recorded in the audit log, including user identifier, timestamp, and IP address."
+    }
+  }
+]
