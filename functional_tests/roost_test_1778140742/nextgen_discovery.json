@@ -1,0 +1,253 @@
+{
+  "summary": "The source is an SRS for Project Aegis v2.0, a web-based credit card management system with a browser portal (React SPA) and a REST API (/v2). It specifies authentication/session behavior (OAuth 2.0 PKCE, JWT + refresh rotation, rate limits), a 3-step credit application flow with a session_token gate and localStorage autosave, transaction initiation and history APIs including a foreign fee formula, dashboard/card controls (freeze/unfreeze, lost/stolen, PIN), billing/statement retrieval with multiple calculation rules, payments, and notification webhooks. It also defines multiple security/compliance and non-functional requirements including PCI-DSS/TLS, CSRF, audit trail, session timeout UX, latency, scalability, and PAN masking.",
+  "domain": "BFSI / fintech (web-based credit card management)",
+  "riskLevel": "high",
+  "totalRecommendedTestCount": 95,
+  "workflows": [
+    {
+      "name": "Platform endpoints & API versioning surface",
+      "description": "Validate the published base URLs for portal/API and v2 versioning expectations as consumed by browser clients.",
+      "priority": "P1",
+      "testPointCount": 2,
+      "rationale": "Multiple published entry points (portal + API base + /v2) and OpenAPI compliance note; small but foundational coverage for routing/compatibility."
+    },
+    {
+      "name": "WebSocket live transaction feed",
+      "description": "Validate connectivity and basic client behavior against the documented WebSocket endpoint for live transaction feed.",
+      "priority": "P2",
+      "testPointCount": 1,
+      "rationale": "Single endpoint with real-time feed implication; needs smoke + negative connectivity/auth/environment validation."
+    },
+    {
+      "name": "Auth session storage policy (cookies vs localStorage)",
+      "description": "Verify that portal authentication tokens are stored in HttpOnly/Secure cookies and are never stored in localStorage.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Explicit storage prohibition and BFSI security criticality; requires browser-observable checks and regression guardrails."
+    },
+    {
+      "name": "User Registration (POST /v2/auth/register)",
+      "description": "Create portal users with required validation rules and error handling including email uniqueness and password complexity outcomes.",
+      "priority": "P0",
+      "testPointCount": 6,
+      "rationale": "8 field-level validation constraints + 4 response codes (201/400/409/422) + email verification trigger; warrants broad BVA/negative coverage."
+    },
+    {
+      "name": "Login, rate limiting, and account lockout (POST /v2/auth/login)",
+      "description": "Authenticate credentials and validate MFA optionality, device_id/remember_me handling, lockout after failed attempts, and per-IP rate limiting responses.",
+      "priority": "P0",
+      "testPointCount": 6,
+      "rationale": "Multiple outcome matrix branches (200/401/403/429) plus conditional MFA and remember_me TTL behavior and lockout threshold (5 attempts) and rate limit (10 req/min/IP)."
+    },
+    {
+      "name": "Token refresh rotation (POST /v2/auth/token/refresh)",
+      "description": "Issue new access tokens via single-use refresh tokens and verify old refresh invalidation and TOKEN_INVALID behavior.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "Security-critical rotation + single-use constraint with explicit 200/401 outcomes; needs reuse/expiry/parallel refresh test points."
+    },
+    {
+      "name": "Credit application flow orchestration (3 sequential steps + session_token + ordering)",
+      "description": "Validate the end-to-end multi-step application sequencing rules including session_token issuance and requirement across steps.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "Multi-step dependency with artifacts (application_id, session_token), mandatory ordering, and gating across Steps 1–3; requires positive + out-of-order + missing token coverage."
+    },
+    {
+      "name": "Credit application draft autosave to localStorage (every 60 seconds)",
+      "description": "Verify the browser portal auto-saves application drafts to localStorage at the specified interval.",
+      "priority": "P1",
+      "testPointCount": 2,
+      "rationale": "Explicit timing + storage location requirement; requires timing accuracy and persistence checks without conflating with auth localStorage prohibition."
+    },
+    {
+      "name": "Credit Application Step 1 Personal Information (POST /v2/applications/start)",
+      "description": "Initiate applications and validate field constraints, duplicate application handling, and return of application_id/session_token.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Multiple validations (name/email match/E.164/address fields/province/postal/id enum/id_number) plus 201/400/409 outcomes; needs BVA and negative coverage."
+    },
+    {
+      "name": "Credit Application Step 2 Financial Information (POST /v2/applications/{application_id}/financials)",
+      "description": "Submit financials with X-App-Session header, validate conditional employer_name, consent gate, queued credit pull status response, and session expiry behavior.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Header-gated token with 30 min expiry + conditional field requirement + numeric constraints + consent boolean + 200/400/401 outcomes and returned status PENDING_REVIEW/fico_pull_id."
+    },
+    {
+      "name": "Credit Application Step 3 Decision & Card Selection (POST /v2/applications/{application_id}/submit)",
+      "description": "Finalize applications, validate signature requirement, card_product_id requirement, and all decision branches by FICO thresholds.",
+      "priority": "P0",
+      "testPointCount": 5,
+      "rationale": "Outcome matrix with 3 distinct 200 responses (APPROVED/PENDING/DECLINED) + 400 SIGNATURE_REQUIRED; requires boundary testing around 600/680 thresholds and response payload verification."
+    },
+    {
+      "name": "Initiate web-initiated transaction (POST /v2/accounts/{account_id}/transactions)",
+      "description": "Authorize and post transactions with ownership enforcement, amount/merchant/mcc/currency/exchange validations, and all documented ISO-8583-derived outcomes.",
+      "priority": "P0",
+      "testPointCount": 7,
+      "rationale": "Large validation surface + multiple response outcomes (200 approved, 200 over-limit flag, 402, 403, 422, 429) + conditional exchange_rate when currency_code != CAD + frequency limit branch."
+    },
+    {
+      "name": "List transactions with pagination and filters (GET /v2/accounts/{account_id}/transactions)",
+      "description": "Retrieve transaction history with pagination defaults/limits, date filter rules, category filter enum, and forbidden access handling.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "Pagination boundary rules (page min 1, per_page max 100) + date ordering constraint with 400 INVALID_DATE_RANGE + 403 FORBIDDEN + filter enum correctness."
+    },
+    {
+      "name": "Foreign transaction fee calculation (REQ-006)",
+      "description": "Validate the foreign exchange total calculation and separate foreign_fee_amount itemization when currency_code is not CAD.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Explicit numeric formula Total_CAD = (transaction_amount × exchange_rate) × 1.03 plus itemization requirement; needs golden value + rounding/tolerance-style checks and boundary around CAD vs non-CAD."
+    },
+    {
+      "name": "Get account summary (GET /v2/accounts/{account_id}/summary)",
+      "description": "Retrieve balances/credit/account status and validate include_rewards default and owner-only access.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Core dashboard endpoint with access control (403) and query param default behavior; validates key financial fields presence."
+    },
+    {
+      "name": "Freeze / unfreeze card status with OTP (PATCH /v2/cards/{card_id}/status)",
+      "description": "Change card status between Active and Frozen with OTP confirmation, validate reason length and audit logging requirement, and invalid transition handling.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "State transition constraints (only {Active, Frozen}) + OTP failure branch (401) + invalid transition branch (400 with allowed_transitions) + audit trail note for reason."
+    },
+    {
+      "name": "Report card lost/stolen (POST /v2/cards/{card_id}/report-lost)",
+      "description": "Block card and trigger replacement workflow, ensure irreversibility and prevent repeat report when already blocked/closed.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "Irreversible action + two loss_type branches + optional fields + 200/409 outcomes; needs state-based negative coverage."
+    },
+    {
+      "name": "Set/reset virtual PIN with OTP and encryption (PUT /v2/cards/{card_id}/pin)",
+      "description": "Set/reset card PIN validating format/match, session_otp requirement, blocked-card restriction, and client encryption expectation (RSA-OAEP).",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Multiple validation branches (200/400 PIN_MISMATCH or PIN_FORMAT/403 CARD_BLOCKED) plus transport/encryption requirement and dependency on OTP endpoint reference."
+    },
+    {
+      "name": "Statement retrieval (GET /v2/accounts/{account_id}/statements/{statement_id})",
+      "description": "Retrieve billing statements in JSON/PDF formats and validate 404 behavior when not found/not generated.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "Format enum + default + required response keys + 404 NOT_FOUND branch; foundational for downstream billing validation."
+    },
+    {
+      "name": "Interest calculation (REQ-009 ADB method)",
+      "description": "Verify interest computation aligns with ADB/APR/days formula across representative cycles and boundary values.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Independent numeric rule with multiple inputs; requires golden-value and boundary/precision checks."
+    },
+    {
+      "name": "Grace period logic (REQ-010)",
+      "description": "Verify 21-day grace period is applied only when prev_statement_balance_paid_in_full is true.",
+      "priority": "P0",
+      "testPointCount": 1,
+      "rationale": "Binary decision rule that gates billing behavior; needs both branches validated."
+    },
+    {
+      "name": "Late fee trigger boundary (REQ-011)",
+      "description": "Verify late_fee = $35.00 triggers only when payment_received_date is strictly greater than due_date + 2 days.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Time boundary rule with strict inequality and fixed fee value; requires at-boundary and just-over boundary checks."
+    },
+    {
+      "name": "Rewards accrual and rounding (REQ-012, REQ-013)",
+      "description": "Verify Travel MCC multiplier vs non-travel and enforce floor-only rounding behavior.",
+      "priority": "P1",
+      "testPointCount": 2,
+      "rationale": "Two coupled numeric rules: multiplier by category and rounding policy; requires fractional amounts and category variation coverage."
+    },
+    {
+      "name": "Statement accuracy tolerance (REQ-015)",
+      "description": "Validate total_spend equals sum(transaction_amount[]) within ±$0.01 tolerance.",
+      "priority": "P0",
+      "testPointCount": 1,
+      "rationale": "Independent numeric reconciliation rule with explicit tolerance; requires within-tolerance and out-of-tolerance validations."
+    },
+    {
+      "name": "Make a payment (POST /v2/accounts/{account_id}/payments)",
+      "description": "Submit immediate or scheduled payments validating min/max, type enum, linked bank account requirement, and error outcomes.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Multiple constraints (min $1.00, max total_balance, scheduled future date, required bank_account_id pre-linked) + outcomes (200/400 BELOW_MINIMUM/422 INVALID_BANK_ACCOUNT)."
+    },
+    {
+      "name": "PAN masking requirement (REQ-014)",
+      "description": "Ensure PAN is displayed masked in browser and full PAN is never transmitted to frontend.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Direct PCI/PII exposure risk; requires UI/network payload inspection and regression coverage."
+    },
+    {
+      "name": "Right to rescind (REQ-016) (DELETE /v2/accounts/{{id}})",
+      "description": "Verify account rescission is allowed within 14 days post-issuance with no membership fee and rejected after Day 14.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Time-window compliance rule with acceptance/rejection behavior; needs boundary around day 14 and post-window rejection."
+    },
+    {
+      "name": "PCI-DSS transport and tokenisation (NFR-01)",
+      "description": "Validate TLS 1.3 usage and that card fields use iframe tokenisation with no raw PAN in the DOM.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Explicit PCI-DSS L1 requirement with concrete implementation constraints; needs browser DOM and network-level assertions."
+    },
+    {
+      "name": "CSRF protection and SameSite cookie policy (NFR-05)",
+      "description": "Verify X-CSRF-Token is required on state-changing endpoints and SameSite=Strict cookie policy is enforced.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Cross-cutting security control affecting all mutating operations; requires positive/negative token tests and cookie attribute validation."
+    },
+    {
+      "name": "Session timeout warning modal and auto-logout (NFR-06)",
+      "description": "Validate portal session expires after 15 minutes inactivity with a 2-minute warning modal before logout.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Explicit UX+security timing requirements; needs timing accuracy and post-timeout access behavior checks."
+    },
+    {
+      "name": "Audit trail for credit_limit changes (NFR-04)",
+      "description": "Verify that any credit_limit change produces an immutable audit log entry with required fields.",
+      "priority": "P0",
+      "testPointCount": 1,
+      "rationale": "Compliance/audit requirement with mandatory fields (user_id, session_id, ip_address, timestamp_utc); needs at least create + verify immutability/field completeness."
+    },
+    {
+      "name": "API latency threshold (NFR-02)",
+      "description": "Validate API p95 latency meets the ≤ 1,500 ms requirement under defined test load profiles.",
+      "priority": "P0",
+      "testPointCount": 1,
+      "rationale": "Explicit performance SLO; requires baseline and stressed p95 measurement to detect regressions."
+    },
+    {
+      "name": "Web portal Time-to-Interactive threshold (NFR-02)",
+      "description": "Validate portal TTI is ≤ 3 seconds on 4G conditions.",
+      "priority": "P1",
+      "testPointCount": 1,
+      "rationale": "Explicit frontend performance target; requires controlled network simulation and measurement."
+    },
+    {
+      "name": "API gateway scalability & autoscaling trigger (NFR-03)",
+      "description": "Validate gateway sustains 5,000 concurrent req/sec and autoscaling triggers at 70% CPU utilization.",
+      "priority": "P0",
+      "testPointCount": 2,
+      "rationale": "Two distinct scale requirements (throughput + autoscaling trigger) in high-risk payments/credit context; requires load test and infra observability checks."
+    },
+    {
+      "name": "Notification & alert webhook delivery and idempotency (POST /v2/notifications/webhook)",
+      "description": "Validate alert payload validations, supported enums, idempotency_key duplicate suppression, and response payload keys.",
+      "priority": "P1",
+      "testPointCount": 2,
+      "rationale": "Multiple required fields and enums + max length rule + idempotency concurrency/duplication behavior + outcomes (200/400/409)."
+    }
+  ]
+}
