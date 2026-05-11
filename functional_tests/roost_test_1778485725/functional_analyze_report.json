@@ -1,0 +1,4069 @@
+{
+  "triggerId": "1778485725",
+  "ticketId": "roost_test_1778485725",
+  "mode": "coverage-doc",
+  "generatedAt": "2026-05-11T08:03:54.207Z",
+  "source": {
+    "type": "user_input",
+    "filePaths": [
+      "/Users/iamdm/Downloads/Aegis_WebCC_SRS.pdf"
+    ],
+    "hasInlineData": ""
+  },
+  "discovery": {
+    "summary": "The source is an SRS for “Project Aegis”, a web-based credit card management system consisting of a browser portal (React SPA) and a REST API (v2). It defines end-to-end workflows for user authentication, a 3-step credit application process, transaction initiation and listing (including foreign fee logic), account dashboard and card controls (freeze/unfreeze, lost/stolen, PIN), billing statement retrieval and payment submission, plus security/compliance and non-functional requirements including PCI, CSRF, session timeout, masking, latency, scalability, and audit trail expectations.",
+    "domain": "BFSI / fintech (credit card management: portal + REST API)",
+    "riskLevel": "high",
+    "totalRecommendedTestCount": 97,
+    "workflows": [
+      {
+        "name": "System entry points & base URLs (API + Portal + WebSocket)",
+        "description": "Validate the documented base API URL, portal URL, API versioning, TLS minimum, and presence of the WebSocket live transaction feed endpoint.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Multiple entry points are explicitly listed (API base URL, portal, version v2, TLS 1.3 minimum, and WebSocket endpoint). Coverage includes correct routing and protocol constraints."
+      },
+      {
+        "name": "OAuth 2.0 session model & token storage constraints",
+        "description": "Verify OAuth 2.0 Authorization Code Flow with PKCE is used for portal sessions and tokens are stored only in HttpOnly, Secure cookies (never in localStorage).",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Explicit security/session storage requirements require dedicated verification (PKCE flow usage + cookie storage + prohibition of localStorage)."
+      },
+      {
+        "name": "User Registration (POST /v2/auth/register)",
+        "description": "Create new portal user accounts with full field validation, uniqueness, and correct HTTP/error handling including verification email trigger.",
+        "priority": "P0",
+        "testPointCount": 7,
+        "rationale": "Registration has 9 required fields with multiple validation rules (length, formats, age >=18, complexity, uniqueness, agree_terms) plus 4 documented response outcomes (201/400/409/422). BVA needed for name lengths and password min 12."
+      },
+      {
+        "name": "Login & Token Issuance (POST /v2/auth/login)",
+        "description": "Authenticate users and issue JWT access/refresh tokens with support for optional MFA fields, remember_me behavior, lockouts, and rate limiting.",
+        "priority": "P0",
+        "testPointCount": 5,
+        "rationale": "Login includes required credentials plus optional fields (mfa_code/device_id/remember_me) and has multiple outcome branches (200/401/403 lock after 5 failed/429 rate limit 10 req/min per IP)."
+      },
+      {
+        "name": "Token Refresh (POST /v2/auth/token/refresh) with rotation",
+        "description": "Issue new access tokens via refresh token with enforced single-use rotation and invalid/expired token handling.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Refresh token rotation is explicitly enforced (single-use); requires replay-protection checks plus success and TOKEN_INVALID handling (200/401)."
+      },
+      {
+        "name": "Credit Application Flow sequencing & draft auto-save",
+        "description": "Validate 3-step sequential application ordering, session_token issuance/usage across steps, and auto-save draft behavior to localStorage every 60 seconds.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Multi-step dependency plus explicit timing/storage behavior (auto-save every 60 seconds to localStorage) creates state/sequence and security-adjacent coverage needs."
+      },
+      {
+        "name": "Application Step 1 — Personal Information (POST /v2/applications/start)",
+        "description": "Start a new credit application with personal/address/ID validation and enforce duplicate in-progress behavior.",
+        "priority": "P0",
+        "testPointCount": 5,
+        "rationale": "Multiple required fields and schema validations (address, province code, postal format, enums, max lengths) plus outcomes 201/400/409 (DUPLICATE_APPLICATION)."
+      },
+      {
+        "name": "Application Step 2 — Financial Information (POST /v2/applications/{application_id}/financials)",
+        "description": "Submit financials with X-App-Session session_token, enforce required/conditional fields, and handle session expiry while triggering soft credit pull queued status.",
+        "priority": "P0",
+        "testPointCount": 6,
+        "rationale": "Many rules: header token expires 30 min, employment_status enum, employer_name required conditionally, income bounds (max 9,999,999.99), defaults (other_income), numeric constraints, and sin_consent must be true; outcomes 200/400/401 SESSION_EXPIRED."
+      },
+      {
+        "name": "Application Step 3 — Decision & Card Selection (POST /v2/applications/{application_id}/submit)",
+        "description": "Finalize application with card_product_id and e_signature, apply FICO-based decision outcomes, and validate signature requirement and marketing_opt_in default.",
+        "priority": "P0",
+        "testPointCount": 5,
+        "rationale": "Decision table has 3 FICO branches with distinct response keys plus error branch for missing/malformed e_signature; also validates required card_product_id and default marketing_opt_in false."
+      },
+      {
+        "name": "Initiate a Web Transaction (POST /v2/accounts/{account_id}/transactions)",
+        "description": "Authorize and post a web-initiated transaction with field validations, ownership checks, over-limit buffer behavior, and documented declines/errors including frequency cap.",
+        "priority": "P0",
+        "testPointCount": 7,
+        "rationale": "High-impact money movement workflow with many validation rules (amount >0, MCC format, exchange_rate conditional, enums) plus multiple outcomes (200 approved, 200 over_limit_flag, 402/403/422/429 with mfa_required). Includes ownership constraint in path param."
+      },
+      {
+        "name": "List Transactions (GET /v2/accounts/{account_id}/transactions)",
+        "description": "Retrieve paginated transaction history with date range validation, pagination bounds, optional category filtering, and owner-only access enforcement.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Covers pagination defaults and bounds (page min 1, per_page max 100), date validation (to_date >= from_date), category enum filter, and forbidden access."
+      },
+      {
+        "name": "Foreign Transaction Fee Calculation (REQ-006)",
+        "description": "Validate foreign transaction total and itemized fee calculation when currency_code is not CAD, including dependency on exchange_rate.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Explicit formula and itemization requirement require golden-value and boundary/precision coverage; also ties to exchange_rate conditionality from transaction initiation."
+      },
+      {
+        "name": "Get Account Summary (GET /v2/accounts/{account_id}/summary)",
+        "description": "Retrieve balances, credit and billing cycle information with include_rewards default behavior and owner-only access control.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Validates response keys + include_rewards default false and forbidden access when token doesn’t own account (200/403)."
+      },
+      {
+        "name": "Update Card Status Freeze/Unfreeze (PATCH /v2/cards/{card_id}/status)",
+        "description": "Allow users to change card status only between Active and Frozen with OTP confirmation and audit logging of reason; enforce invalid transition and OTP failure handling.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "State transition constraints (only {Active,Frozen}) + OTP requirement + audit trail logging of reason, with explicit errors (INVALID_TRANSITION, OTP_FAILED) and success response keys."
+      },
+      {
+        "name": "Report Card Lost or Stolen (POST /v2/cards/{card_id}/report-lost)",
+        "description": "Block card and trigger re-issue workflow with irreversible operation and duplicate blocked handling.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Irreversible state change with enum validation (LOST/STOLEN) and optional fields; includes 200 success and 409 ALREADY_BLOCKED branch."
+      },
+      {
+        "name": "Set Web-Based PIN (PUT /v2/cards/{card_id}/pin)",
+        "description": "Set/reset a virtual PIN with format/confirmation validation, required OTP, encrypted transmission requirement, and blocked-card restriction.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Multiple constraints: exactly 4 digits, confirm match, session_otp required, transmitted encrypted (RSA-OAEP), and 400/403 error branches plus 200 success."
+      },
+      {
+        "name": "Retrieve Statement (GET /v2/accounts/{account_id}/statements/{statement_id})",
+        "description": "Return billing statements in JSON/PDF formats with correct response fields and 404 NOT_FOUND behavior.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Endpoint has format enum default JSON, required path params, defined response keys, and explicit 404 behavior; requires both format paths and error handling."
+      },
+      {
+        "name": "Billing calculations: Interest (REQ-009 ADB method)",
+        "description": "Validate interest computed using ADB, APR, day-count, and days-in-cycle per the defined formula.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Explicit numeric formula requires golden-value, boundary/precision and day-count variation coverage."
+      },
+      {
+        "name": "Billing calculations: Grace period eligibility (REQ-010)",
+        "description": "Validate grace period (21 days) is applied only when prior statement balance is paid in full.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Binary decision rule based on prev_statement_balance_paid_in_full; requires both branches and a control/consistency check."
+      },
+      {
+        "name": "Billing calculations: Late fee trigger (REQ-011)",
+        "description": "Validate late fee of $35.00 is charged only when payment_received_date exceeds due_date by more than 2 days.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Date-threshold rule needs boundary cases around due_date + 2 days (before, exactly, after) and correct fee application."
+      },
+      {
+        "name": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+        "description": "Validate rewards multipliers for Travel MCC vs other and enforce floor() rounding only (never round/ceil).",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Two coupled numeric rules: multiplier by category plus rounding constraint; requires cross-checking fractional amounts and ensuring floor applied."
+      },
+      {
+        "name": "Statement accuracy tolerance (REQ-015)",
+        "description": "Validate statement total_spend matches sum(transaction_amount[]) within ±$0.01 tolerance.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Explicit tolerance rule requires cases within tolerance and just outside tolerance; high risk for reconciliation correctness."
+      },
+      {
+        "name": "Make a Payment (POST /v2/accounts/{account_id}/payments)",
+        "description": "Submit payments from linked bank accounts with amount rules, scheduling rules, payment_type enum, and error handling for below-minimum and invalid bank account.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Payment workflow has key validations (min $1.00, max=total_balance, payment_amount vs minimum_payment_due), scheduling date rule (future or omitted), required bank_account_id pre-linked, and documented 200/400/422 outcomes."
+      },
+      {
+        "name": "PAN masking & non-exposure (REQ-014)",
+        "description": "Ensure PAN is displayed masked in the browser and full PAN is never transmitted to the frontend.",
+        "priority": "P0",
+        "testPointCount": 1,
+        "rationale": "Explicit masking and data exposure constraints; requires UI/API payload inspection coverage."
+      },
+      {
+        "name": "Right to Rescind / Account deletion window (REQ-016)",
+        "description": "Validate DELETE /v2/accounts/{{id}} is allowed only within 14 days post-issuance with no membership fee, and rejected after Day 14.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Time-window and fee constraint are explicitly stated; requires within-window success and post-window rejection behavior verification."
+      },
+      {
+        "name": "PCI-DSS web controls: TLS 1.3 + iframe tokenisation + no PAN in DOM (NFR-01)",
+        "description": "Verify all web forms use TLS 1.3 and card entry uses iframe tokenisation with no raw PAN in the DOM.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Security compliance controls require explicit verification across transport and frontend rendering constraints."
+      },
+      {
+        "name": "CSRF protection & SameSite cookies (NFR-05)",
+        "description": "Validate state-changing endpoints require X-CSRF-Token and SameSite=Strict cookie policy is enforced.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Applies to all state-changing endpoints; needs at least token present vs missing/invalid and cookie attribute enforcement checks."
+      },
+      {
+        "name": "Session timeout and warning modal (NFR-06)",
+        "description": "Verify portal sessions expire after 15 minutes inactivity and a 2-minute warning modal appears before auto-logout.",
+        "priority": "P0",
+        "testPointCount": 2,
+        "rationale": "Explicit UX/security timeout behavior includes two timing thresholds (15 min expiry, 2-minute warning) requiring dedicated verification."
+      },
+      {
+        "name": "Audit trail for credit_limit changes (NFR-04)",
+        "description": "Validate that any credit_limit change results in an immutable audit log record with required fields.",
+        "priority": "P0",
+        "testPointCount": 1,
+        "rationale": "Audit requirement is explicit about fields (user_id, session_id, ip_address, timestamp_utc) and immutability, requiring creation and integrity checks."
+      },
+      {
+        "name": "API latency & portal TTI budgets (NFR-02)",
+        "description": "Validate non-functional performance targets for API p95 latency and portal Time-to-Interactive on 4G.",
+        "priority": "P1",
+        "testPointCount": 1,
+        "rationale": "Two explicit measurable targets (API p95 ≤ 1,500 ms; portal TTI ≤ 3s on 4G) each needs at least one verification point."
+      },
+      {
+        "name": "Scalability & autoscaling trigger (NFR-03)",
+        "description": "Validate gateway concurrency requirement and autoscaling trigger condition when CPU utilization reaches 70%.",
+        "priority": "P1",
+        "testPointCount": 1,
+        "rationale": "Two explicit scalability requirements (5,000 concurrent req/sec and autoscaling at 70% CPU) warrant dedicated load/trigger validation."
+      },
+      {
+        "name": "Notification & Alert Webhooks (POST /v2/notifications/webhook)",
+        "description": "Send alerts with enum validations, idempotency de-duplication, and correct delivered/queued responses and error handling.",
+        "priority": "P1",
+        "testPointCount": 1,
+        "rationale": "Webhook payload has multiple required fields and enums (alert_type/channel/severity), message max length, idempotency_key UUID v4 with duplicate suppression, and 200/400/409 outcomes."
+      }
+    ]
+  },
+  "outlines": [
+    {
+      "testId": "TC-ENTRY-01",
+      "title": "Validate Base API URL is /v2 and served over HTTPS",
+      "workflow": "System entry points & base URLs",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "Base API URL https://api.aegiscard.com/v2"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ENTRY-02",
+      "title": "Validate Frontend Portal URL is reachable at portal.aegiscard.com",
+      "workflow": "System entry points & base URLs",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "Frontend Portal https://portal.aegiscard.com"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ENTRY-03",
+      "title": "Validate API declares Version v2 (OpenAPI 3.1 compliant)",
+      "workflow": "System entry points & base URLs",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "API Version v2 (OpenAPI 3.1 compliant)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ENTRY-04",
+      "title": "Validate minimum TLS version requirement is TLS 1.3 for platform interactions",
+      "workflow": "System entry points & base URLs",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "TLS Version TLS 1.3 minimum"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ENTRY-05",
+      "title": "Validate WebSocket endpoint exists for live transaction feed",
+      "workflow": "System entry points & base URLs",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 2 Web Application Architecture, page 3 (parsed text)",
+        "excerpt": "WebSocket endpoint: wss://realtime.aegiscard.com/v2/stream — Live transaction feed"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ARCH-01",
+      "title": "Validate API gateway described as rate-limited and WAF-protected",
+      "workflow": "Web Application Architecture",
+      "type": "resilience",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 2 Web Application Architecture, page 3 (parsed text)",
+        "excerpt": "API Gateway: https://api.aegiscard.com/v2 — Rate-limited, WAF-protected"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUTH-01",
+      "title": "Verify OAuth 2.0 Authorization Code Flow with PKCE governs portal sessions",
+      "workflow": "Authentication",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3 User Authentication & Session Management, page 4 (parsed text)",
+        "excerpt": "All web portal sessions are governed by OAuth 2.0 Authorization Code Flow with PKCE."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUTH-02",
+      "title": "Verify auth tokens are stored in HttpOnly Secure cookies and never in localStorage",
+      "workflow": "Authentication",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3 User Authentication & Session Management, page 4 (parsed text)",
+        "excerpt": "Tokens are stored in HttpOnly, Secure cookies — never in localStorage."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUTH-03",
+      "title": "Verify access token expiry model (15-minute expiry) is enforced by API authentication",
+      "workflow": "Authentication",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 2 Web Application Architecture, page 2 (parsed text)",
+        "excerpt": "authenticated via JWT Bearer tokens with a 15-minute expiry and refresh token rotation."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-01",
+      "title": "Register user successfully with all required fields returns 201 and verification token",
+      "workflow": "User Registration",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "201 Account created; verification email sent user_id, verification_token"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-02",
+      "title": "Registration rejects when agree_terms is false",
+      "workflow": "User Registration",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "agree_terms Boolean ✓ Required Must be true; rejects if false"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-03",
+      "title": "Registration validates first_name length boundaries (min 2, max 50)",
+      "workflow": "User Registration",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "first_name String ✓ Required Min 2 chars, max 50 chars, alpha only"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-04",
+      "title": "Registration validates last_name alphabetic-only constraint",
+      "workflow": "User Registration",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "last_name String ✓ Required Min 2 chars, max 50 chars, alpha only"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-05",
+      "title": "Registration enforces email RFC 5322 format and uniqueness",
+      "workflow": "User Registration",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "email String ✓ Required Valid RFC 5322 email format; unique in system"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-06",
+      "title": "Registration returns 409 EMAIL_EXISTS when email already registered",
+      "workflow": "User Registration",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "409 Email already registered error: EMAIL_EXISTS"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-07",
+      "title": "Registration enforces password complexity; returns 422 WEAK_PASSWORD when failing rules",
+      "workflow": "User Registration",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "422 Password does not meet complexity rules error: WEAK_PASSWORD"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-08",
+      "title": "Registration enforces password minimum length 12 characters boundary",
+      "workflow": "User Registration",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "password String ✓ Required Min 12 chars; 1 upper, 1 lower, 1 digit, 1 symbol"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-09",
+      "title": "Registration validates date_of_birth ISO 8601 format and age >= 18",
+      "workflow": "User Registration",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "date_of_birth Date ✓ Required ISO 8601 (YYYY-MM-DD); age must be >= 18"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-10",
+      "title": "Registration validates phone_number E.164 format",
+      "workflow": "User Registration",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "phone_number String ✓ Required E.164 format (e.g., +14165551234)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-11",
+      "title": "Registration validates ssn_last4 exactly 4 numeric digits",
+      "workflow": "User Registration",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "ssn_last4 String ✓ Required Exactly 4 numeric digits; for identity pre-check"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REG-12",
+      "title": "Registration returns 400 with error, field, message for missing required field",
+      "workflow": "User Registration",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "400 Missing or malformed required field error, field, message"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOGIN-01",
+      "title": "Login success returns access_token, refresh_token, expires_in",
+      "workflow": "Login & Token Issuance",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "200 Login successful access_token, refresh_token, expires_in"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOGIN-02",
+      "title": "Login rejects invalid credentials with 401 INVALID_CREDENTIALS",
+      "workflow": "Login & Token Issuance",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "401 Invalid credentials error: INVALID_CREDENTIALS"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOGIN-03",
+      "title": "Login locks account after 5 failed attempts and returns 403 ACCOUNT_LOCKED with unlock_at",
+      "workflow": "Login & Token Issuance",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "403 Account locked after 5 failed attempts error: ACCOUNT_LOCKED, unlock_at"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOGIN-04",
+      "title": "Login rate limit exceeded returns 429 RATE_LIMITED with retry_after (10 req/min per IP)",
+      "workflow": "Login & Token Issuance",
+      "type": "resilience",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "429 Rate limit exceeded (10 req/min per IP) error: RATE_LIMITED, retry_after"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOGIN-05",
+      "title": "Login accepts optional mfa_code when MFA enabled (6-digit TOTP)",
+      "workflow": "Login & Token Issuance",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "mfa_code String Optional 6-digit TOTP if MFA enabled on account"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOGIN-06",
+      "title": "Login accepts optional device_id as UUID v4 for trusted device recognition",
+      "workflow": "Login & Token Issuance",
+      "type": "boundary",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "device_id String Optional UUID v4; for trusted device recognition"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOGIN-07",
+      "title": "Login remember_me true extends refresh token TTL to 30 days",
+      "workflow": "Login & Token Issuance",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "remember_me Boolean Optional Extends refresh token TTL to 30 days if true"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REFRESH-01",
+      "title": "Token refresh success returns new access_token and refresh_token and invalidates old refresh",
+      "workflow": "Token Refresh",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.3 Token Refresh & Logout, page 5 (parsed text)",
+        "excerpt": "New access token issued; old refresh invalidated"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REFRESH-02",
+      "title": "Token refresh enforces refresh_token single-use rotation (replay returns TOKEN_INVALID)",
+      "workflow": "Token Refresh",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.3 Token Refresh & Logout, page 5 (parsed text)",
+        "excerpt": "refresh_token String ✓ Required Opaque token from login response; single-use"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REFRESH-03",
+      "title": "Token refresh returns 401 TOKEN_INVALID when refresh token expired or already used",
+      "workflow": "Token Refresh",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.3 Token Refresh & Logout, page 5 (parsed text)",
+        "excerpt": "401 Refresh token expired or already used error: TOKEN_INVALID"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APPFLOW-01",
+      "title": "Enforce sequential completion of 3-step credit application (steps must be completed in order)",
+      "workflow": "Credit Application Flow sequencing & draft auto-save",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "Each step must be completed in order; the system issues a session_token on Step 1"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APPFLOW-02",
+      "title": "Verify session_token issued at Step 1 must accompany Steps 2 and 3",
+      "workflow": "Credit Application Flow sequencing & draft auto-save",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "issues a session_token on Step 1 that must accompany Steps 2 and 3."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APPFLOW-03",
+      "title": "Verify application draft auto-saves every 60 seconds to localStorage (draft only)",
+      "workflow": "Credit Application Flow sequencing & draft auto-save",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "Auto-save occurs every 60 seconds to {c('localStorage')} as a draft."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP1-01",
+      "title": "Start application Step 1 success returns application_id and session_token (201)",
+      "workflow": "Application Step 1 — Personal Information",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "201 Step 1 accepted; application created application_id, session_token"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP1-02",
+      "title": "Step 1 rejects when email does not match authenticated user email",
+      "workflow": "Application Step 1 — Personal Information",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "email String ✓ Required Must match authenticated user email"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP1-03",
+      "title": "Step 1 validates residential address province is 2-char ISO 3166-2 code",
+      "workflow": "Application Step 1 — Personal Information",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "address.province String ✓ Required 2-char ISO 3166-2 code (e.g., ON, CA)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP1-04",
+      "title": "Step 1 validates Canadian postal code format A1A 1A1",
+      "workflow": "Application Step 1 — Personal Information",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "address.postal_code String ✓ Required Canadian format: A1A 1A1"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP1-05",
+      "title": "Step 1 validates id_type enum is one of PASSPORT, DRIVERS_LICENSE, PR_CARD",
+      "workflow": "Application Step 1 — Personal Information",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "id_type Enum ✓ Required {PASSPORT, DRIVERS_LICENSE, PR_CARD}"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP1-06",
+      "title": "Step 1 returns 409 DUPLICATE_APPLICATION when active application already in progress",
+      "workflow": "Application Step 1 — Personal Information",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "409 Active application already in progress error: DUPLICATE_APPLICATION"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP1-07",
+      "title": "Step 1 returns 400 with error, field, message on validation failure",
+      "workflow": "Application Step 1 — Personal Information",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "400 Validation failure on any field error, field, message"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-01",
+      "title": "Submit Step 2 financials success returns PENDING_REVIEW and fico_pull_id",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "200 Financials saved; credit pull queued status: PENDING_REVIEW, fico_pull_id"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-02",
+      "title": "Step 2 requires X-App-Session header session_token and enforces 30-minute expiry",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "session_token String ✓ Required Header: X-App-Session; expires 30 min"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-03",
+      "title": "Step 2 returns 401 SESSION_EXPIRED when session_token invalid or expired",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "401 session_token expired or invalid error: SESSION_EXPIRED"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-04",
+      "title": "Step 2 enforces employer_name required only when employment_status=EMPLOYED",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "state-transition",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "employer_name String Optional Required if employment_status = EMPLOYED"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-05",
+      "title": "Step 2 validates gross_annual_income positive and max 9,999,999.99 (CAD)",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "gross_annual_income Decimal ✓ Required Positive; max 9,999,999.99; in CAD"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-06",
+      "title": "Step 2 defaults other_income to 0.00 when omitted",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "functional",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "other_income Decimal Optional Default 0.00 if omitted"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-07",
+      "title": "Step 2 allows monthly_rent to be 0 when homeowner; otherwise must be positive",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "monthly_rent Decimal ✓ Required Positive or 0 (if homeowner)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-08",
+      "title": "Step 2 requires sin_consent true to proceed with credit check",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "sin_consent Boolean ✓ Required Must be true to proceed with credit check"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP2-09",
+      "title": "Step 2 returns 400 for invalid or missing financial field with error, field, message",
+      "workflow": "Application Step 2 — Financial Information",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "400 Invalid or missing financial field error, field, message"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP3-01",
+      "title": "Submit Step 3 approved decision when FICO > 680 returns APPROVED with credit_limit and card_number_masked",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "200 Auto-Approved (FICO > 680) decision: APPROVED, credit_limit, card_number_masked"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP3-02",
+      "title": "Submit Step 3 pending decision when FICO 600-680 returns PENDING with review_eta_hours",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "200 Referred to underwriter (FICO 600-680) decision: PENDING, review_eta_hours"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP3-03",
+      "title": "Submit Step 3 declined decision when FICO < 600 returns DECLINED with reason_code",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "200 Auto-Declined (FICO < 600) decision: DECLINED, reason_code"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP3-04",
+      "title": "Step 3 requires e_signature as Base64-encoded typed name signature",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 7 (parsed text)",
+        "excerpt": "e_signature String ✓ Required Base64-encoded typed name signature"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP3-05",
+      "title": "Step 3 returns 400 SIGNATURE_REQUIRED when e_signature missing or malformed",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "400 e_signature missing or malformed error: SIGNATURE_REQUIRED"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-APP3-06",
+      "title": "Step 3 marketing_opt_in defaults to false when omitted",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "type": "functional",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 7 (parsed text)",
+        "excerpt": "marketing_opt_in Boolean Optional Default false"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-01",
+      "title": "Initiate transaction approves and returns transaction_id, available_credit, auth_code",
+      "workflow": "Initiate a Web Transaction",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "200 Approved; credit updated (ISO 8583: 00) transaction_id, available_credit, auth_code"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-02",
+      "title": "Initiate transaction enforces account_id belongs to authenticated user",
+      "workflow": "Initiate a Web Transaction",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "account_id UUID ✓ Required Path param; must belong to authenticated user"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-03",
+      "title": "Initiate transaction rejects transaction_amount <= 0 with 422 INVALID_AMOUNT",
+      "workflow": "Initiate a Web Transaction",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "422 transaction_amount <= 0 (ISO 8583: 13) error: INVALID_AMOUNT"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-04",
+      "title": "Initiate transaction returns 402 INSUFFICIENT_FUNDS with available_credit",
+      "workflow": "Initiate a Web Transaction",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "402 Insufficient funds (ISO 8583: 51) error: INSUFFICIENT_FUNDS, available_credit"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-05",
+      "title": "Initiate transaction returns 403 CARD_INACTIVE when card not Active or Frozen",
+      "workflow": "Initiate a Web Transaction",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "403 Card not Active or Frozen error: CARD_INACTIVE, card_status"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-06",
+      "title": "Initiate transaction triggers essential service over-limit response (5% buffer used) sets over_limit_flag true",
+      "workflow": "Initiate a Web Transaction",
+      "type": "state-transition",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "Essential service over-limit (5% buffer used) transaction_id, over_limit_flag: true"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-07",
+      "title": "Initiate transaction enforces exchange_rate required when currency_code != CAD",
+      "workflow": "Initiate a Web Transaction",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "exchange_rate Decimal Optional Required if currency_code != CAD; Decimal(8,6)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-08",
+      "title": "Initiate transaction uses default currency_code CAD when omitted",
+      "workflow": "Initiate a Web Transaction",
+      "type": "functional",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "currency_code String Optional ISO 4217 (e.g., USD, EUR); default CAD"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-09",
+      "title": "Initiate transaction rejects frequency >10 transactions/60 min with 429 FREQ_EXCEEDED and mfa_required true",
+      "workflow": "Initiate a Web Transaction",
+      "type": "resilience",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "429 >10 transactions in 60 min (ISO 8583: 65) error: FREQ_EXCEEDED, mfa_required: true"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-10",
+      "title": "Initiate transaction validates merchant_id alphanumeric and max 32 chars",
+      "workflow": "Initiate a Web Transaction",
+      "type": "boundary",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "merchant_id String ✓ Required Alphanumeric; max 32 chars"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-11",
+      "title": "Initiate transaction validates MCC code as 4-digit ISO 18245 value",
+      "workflow": "Initiate a Web Transaction",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "mcc_code String ✓ Required 4-digit ISO 18245 Merchant Category Code"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-12",
+      "title": "Initiate transaction validates transaction_type enum values PURCHASE/CASH_ADVANCE/BALANCE_TRANSFER",
+      "workflow": "Initiate a Web Transaction",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "transaction_type Enum ✓ Required {PURCHASE, CASH_ADVANCE, BALANCE_TRANSFER}"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-13",
+      "title": "Initiate transaction description field max length 255 and appears on statement",
+      "workflow": "Initiate a Web Transaction",
+      "type": "boundary",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "description String Optional Max 255 chars; appears on statement"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-LIST-01",
+      "title": "List transactions returns paginated list with total_count, page, total_pages",
+      "workflow": "List Transactions",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "200 Returns paginated list transactions[], total_count, page, total_pages"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-LIST-02",
+      "title": "List transactions defaults from_date to billing cycle start when omitted",
+      "workflow": "List Transactions",
+      "type": "functional",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "from_date Date Optional ISO 8601; default: billing cycle start"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-LIST-03",
+      "title": "List transactions enforces to_date must be >= from_date; invalid range returns 400 INVALID_DATE_RANGE",
+      "workflow": "List Transactions",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "400 to_date < from_date error: INVALID_DATE_RANGE"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-LIST-04",
+      "title": "List transactions enforces pagination bounds: page min 1 and per_page max 100",
+      "workflow": "List Transactions",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "page Integer Optional Default 1; min 1\nper_page Integer Optional Default 25; max 100"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-LIST-05",
+      "title": "List transactions supports category filter enum values (PURCHASE/CASH_ADVANCE/REFUND/FEE/INTEREST)",
+      "workflow": "List Transactions",
+      "type": "functional",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "category Enum Optional {PURCHASE, CASH_ADVANCE, REFUND, FEE, INTEREST}"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-TXN-LIST-06",
+      "title": "List transactions rejects access to account not owned by user with 403 FORBIDDEN",
+      "workflow": "List Transactions",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "403 Account not owned by user error: FORBIDDEN"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-FTF-01",
+      "title": "Foreign transaction applies Total_CAD formula when currency_code ≠ CAD",
+      "workflow": "Foreign Transaction Fee Calculation",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.3 Foreign Transaction Fee Calculation, page 10 (parsed text)",
+        "excerpt": "Total_CAD = (transaction_amount × exchange_rate) × 1.03"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-FTF-02",
+      "title": "Foreign transaction fee is itemized separately as foreign_fee_amount in response",
+      "workflow": "Foreign Transaction Fee Calculation",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.3 Foreign Transaction Fee Calculation, page 10 (parsed text)",
+        "excerpt": "fee is itemised separately in the response as foreign_fee_amount."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-SUM-01",
+      "title": "Get account summary success returns balance, credit, status, billing cycle end, points balance",
+      "workflow": "Get Account Summary",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "200 Success current_balance, available_credit, credit_limit,\naccount_status, billing_cycle_end, points_balance"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-SUM-02",
+      "title": "Get account summary include_rewards query param defaults to false",
+      "workflow": "Get Account Summary",
+      "type": "functional",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "include_rewards Boolean Optional Query param; default false"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-SUM-03",
+      "title": "Get account summary enforces owner-only access and returns 403 FORBIDDEN when token not owner",
+      "workflow": "Get Account Summary",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "403 Token does not own this account error: FORBIDDEN"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CARDSTAT-01",
+      "title": "Freeze/unfreeze card status success returns card_id, new_status, updated_at",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "200 Status updated successfully card_id, new_status, updated_at"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CARDSTAT-02",
+      "title": "Card status update allows only Active or Frozen as user-changeable states",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "status Enum ✓ Required {Active, Frozen} — only these two user-changeable states"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CARDSTAT-03",
+      "title": "Card status update requires 6-digit confirm_otp sent to registered phone/email",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "confirm_otp String ✓ Required 6-digit OTP sent to registered phone/email"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CARDSTAT-04",
+      "title": "Card status update returns 401 OTP_FAILED and attempts_remaining when OTP invalid/expired",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "401 OTP invalid or expired error: OTP_FAILED, attempts_remaining"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CARDSTAT-05",
+      "title": "Card status update returns 400 INVALID_TRANSITION with allowed_transitions on invalid transition",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "400 Invalid status transition attempted error: INVALID_TRANSITION, allowed_transitions"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CARDSTAT-06",
+      "title": "Card status update reason is logged to audit trail and max length 255",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "type": "audit",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "reason String Optional Max 255 chars; logged to audit trail"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOST-01",
+      "title": "Report lost/stolen success blocks card and schedules replacement with case_number",
+      "workflow": "Report Card Lost or Stolen",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "200 Card blocked; replacement scheduled blocked_card_id, new_card_eta, case_number"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOST-02",
+      "title": "Report lost/stolen is irreversible operation",
+      "workflow": "Report Card Lost or Stolen",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "Irreversible."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOST-03",
+      "title": "Report lost/stolen validates loss_type enum LOST or STOLEN",
+      "workflow": "Report Card Lost or Stolen",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "loss_type Enum ✓ Required {LOST, STOLEN}"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOST-04",
+      "title": "Report lost/stolen returns 409 ALREADY_BLOCKED when card already Blocked or Closed",
+      "workflow": "Report Card Lost or Stolen",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "409 Card already in Blocked or Closed state error: ALREADY_BLOCKED"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LOST-05",
+      "title": "Report lost/stolen supports optional last_known_use in ISO 8601 UTC",
+      "workflow": "Report Card Lost or Stolen",
+      "type": "boundary",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "last_known_use DateTime Optional ISO 8601 UTC; for fraud investigation"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PIN-01",
+      "title": "Set/reset virtual PIN success returns success true and updated_at",
+      "workflow": "Set Web-Based PIN",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "200 PIN set successfully success: true, updated_at"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PIN-02",
+      "title": "Virtual PIN enforces exactly 4 numeric digits for new_pin",
+      "workflow": "Set Web-Based PIN",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "new_pin String ✓ Required Exactly 4 numeric digits; transmitted encrypted (RSA-OAEP)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PIN-03",
+      "title": "Virtual PIN confirm_pin must match new_pin else 400 PIN_MISMATCH",
+      "workflow": "Set Web-Based PIN",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "400 PIN mismatch or not 4 digits error: PIN_MISMATCH or PIN_FORMAT"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PIN-04",
+      "title": "Virtual PIN requires session_otp 6-digit OTP from /v2/auth/otp/request",
+      "workflow": "Set Web-Based PIN",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "session_otp String ✓ Required 6-digit OTP from /v2/auth/otp/request"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PIN-05",
+      "title": "Virtual PIN returns 403 CARD_BLOCKED when card is in Blocked state",
+      "workflow": "Set Web-Based PIN",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "403 Card in Blocked state error: CARD_BLOCKED"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-STMT-01",
+      "title": "Retrieve statement default format JSON when format omitted",
+      "workflow": "Retrieve Statement",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "format Enum Optional {JSON, PDF}; default JSON"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-STMT-02",
+      "title": "Retrieve statement supports PDF format",
+      "workflow": "Retrieve Statement",
+      "type": "functional",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "format Enum Optional {JSON, PDF}; default JSON"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-STMT-03",
+      "title": "Retrieve statement success returns statement_date, total_spend, adb, interest_charged, late_fee, rewards_earned, minimum_payment_due, due_date",
+      "workflow": "Retrieve Statement",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "200 Statement returned statement_date, total_spend, adb, interest_charged,"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-STMT-04",
+      "title": "Retrieve statement returns 404 NOT_FOUND when statement not found or not yet generated",
+      "workflow": "Retrieve Statement",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "404 Statement not found or not yet generated error: NOT_FOUND"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-BILL-INT-01",
+      "title": "Validate interest calculation uses ADB method formula (REQ-009)",
+      "workflow": "Billing calculations: Interest (REQ-009)",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Interest = (ADB × APR / 365) × Days_in_Billing_Cycle"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-BILL-INT-02",
+      "title": "Validate interest day-count denominator fixed at 365 per formula",
+      "workflow": "Billing calculations: Interest (REQ-009)",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Interest = (ADB × APR / 365) × Days_in_Billing_Cycle"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-BILL-GRACE-01",
+      "title": "Grace period applies only when prev_statement_balance_paid_in_full = true (REQ-010)",
+      "workflow": "Billing calculations: Grace period eligibility (REQ-010)",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Grace period (21 days) only if prev_statement_balance_paid_in_full = true"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-BILL-GRACE-02",
+      "title": "Grace period not applied when prev_statement_balance_paid_in_full = false",
+      "workflow": "Billing calculations: Grace period eligibility (REQ-010)",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Grace period (21 days) only if prev_statement_balance_paid_in_full = true"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-BILL-LATE-01",
+      "title": "Late fee charged $35.00 when payment_received_date > due_date + 2 days (REQ-011)",
+      "workflow": "Billing calculations: Late fee trigger (REQ-011)",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "late_fee = $35.00 if payment_received_date > due_date + 2 days"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-BILL-LATE-02",
+      "title": "Late fee not charged when payment_received_date is on/before due_date + 2 days",
+      "workflow": "Billing calculations: Late fee trigger (REQ-011)",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "late_fee = $35.00 if payment_received_date > due_date + 2 days"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REW-01",
+      "title": "Rewards accrual for Travel MCC uses 3x multiplier and floor() (REQ-012)",
+      "workflow": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Travel MCC: points += floor(amount × 3)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REW-02",
+      "title": "Rewards accrual for non-Travel uses 1x multiplier and floor() (REQ-012)",
+      "workflow": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "All other: points += floor(amount × 1)"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-REW-03",
+      "title": "Rewards rounding always floor() and never round/ceil (REQ-013)",
+      "workflow": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 14 (parsed text)",
+        "excerpt": "Always floor() — never round or ceil()"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-STMT-ACC-01",
+      "title": "Statement accuracy: sum(transaction_amount[]) equals total_spend within ±$0.01 tolerance (REQ-015)",
+      "workflow": "Statement accuracy tolerance (REQ-015)",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 14 (parsed text)",
+        "excerpt": "sum(transaction_amount[]) == total_spend within tolerance ±$0.01"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-STMT-ACC-02",
+      "title": "Statement accuracy violation beyond ±$0.01 is detected (REQ-015 tolerance boundary)",
+      "workflow": "Statement accuracy tolerance (REQ-015)",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 14 (parsed text)",
+        "excerpt": "within tolerance ±$0.01"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAY-01",
+      "title": "Make payment immediate (scheduled_date omitted) accepted and queued returns payment_id and new_balance_estimate",
+      "workflow": "Make a Payment",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "Payment accepted and queued for processing payment_id, scheduled_date, new_balance_estimate"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAY-02",
+      "title": "Make payment scheduled_date must be future date (ISO 8601) and is returned in response",
+      "workflow": "Make a Payment",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "scheduled_date Date Optional ISO 8601; future date; omit for immediate"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAY-03",
+      "title": "Make payment enforces payment_amount min $1.00 and max equals total_balance",
+      "workflow": "Make a Payment",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "payment_amount Decimal ✓ Required Decimal(10,2); min $1.00; max = total_balance"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAY-04",
+      "title": "Make payment validates payment_type enum values MINIMUM/STATEMENT_BALANCE/CUSTOM/FULL_BALANCE",
+      "workflow": "Make a Payment",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "payment_type Enum ✓ Required {MINIMUM, STATEMENT_BALANCE, CUSTOM, FULL_BALANCE}"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAY-05",
+      "title": "Make payment returns 400 BELOW_MINIMUM when payment_amount < minimum_payment_due",
+      "workflow": "Make a Payment",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "400 payment_amount < minimum_payment_due error: BELOW_MINIMUM, minimum_payment_due"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAY-06",
+      "title": "Make payment returns 422 INVALID_BANK_ACCOUNT when bank_account_id not linked or inactive",
+      "workflow": "Make a Payment",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "422 bank_account_id not linked or inactive error: INVALID_BANK_ACCOUNT"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-MASK-01",
+      "title": "Verify PAN is masked in browser UI and full PAN never transmitted to frontend (REQ-014)",
+      "workflow": "PAN masking & non-exposure",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "PAN displayed in browser as **** **** **** 1234 only. Full PAN never transmitted to frontend."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-RESCIND-01",
+      "title": "DELETE account allowed within 14 days post-issuance and has no membership fee (REQ-016)",
+      "workflow": "Right to Rescind / Account deletion window",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "must be available for 14 days post-issuance with no membership fee."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-RESCIND-02",
+      "title": "DELETE account rejected after Day 14 (REQ-016)",
+      "workflow": "Right to Rescind / Account deletion window",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Endpoint rejects after Day 14."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PCI-01",
+      "title": "Verify all web forms transmit over TLS 1.3 (NFR-01)",
+      "workflow": "PCI-DSS web controls",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "All web forms transmit over TLS 1.3."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PCI-02",
+      "title": "Verify card fields use iframe tokenisation and no raw PAN in DOM (NFR-01)",
+      "workflow": "PCI-DSS web controls",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Card fields use iframe tokenisation (Stripe Elements or equivalent). No raw PAN in DOM."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CSRF-01",
+      "title": "Verify state-changing endpoints require X-CSRF-Token header (NFR-05)",
+      "workflow": "CSRF protection & SameSite cookies",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "All state-changing endpoints require a CSRF token in X-CSRF-Token header."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CSRF-02",
+      "title": "Verify SameSite=Strict cookie policy is enforced (NFR-05)",
+      "workflow": "CSRF protection & SameSite cookies",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "SameSite=Strict cookie policy enforced."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-SESSION-01",
+      "title": "Portal session expires after 15 minutes of inactivity (NFR-06)",
+      "workflow": "Session timeout and warning modal",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Web portal sessions expire after 15 minutes of inactivity."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-SESSION-02",
+      "title": "Portal displays 2-minute warning modal before auto-logout (NFR-06)",
+      "workflow": "Session timeout and warning modal",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "User receives 2-minute warning modal before auto-logout."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUDIT-01",
+      "title": "Validate credit_limit change writes immutable audit log with user_id, session_id, ip_address, timestamp_utc (NFR-04)",
+      "workflow": "Audit trail for credit_limit changes",
+      "type": "audit",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "All credit_limit changes log user_id, session_id, ip_address, timestamp_utc to immutable audit log."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PERF-01",
+      "title": "Validate API p95 latency target is ≤ 1,500 ms (NFR-02)",
+      "workflow": "API latency & portal TTI budgets",
+      "type": "performance",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "API p95 latency ≤ 1,500 ms."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PERF-02",
+      "title": "Validate web portal Time-to-Interactive target is ≤ 3s on 4G (NFR-02)",
+      "workflow": "API latency & portal TTI budgets",
+      "type": "performance",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Web portal Time-to-Interactive ≤ 3s on 4G."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-SCALE-01",
+      "title": "Validate API gateway sustains 5,000 concurrent requests/sec requirement (NFR-03)",
+      "workflow": "Scalability & autoscaling trigger",
+      "type": "performance",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "API gateway must sustain 5,000 concurrent requests/sec."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-SCALE-02",
+      "title": "Validate auto-scaling triggers at 70% CPU utilisation (NFR-03)",
+      "workflow": "Scalability & autoscaling trigger",
+      "type": "resilience",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Auto-scaling triggers at 70% CPU utilisation."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-WEBHOOK-01",
+      "title": "Notifications webhook accepts valid alert payload and returns 200 with notification_id, delivered_at, channel",
+      "workflow": "Notification & Alert Webhooks",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "200 Alert delivered or queued notification_id, delivered_at, channel"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-WEBHOOK-02",
+      "title": "Notifications webhook validates alert_type enum values",
+      "workflow": "Notification & Alert Webhooks",
+      "type": "boundary",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "alert_type Enum ✓ Required\n{LATE_PAYMENT, PIN_LOCKED, FRAUD_FLAG, OVER_LIMIT,\nSTATEMENT_READY}"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-WEBHOOK-03",
+      "title": "Notifications webhook validates channel enum values EMAIL/PUSH/IN_APP/SMS",
+      "workflow": "Notification & Alert Webhooks",
+      "type": "boundary",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "channel Enum ✓ Required {EMAIL, PUSH, IN_APP, SMS}"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-WEBHOOK-04",
+      "title": "Notifications webhook returns 400 INVALID_ALERT_TYPE for unknown alert_type or channel",
+      "workflow": "Notification & Alert Webhooks",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "400 Unknown alert_type or channel error: INVALID_ALERT_TYPE"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-WEBHOOK-05",
+      "title": "Notifications webhook enforces idempotency_key UUID v4 to prevent duplicate delivery",
+      "workflow": "Notification & Alert Webhooks",
+      "type": "resilience",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "idempotency_key UUID ✓ Required UUID v4; prevents duplicate alert delivery"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-WEBHOOK-06",
+      "title": "Notifications webhook returns 409 DUPLICATE_NOTIFICATION for duplicate idempotency_key",
+      "workflow": "Notification & Alert Webhooks",
+      "type": "negative",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "409 Duplicate idempotency_key error: DUPLICATE_NOTIFICATION"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-E2E-01",
+      "title": "E2E: Register then login and obtain access/refresh tokens (verification workflow triggered)",
+      "workflow": "End-to-End User Onboarding",
+      "type": "e2e",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "Creates a new portal user account. Triggers email verification workflow."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-E2E-02",
+      "title": "E2E: Complete credit application Step 1 → Step 2 → Step 3 and receive APPROVED decision",
+      "workflow": "End-to-End Credit Application",
+      "type": "e2e",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "multi-step web form submitted across three sequential API calls. Each step must be completed in order"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-E2E-03",
+      "title": "E2E: After approval, get account summary then initiate transaction then list transactions",
+      "workflow": "End-to-End Account & Transactions",
+      "type": "e2e",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "GET /v2/accounts/{account_id}/summary Returns current balance, available credit, card status, and billing cycle info."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-E2E-04",
+      "title": "E2E: Initiate foreign currency transaction and verify Total_CAD and foreign_fee_amount",
+      "workflow": "End-to-End Foreign Transaction",
+      "type": "e2e",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.3 Foreign Transaction Fee Calculation, page 10 (parsed text)",
+        "excerpt": "any transaction where currency_code ≠ CAD applies the following formula:"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-E2E-05",
+      "title": "E2E: Retrieve statement then make payment and confirm payment queued response keys",
+      "workflow": "End-to-End Billing & Payments",
+      "type": "e2e",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "Payment accepted and queued for processing"
+      },
+      "sourceRefs": []
+    }
+  ],
+  "coverageSummary": {
+    "total": 142,
+    "covered": 0,
+    "partial": 0,
+    "uncovered": 142,
+    "overallPct": 0
+  },
+  "workflowCoverage": [
+    {
+      "name": "System entry points & base URLs (API + Portal + WebSocket)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "OAuth 2.0 session model & token storage constraints",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "User Registration (POST /v2/auth/register)",
+      "planned": 7,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Login & Token Issuance (POST /v2/auth/login)",
+      "planned": 5,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Token Refresh (POST /v2/auth/token/refresh) with rotation",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Credit Application Flow sequencing & draft auto-save",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3,
+      "pct": 0
+    },
+    {
+      "name": "Application Step 1 — Personal Information (POST /v2/applications/start)",
+      "planned": 5,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Application Step 2 — Financial Information (POST /v2/applications/{application_id}/financials)",
+      "planned": 6,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Application Step 3 — Decision & Card Selection (POST /v2/applications/{application_id}/submit)",
+      "planned": 5,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Initiate a Web Transaction (POST /v2/accounts/{account_id}/transactions)",
+      "planned": 7,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "List Transactions (GET /v2/accounts/{account_id}/transactions)",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Foreign Transaction Fee Calculation (REQ-006)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Get Account Summary (GET /v2/accounts/{account_id}/summary)",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Update Card Status Freeze/Unfreeze (PATCH /v2/cards/{card_id}/status)",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Report Card Lost or Stolen (POST /v2/cards/{card_id}/report-lost)",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Set Web-Based PIN (PUT /v2/cards/{card_id}/pin)",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Retrieve Statement (GET /v2/accounts/{account_id}/statements/{statement_id})",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Billing calculations: Interest (REQ-009 ADB method)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Billing calculations: Grace period eligibility (REQ-010)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2,
+      "pct": 0
+    },
+    {
+      "name": "Billing calculations: Late fee trigger (REQ-011)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2,
+      "pct": 0
+    },
+    {
+      "name": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3,
+      "pct": 0
+    },
+    {
+      "name": "Statement accuracy tolerance (REQ-015)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2,
+      "pct": 0
+    },
+    {
+      "name": "Make a Payment (POST /v2/accounts/{account_id}/payments)",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "PAN masking & non-exposure (REQ-014)",
+      "planned": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Right to Rescind / Account deletion window (REQ-016)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "PCI-DSS web controls: TLS 1.3 + iframe tokenisation + no PAN in DOM (NFR-01)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "CSRF protection & SameSite cookies (NFR-05)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Session timeout and warning modal (NFR-06)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Audit trail for credit_limit changes (NFR-04)",
+      "planned": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "API latency & portal TTI budgets (NFR-02)",
+      "planned": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Scalability & autoscaling trigger (NFR-03)",
+      "planned": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    },
+    {
+      "name": "Notification & Alert Webhooks (POST /v2/notifications/webhook)",
+      "planned": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0,
+      "pct": 0
+    }
+  ],
+  "coveredItems": [],
+  "partialItems": [],
+  "uncoveredItems": [
+    {
+      "title": "Validate Base API URL is /v2 and served over HTTPS",
+      "workflow": "System entry points & base URLs",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "Base API URL https://api.aegiscard.com/v2"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate Frontend Portal URL is reachable at portal.aegiscard.com",
+      "workflow": "System entry points & base URLs",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "Frontend Portal https://portal.aegiscard.com"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate API declares Version v2 (OpenAPI 3.1 compliant)",
+      "workflow": "System entry points & base URLs",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "API Version v2 (OpenAPI 3.1 compliant)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate minimum TLS version requirement is TLS 1.3 for platform interactions",
+      "workflow": "System entry points & base URLs",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 1 Introduction & System Overview, page 2 (parsed text)",
+        "excerpt": "TLS Version TLS 1.3 minimum"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate WebSocket endpoint exists for live transaction feed",
+      "workflow": "System entry points & base URLs",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 2 Web Application Architecture, page 3 (parsed text)",
+        "excerpt": "WebSocket endpoint: wss://realtime.aegiscard.com/v2/stream — Live transaction feed"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate API gateway described as rate-limited and WAF-protected",
+      "workflow": "Web Application Architecture",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 2 Web Application Architecture, page 3 (parsed text)",
+        "excerpt": "API Gateway: https://api.aegiscard.com/v2 — Rate-limited, WAF-protected"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify OAuth 2.0 Authorization Code Flow with PKCE governs portal sessions",
+      "workflow": "Authentication",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3 User Authentication & Session Management, page 4 (parsed text)",
+        "excerpt": "All web portal sessions are governed by OAuth 2.0 Authorization Code Flow with PKCE."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify auth tokens are stored in HttpOnly Secure cookies and never in localStorage",
+      "workflow": "Authentication",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3 User Authentication & Session Management, page 4 (parsed text)",
+        "excerpt": "Tokens are stored in HttpOnly, Secure cookies — never in localStorage."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify access token expiry model (15-minute expiry) is enforced by API authentication",
+      "workflow": "Authentication",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 2 Web Application Architecture, page 2 (parsed text)",
+        "excerpt": "authenticated via JWT Bearer tokens with a 15-minute expiry and refresh token rotation."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Register user successfully with all required fields returns 201 and verification token",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "201 Account created; verification email sent user_id, verification_token"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration rejects when agree_terms is false",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "agree_terms Boolean ✓ Required Must be true; rejects if false"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration validates first_name length boundaries (min 2, max 50)",
+      "workflow": "User Registration",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "first_name String ✓ Required Min 2 chars, max 50 chars, alpha only"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration validates last_name alphabetic-only constraint",
+      "workflow": "User Registration",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "last_name String ✓ Required Min 2 chars, max 50 chars, alpha only"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration enforces email RFC 5322 format and uniqueness",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "email String ✓ Required Valid RFC 5322 email format; unique in system"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration returns 409 EMAIL_EXISTS when email already registered",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "409 Email already registered error: EMAIL_EXISTS"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration enforces password complexity; returns 422 WEAK_PASSWORD when failing rules",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "422 Password does not meet complexity rules error: WEAK_PASSWORD"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration enforces password minimum length 12 characters boundary",
+      "workflow": "User Registration",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "password String ✓ Required Min 12 chars; 1 upper, 1 lower, 1 digit, 1 symbol"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration validates date_of_birth ISO 8601 format and age >= 18",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "date_of_birth Date ✓ Required ISO 8601 (YYYY-MM-DD); age must be >= 18"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration validates phone_number E.164 format",
+      "workflow": "User Registration",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "phone_number String ✓ Required E.164 format (e.g., +14165551234)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration validates ssn_last4 exactly 4 numeric digits",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "ssn_last4 String ✓ Required Exactly 4 numeric digits; for identity pre-check"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Registration returns 400 with error, field, message for missing required field",
+      "workflow": "User Registration",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "400 Missing or malformed required field error, field, message"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Login success returns access_token, refresh_token, expires_in",
+      "workflow": "Login & Token Issuance",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "200 Login successful access_token, refresh_token, expires_in"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Login rejects invalid credentials with 401 INVALID_CREDENTIALS",
+      "workflow": "Login & Token Issuance",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "401 Invalid credentials error: INVALID_CREDENTIALS"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Login locks account after 5 failed attempts and returns 403 ACCOUNT_LOCKED with unlock_at",
+      "workflow": "Login & Token Issuance",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "403 Account locked after 5 failed attempts error: ACCOUNT_LOCKED, unlock_at"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Login rate limit exceeded returns 429 RATE_LIMITED with retry_after (10 req/min per IP)",
+      "workflow": "Login & Token Issuance",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "429 Rate limit exceeded (10 req/min per IP) error: RATE_LIMITED, retry_after"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Login accepts optional mfa_code when MFA enabled (6-digit TOTP)",
+      "workflow": "Login & Token Issuance",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "mfa_code String Optional 6-digit TOTP if MFA enabled on account"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Login accepts optional device_id as UUID v4 for trusted device recognition",
+      "workflow": "Login & Token Issuance",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "device_id String Optional UUID v4; for trusted device recognition"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Login remember_me true extends refresh token TTL to 30 days",
+      "workflow": "Login & Token Issuance",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 3.2 Login & Token Issuance, page 5 (parsed text)",
+        "excerpt": "remember_me Boolean Optional Extends refresh token TTL to 30 days if true"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Token refresh success returns new access_token and refresh_token and invalidates old refresh",
+      "workflow": "Token Refresh",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.3 Token Refresh & Logout, page 5 (parsed text)",
+        "excerpt": "New access token issued; old refresh invalidated"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Token refresh enforces refresh_token single-use rotation (replay returns TOKEN_INVALID)",
+      "workflow": "Token Refresh",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.3 Token Refresh & Logout, page 5 (parsed text)",
+        "excerpt": "refresh_token String ✓ Required Opaque token from login response; single-use"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Token refresh returns 401 TOKEN_INVALID when refresh token expired or already used",
+      "workflow": "Token Refresh",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.3 Token Refresh & Logout, page 5 (parsed text)",
+        "excerpt": "401 Refresh token expired or already used error: TOKEN_INVALID"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Enforce sequential completion of 3-step credit application (steps must be completed in order)",
+      "workflow": "Credit Application Flow sequencing & draft auto-save",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "Each step must be completed in order; the system issues a session_token on Step 1"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify session_token issued at Step 1 must accompany Steps 2 and 3",
+      "workflow": "Credit Application Flow sequencing & draft auto-save",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "issues a session_token on Step 1 that must accompany Steps 2 and 3."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify application draft auto-saves every 60 seconds to localStorage (draft only)",
+      "workflow": "Credit Application Flow sequencing & draft auto-save",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "Auto-save occurs every 60 seconds to {c('localStorage')} as a draft."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Start application Step 1 success returns application_id and session_token (201)",
+      "workflow": "Application Step 1 — Personal Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "201 Step 1 accepted; application created application_id, session_token"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 1 rejects when email does not match authenticated user email",
+      "workflow": "Application Step 1 — Personal Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "email String ✓ Required Must match authenticated user email"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 1 validates residential address province is 2-char ISO 3166-2 code",
+      "workflow": "Application Step 1 — Personal Information",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "address.province String ✓ Required 2-char ISO 3166-2 code (e.g., ON, CA)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 1 validates Canadian postal code format A1A 1A1",
+      "workflow": "Application Step 1 — Personal Information",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "address.postal_code String ✓ Required Canadian format: A1A 1A1"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 1 validates id_type enum is one of PASSPORT, DRIVERS_LICENSE, PR_CARD",
+      "workflow": "Application Step 1 — Personal Information",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "id_type Enum ✓ Required {PASSPORT, DRIVERS_LICENSE, PR_CARD}"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 1 returns 409 DUPLICATE_APPLICATION when active application already in progress",
+      "workflow": "Application Step 1 — Personal Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "409 Active application already in progress error: DUPLICATE_APPLICATION"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 1 returns 400 with error, field, message on validation failure",
+      "workflow": "Application Step 1 — Personal Information",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.1 Step 1 — Personal Information, page 6 (parsed text)",
+        "excerpt": "400 Validation failure on any field error, field, message"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Submit Step 2 financials success returns PENDING_REVIEW and fico_pull_id",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "200 Financials saved; credit pull queued status: PENDING_REVIEW, fico_pull_id"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 requires X-App-Session header session_token and enforces 30-minute expiry",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "session_token String ✓ Required Header: X-App-Session; expires 30 min"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 returns 401 SESSION_EXPIRED when session_token invalid or expired",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "401 session_token expired or invalid error: SESSION_EXPIRED"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 enforces employer_name required only when employment_status=EMPLOYED",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "employer_name String Optional Required if employment_status = EMPLOYED"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 validates gross_annual_income positive and max 9,999,999.99 (CAD)",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "gross_annual_income Decimal ✓ Required Positive; max 9,999,999.99; in CAD"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 defaults other_income to 0.00 when omitted",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "other_income Decimal Optional Default 0.00 if omitted"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 allows monthly_rent to be 0 when homeowner; otherwise must be positive",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "monthly_rent Decimal ✓ Required Positive or 0 (if homeowner)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 requires sin_consent true to proceed with credit check",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "sin_consent Boolean ✓ Required Must be true to proceed with credit check"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 2 returns 400 for invalid or missing financial field with error, field, message",
+      "workflow": "Application Step 2 — Financial Information",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 4.2 Step 2 — Financial Information, page 7 (parsed text)",
+        "excerpt": "400 Invalid or missing financial field error, field, message"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Submit Step 3 approved decision when FICO > 680 returns APPROVED with credit_limit and card_number_masked",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "200 Auto-Approved (FICO > 680) decision: APPROVED, credit_limit, card_number_masked"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Submit Step 3 pending decision when FICO 600-680 returns PENDING with review_eta_hours",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "200 Referred to underwriter (FICO 600-680) decision: PENDING, review_eta_hours"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Submit Step 3 declined decision when FICO < 600 returns DECLINED with reason_code",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "200 Auto-Declined (FICO < 600) decision: DECLINED, reason_code"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 3 requires e_signature as Base64-encoded typed name signature",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 7 (parsed text)",
+        "excerpt": "e_signature String ✓ Required Base64-encoded typed name signature"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 3 returns 400 SIGNATURE_REQUIRED when e_signature missing or malformed",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 8 (parsed text)",
+        "excerpt": "400 e_signature missing or malformed error: SIGNATURE_REQUIRED"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Step 3 marketing_opt_in defaults to false when omitted",
+      "workflow": "Application Step 3 — Decision & Card Selection",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 4.3 Step 3 — Decision & Card Selection, page 7 (parsed text)",
+        "excerpt": "marketing_opt_in Boolean Optional Default false"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction approves and returns transaction_id, available_credit, auth_code",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "200 Approved; credit updated (ISO 8583: 00) transaction_id, available_credit, auth_code"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction enforces account_id belongs to authenticated user",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "account_id UUID ✓ Required Path param; must belong to authenticated user"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction rejects transaction_amount <= 0 with 422 INVALID_AMOUNT",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "422 transaction_amount <= 0 (ISO 8583: 13) error: INVALID_AMOUNT"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction returns 402 INSUFFICIENT_FUNDS with available_credit",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "402 Insufficient funds (ISO 8583: 51) error: INSUFFICIENT_FUNDS, available_credit"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction returns 403 CARD_INACTIVE when card not Active or Frozen",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "403 Card not Active or Frozen error: CARD_INACTIVE, card_status"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction triggers essential service over-limit response (5% buffer used) sets over_limit_flag true",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "Essential service over-limit (5% buffer used) transaction_id, over_limit_flag: true"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction enforces exchange_rate required when currency_code != CAD",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "exchange_rate Decimal Optional Required if currency_code != CAD; Decimal(8,6)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction uses default currency_code CAD when omitted",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "currency_code String Optional ISO 4217 (e.g., USD, EUR); default CAD"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction rejects frequency >10 transactions/60 min with 429 FREQ_EXCEEDED and mfa_required true",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "429 >10 transactions in 60 min (ISO 8583: 65) error: FREQ_EXCEEDED, mfa_required: true"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction validates merchant_id alphanumeric and max 32 chars",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "merchant_id String ✓ Required Alphanumeric; max 32 chars"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction validates MCC code as 4-digit ISO 18245 value",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "mcc_code String ✓ Required 4-digit ISO 18245 Merchant Category Code"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction validates transaction_type enum values PURCHASE/CASH_ADVANCE/BALANCE_TRANSFER",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "transaction_type Enum ✓ Required {PURCHASE, CASH_ADVANCE, BALANCE_TRANSFER}"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Initiate transaction description field max length 255 and appears on statement",
+      "workflow": "Initiate a Web Transaction",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.1 Initiate a Web Payment, page 9 (parsed text)",
+        "excerpt": "description String Optional Max 255 chars; appears on statement"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "List transactions returns paginated list with total_count, page, total_pages",
+      "workflow": "List Transactions",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "200 Returns paginated list transactions[], total_count, page, total_pages"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "List transactions defaults from_date to billing cycle start when omitted",
+      "workflow": "List Transactions",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "from_date Date Optional ISO 8601; default: billing cycle start"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "List transactions enforces to_date must be >= from_date; invalid range returns 400 INVALID_DATE_RANGE",
+      "workflow": "List Transactions",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "400 to_date < from_date error: INVALID_DATE_RANGE"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "List transactions enforces pagination bounds: page min 1 and per_page max 100",
+      "workflow": "List Transactions",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "page Integer Optional Default 1; min 1\nper_page Integer Optional Default 25; max 100"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "List transactions supports category filter enum values (PURCHASE/CASH_ADVANCE/REFUND/FEE/INTEREST)",
+      "workflow": "List Transactions",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "category Enum Optional {PURCHASE, CASH_ADVANCE, REFUND, FEE, INTEREST}"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "List transactions rejects access to account not owned by user with 403 FORBIDDEN",
+      "workflow": "List Transactions",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.2 List Transactions, page 10 (parsed text)",
+        "excerpt": "403 Account not owned by user error: FORBIDDEN"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Foreign transaction applies Total_CAD formula when currency_code ≠ CAD",
+      "workflow": "Foreign Transaction Fee Calculation",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.3 Foreign Transaction Fee Calculation, page 10 (parsed text)",
+        "excerpt": "Total_CAD = (transaction_amount × exchange_rate) × 1.03"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Foreign transaction fee is itemized separately as foreign_fee_amount in response",
+      "workflow": "Foreign Transaction Fee Calculation",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 5.3 Foreign Transaction Fee Calculation, page 10 (parsed text)",
+        "excerpt": "fee is itemised separately in the response as foreign_fee_amount."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Get account summary success returns balance, credit, status, billing cycle end, points balance",
+      "workflow": "Get Account Summary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "200 Success current_balance, available_credit, credit_limit,\naccount_status, billing_cycle_end, points_balance"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Get account summary include_rewards query param defaults to false",
+      "workflow": "Get Account Summary",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "include_rewards Boolean Optional Query param; default false"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Get account summary enforces owner-only access and returns 403 FORBIDDEN when token not owner",
+      "workflow": "Get Account Summary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "403 Token does not own this account error: FORBIDDEN"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Freeze/unfreeze card status success returns card_id, new_status, updated_at",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "200 Status updated successfully card_id, new_status, updated_at"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Card status update allows only Active or Frozen as user-changeable states",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "status Enum ✓ Required {Active, Frozen} — only these two user-changeable states"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Card status update requires 6-digit confirm_otp sent to registered phone/email",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "confirm_otp String ✓ Required 6-digit OTP sent to registered phone/email"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Card status update returns 401 OTP_FAILED and attempts_remaining when OTP invalid/expired",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "401 OTP invalid or expired error: OTP_FAILED, attempts_remaining"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Card status update returns 400 INVALID_TRANSITION with allowed_transitions on invalid transition",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "400 Invalid status transition attempted error: INVALID_TRANSITION, allowed_transitions"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Card status update reason is logged to audit trail and max length 255",
+      "workflow": "Update Card Status Freeze/Unfreeze",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 6.2 Update Card Status (Freeze / Unfreeze), page 11 (parsed text)",
+        "excerpt": "reason String Optional Max 255 chars; logged to audit trail"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Report lost/stolen success blocks card and schedules replacement with case_number",
+      "workflow": "Report Card Lost or Stolen",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "200 Card blocked; replacement scheduled blocked_card_id, new_card_eta, case_number"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Report lost/stolen is irreversible operation",
+      "workflow": "Report Card Lost or Stolen",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "Irreversible."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Report lost/stolen validates loss_type enum LOST or STOLEN",
+      "workflow": "Report Card Lost or Stolen",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "loss_type Enum ✓ Required {LOST, STOLEN}"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Report lost/stolen returns 409 ALREADY_BLOCKED when card already Blocked or Closed",
+      "workflow": "Report Card Lost or Stolen",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "409 Card already in Blocked or Closed state error: ALREADY_BLOCKED"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Report lost/stolen supports optional last_known_use in ISO 8601 UTC",
+      "workflow": "Report Card Lost or Stolen",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 6.3 Report Card Lost or Stolen, page 12 (parsed text)",
+        "excerpt": "last_known_use DateTime Optional ISO 8601 UTC; for fraud investigation"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Set/reset virtual PIN success returns success true and updated_at",
+      "workflow": "Set Web-Based PIN",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "200 PIN set successfully success: true, updated_at"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Virtual PIN enforces exactly 4 numeric digits for new_pin",
+      "workflow": "Set Web-Based PIN",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "new_pin String ✓ Required Exactly 4 numeric digits; transmitted encrypted (RSA-OAEP)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Virtual PIN confirm_pin must match new_pin else 400 PIN_MISMATCH",
+      "workflow": "Set Web-Based PIN",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "400 PIN mismatch or not 4 digits error: PIN_MISMATCH or PIN_FORMAT"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Virtual PIN requires session_otp 6-digit OTP from /v2/auth/otp/request",
+      "workflow": "Set Web-Based PIN",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "session_otp String ✓ Required 6-digit OTP from /v2/auth/otp/request"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Virtual PIN returns 403 CARD_BLOCKED when card is in Blocked state",
+      "workflow": "Set Web-Based PIN",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.4 Set Web-Based PIN (Virtual PIN), page 12 (parsed text)",
+        "excerpt": "403 Card in Blocked state error: CARD_BLOCKED"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Retrieve statement default format JSON when format omitted",
+      "workflow": "Retrieve Statement",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "format Enum Optional {JSON, PDF}; default JSON"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Retrieve statement supports PDF format",
+      "workflow": "Retrieve Statement",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "format Enum Optional {JSON, PDF}; default JSON"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Retrieve statement success returns statement_date, total_spend, adb, interest_charged, late_fee, rewards_earned, minimum_payment_due, due_date",
+      "workflow": "Retrieve Statement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "200 Statement returned statement_date, total_spend, adb, interest_charged,"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Retrieve statement returns 404 NOT_FOUND when statement not found or not yet generated",
+      "workflow": "Retrieve Statement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.1 Statement & Billing Cycle API, page 13 (parsed text)",
+        "excerpt": "404 Statement not found or not yet generated error: NOT_FOUND"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate interest calculation uses ADB method formula (REQ-009)",
+      "workflow": "Billing calculations: Interest (REQ-009)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Interest = (ADB × APR / 365) × Days_in_Billing_Cycle"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate interest day-count denominator fixed at 365 per formula",
+      "workflow": "Billing calculations: Interest (REQ-009)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Interest = (ADB × APR / 365) × Days_in_Billing_Cycle"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Grace period applies only when prev_statement_balance_paid_in_full = true (REQ-010)",
+      "workflow": "Billing calculations: Grace period eligibility (REQ-010)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Grace period (21 days) only if prev_statement_balance_paid_in_full = true"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Grace period not applied when prev_statement_balance_paid_in_full = false",
+      "workflow": "Billing calculations: Grace period eligibility (REQ-010)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Grace period (21 days) only if prev_statement_balance_paid_in_full = true"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Late fee charged $35.00 when payment_received_date > due_date + 2 days (REQ-011)",
+      "workflow": "Billing calculations: Late fee trigger (REQ-011)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "late_fee = $35.00 if payment_received_date > due_date + 2 days"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Late fee not charged when payment_received_date is on/before due_date + 2 days",
+      "workflow": "Billing calculations: Late fee trigger (REQ-011)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "late_fee = $35.00 if payment_received_date > due_date + 2 days"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Rewards accrual for Travel MCC uses 3x multiplier and floor() (REQ-012)",
+      "workflow": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "Travel MCC: points += floor(amount × 3)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Rewards accrual for non-Travel uses 1x multiplier and floor() (REQ-012)",
+      "workflow": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 13 (parsed text)",
+        "excerpt": "All other: points += floor(amount × 1)"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Rewards rounding always floor() and never round/ceil (REQ-013)",
+      "workflow": "Billing calculations: Rewards accrual (REQ-012) and rounding (REQ-013)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 14 (parsed text)",
+        "excerpt": "Always floor() — never round or ceil()"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Statement accuracy: sum(transaction_amount[]) equals total_spend within ±$0.01 tolerance (REQ-015)",
+      "workflow": "Statement accuracy tolerance (REQ-015)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 14 (parsed text)",
+        "excerpt": "sum(transaction_amount[]) == total_spend within tolerance ±$0.01"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Statement accuracy violation beyond ±$0.01 is detected (REQ-015 tolerance boundary)",
+      "workflow": "Statement accuracy tolerance (REQ-015)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.2 Billing Calculation Rules, page 14 (parsed text)",
+        "excerpt": "within tolerance ±$0.01"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Make payment immediate (scheduled_date omitted) accepted and queued returns payment_id and new_balance_estimate",
+      "workflow": "Make a Payment",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "Payment accepted and queued for processing payment_id, scheduled_date, new_balance_estimate"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Make payment scheduled_date must be future date (ISO 8601) and is returned in response",
+      "workflow": "Make a Payment",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "scheduled_date Date Optional ISO 8601; future date; omit for immediate"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Make payment enforces payment_amount min $1.00 and max equals total_balance",
+      "workflow": "Make a Payment",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "payment_amount Decimal ✓ Required Decimal(10,2); min $1.00; max = total_balance"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Make payment validates payment_type enum values MINIMUM/STATEMENT_BALANCE/CUSTOM/FULL_BALANCE",
+      "workflow": "Make a Payment",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "payment_type Enum ✓ Required {MINIMUM, STATEMENT_BALANCE, CUSTOM, FULL_BALANCE}"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Make payment returns 400 BELOW_MINIMUM when payment_amount < minimum_payment_due",
+      "workflow": "Make a Payment",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "400 payment_amount < minimum_payment_due error: BELOW_MINIMUM, minimum_payment_due"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Make payment returns 422 INVALID_BANK_ACCOUNT when bank_account_id not linked or inactive",
+      "workflow": "Make a Payment",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "422 bank_account_id not linked or inactive error: INVALID_BANK_ACCOUNT"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify PAN is masked in browser UI and full PAN never transmitted to frontend (REQ-014)",
+      "workflow": "PAN masking & non-exposure",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "PAN displayed in browser as **** **** **** 1234 only. Full PAN never transmitted to frontend."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "DELETE account allowed within 14 days post-issuance and has no membership fee (REQ-016)",
+      "workflow": "Right to Rescind / Account deletion window",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "must be available for 14 days post-issuance with no membership fee."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "DELETE account rejected after Day 14 (REQ-016)",
+      "workflow": "Right to Rescind / Account deletion window",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Endpoint rejects after Day 14."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify all web forms transmit over TLS 1.3 (NFR-01)",
+      "workflow": "PCI-DSS web controls",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "All web forms transmit over TLS 1.3."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify card fields use iframe tokenisation and no raw PAN in DOM (NFR-01)",
+      "workflow": "PCI-DSS web controls",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Card fields use iframe tokenisation (Stripe Elements or equivalent). No raw PAN in DOM."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify state-changing endpoints require X-CSRF-Token header (NFR-05)",
+      "workflow": "CSRF protection & SameSite cookies",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "All state-changing endpoints require a CSRF token in X-CSRF-Token header."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Verify SameSite=Strict cookie policy is enforced (NFR-05)",
+      "workflow": "CSRF protection & SameSite cookies",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "SameSite=Strict cookie policy enforced."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Portal session expires after 15 minutes of inactivity (NFR-06)",
+      "workflow": "Session timeout and warning modal",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Web portal sessions expire after 15 minutes of inactivity."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Portal displays 2-minute warning modal before auto-logout (NFR-06)",
+      "workflow": "Session timeout and warning modal",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "User receives 2-minute warning modal before auto-logout."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate credit_limit change writes immutable audit log with user_id, session_id, ip_address, timestamp_utc (NFR-04)",
+      "workflow": "Audit trail for credit_limit changes",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "All credit_limit changes log user_id, session_id, ip_address, timestamp_utc to immutable audit log."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate API p95 latency target is ≤ 1,500 ms (NFR-02)",
+      "workflow": "API latency & portal TTI budgets",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "API p95 latency ≤ 1,500 ms."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate web portal Time-to-Interactive target is ≤ 3s on 4G (NFR-02)",
+      "workflow": "API latency & portal TTI budgets",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Web portal Time-to-Interactive ≤ 3s on 4G."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate API gateway sustains 5,000 concurrent requests/sec requirement (NFR-03)",
+      "workflow": "Scalability & autoscaling trigger",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "API gateway must sustain 5,000 concurrent requests/sec."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Validate auto-scaling triggers at 70% CPU utilisation (NFR-03)",
+      "workflow": "Scalability & autoscaling trigger",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 8.1 Security & Compliance Requirements, page 15 (parsed text)",
+        "excerpt": "Auto-scaling triggers at 70% CPU utilisation."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Notifications webhook accepts valid alert payload and returns 200 with notification_id, delivered_at, channel",
+      "workflow": "Notification & Alert Webhooks",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "200 Alert delivered or queued notification_id, delivered_at, channel"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Notifications webhook validates alert_type enum values",
+      "workflow": "Notification & Alert Webhooks",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "alert_type Enum ✓ Required\n{LATE_PAYMENT, PIN_LOCKED, FRAUD_FLAG, OVER_LIMIT,\nSTATEMENT_READY}"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Notifications webhook validates channel enum values EMAIL/PUSH/IN_APP/SMS",
+      "workflow": "Notification & Alert Webhooks",
+      "priority": "P2",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "channel Enum ✓ Required {EMAIL, PUSH, IN_APP, SMS}"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Notifications webhook returns 400 INVALID_ALERT_TYPE for unknown alert_type or channel",
+      "workflow": "Notification & Alert Webhooks",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "400 Unknown alert_type or channel error: INVALID_ALERT_TYPE"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Notifications webhook enforces idempotency_key UUID v4 to prevent duplicate delivery",
+      "workflow": "Notification & Alert Webhooks",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "idempotency_key UUID ✓ Required UUID v4; prevents duplicate alert delivery"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "Notifications webhook returns 409 DUPLICATE_NOTIFICATION for duplicate idempotency_key",
+      "workflow": "Notification & Alert Webhooks",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Section 8.2 Notification & Alert Webhooks, page 16 (parsed text)",
+        "excerpt": "409 Duplicate idempotency_key error: DUPLICATE_NOTIFICATION"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "E2E: Register then login and obtain access/refresh tokens (verification workflow triggered)",
+      "workflow": "End-to-End User Onboarding",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 3.1 User Registration, page 4 (parsed text)",
+        "excerpt": "Creates a new portal user account. Triggers email verification workflow."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "E2E: Complete credit application Step 1 → Step 2 → Step 3 and receive APPROVED decision",
+      "workflow": "End-to-End Credit Application",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 4 Credit Application Web Flow, page 6 (parsed text)",
+        "excerpt": "multi-step web form submitted across three sequential API calls. Each step must be completed in order"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "E2E: After approval, get account summary then initiate transaction then list transactions",
+      "workflow": "End-to-End Account & Transactions",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 6.1 Get Account Summary, page 11 (parsed text)",
+        "excerpt": "GET /v2/accounts/{account_id}/summary Returns current balance, available credit, card status, and billing cycle info."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "E2E: Initiate foreign currency transaction and verify Total_CAD and foreign_fee_amount",
+      "workflow": "End-to-End Foreign Transaction",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 5.3 Foreign Transaction Fee Calculation, page 10 (parsed text)",
+        "excerpt": "any transaction where currency_code ≠ CAD applies the following formula:"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "title": "E2E: Retrieve statement then make payment and confirm payment queued response keys",
+      "workflow": "End-to-End Billing & Payments",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Section 7.3 Make a Payment, page 14 (parsed text)",
+        "excerpt": "Payment accepted and queued for processing"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    }
+  ],
+  "orphans": [
+    {
+      "testId": "TC-DRAFT-02",
+      "ref": "Draft autosave never stores auth tokens in localStorage",
+      "reason": "No required outline explicitly covers ensuring application draft contents exclude auth tokens; closest outlines cover token storage and autosave, but not 'draft contains no tokens' as a requirement."
+    },
+    {
+      "testId": "TC-TXNFREQ-02",
+      "ref": "Transaction frequency boundary at 10 allowed",
+      "reason": "Required outlines include the >10/60min rejection case but not the explicit boundary case confirming 10 is allowed."
+    },
+    {
+      "testId": "TC-TXN-08",
+      "ref": "transaction_amount Decimal(10,2) precision boundary",
+      "reason": "No required outline specifies Decimal(10,2) precision validation for transaction_amount."
+    },
+    {
+      "testId": "TC-TXN-09",
+      "ref": "merchant_name max 100 chars boundary",
+      "reason": "No required outline calls out merchant_name length boundary validation."
+    },
+    {
+      "testId": "TC-APP1-02",
+      "ref": "Step 1 full_legal_name length boundary",
+      "reason": "Required outlines for Step 1 do not include full_legal_name max-length boundary testing."
+    },
+    {
+      "testId": "TC-APP1-05",
+      "ref": "Step1 phone_number E.164 validation",
+      "reason": "Required outlines for Application Step 1 do not include phone_number E.164 validation (only registration phone_number E.164 is required)."
+    },
+    {
+      "testId": "TC-APP1-06",
+      "ref": "Step1 address.street max 100 chars",
+      "reason": "Required outlines do not include address.street length boundary."
+    },
+    {
+      "testId": "TC-APP1-07",
+      "ref": "Step1 address.city max 60 chars",
+      "reason": "Required outlines do not include address.city length boundary."
+    },
+    {
+      "testId": "TC-APP1-11",
+      "ref": "Step1 id_number alphanumeric max 20",
+      "reason": "Required outlines do not include id_number validation coverage."
+    },
+    {
+      "testId": "TC-APP2-07",
+      "ref": "Step2 existing_debt_payments 2-decimal precision",
+      "reason": "Required outlines do not include Decimal(10,2) precision validation for existing_debt_payments."
+    },
+    {
+      "testId": "TC-APP3-06",
+      "ref": "Step3 card_product_id must come from catalog",
+      "reason": "Required outlines do not include card_product_id catalog validation (GET /v2/products linkage)."
+    },
+    {
+      "testId": "TC-APP3-08",
+      "ref": "Decision boundary FICO 680 returns PENDING",
+      "reason": "Required outlines cover the FICO bands but do not include exact boundary conditions at 680/681."
+    },
+    {
+      "testId": "TC-APP3-10",
+      "ref": "Decision boundary FICO 599 returns DECLINED",
+      "reason": "Required outlines cover the FICO bands but do not include exact boundary conditions at 599/600."
+    },
+    {
+      "testId": "TC-APP3-11",
+      "ref": "Approved decision includes card_number_masked",
+      "reason": "Redundant/extra detail beyond required outline for approval branch; required outline already covers approved decision response keys."
+    },
+    {
+      "testId": "TC-CSRF-03",
+      "ref": "CSRF required even with Bearer auth",
+      "reason": "Required outlines request CSRF header required on state-changing endpoints; this test adds a specific 'even with Bearer auth' nuance not explicitly required."
+    },
+    {
+      "testId": "TC-PIN-06",
+      "ref": "Set PIN new_pin must be RSA-OAEP encrypted",
+      "reason": "Required outlines cover PIN format/match/OTP/blocked state but do not require explicit RSA-OAEP encryption validation."
+    },
+    {
+      "testId": "TC-STMT-04",
+      "ref": "Statement includes due_date and minimum_payment_due",
+      "reason": "Redundant subset of required statement field coverage already satisfied by other statement retrieval tests; additionally includes non-owner access check not required in statement outlines."
+    },
+    {
+      "testId": "TC-PAY-05",
+      "ref": "Payment requires pre-linked bank_account_id",
+      "reason": "Required outlines cover rejection of invalid bank_account_id (422) but do not explicitly require testing that bank_account_id must come from /v2/bank-accounts or omission handling."
+    },
+    {
+      "testId": "TC-LOST-05",
+      "ref": "Report lost supports delivery_address override",
+      "reason": "Required outlines do not include delivery_address override behavior."
+    },
+    {
+      "testId": "TC-NOTIF-03",
+      "ref": "Webhook severity enum enforcement",
+      "reason": "Required outlines do not include severity enum validation."
+    },
+    {
+      "testId": "TC-WEBHOOK-03",
+      "ref": "Webhook message_body max 500 chars",
+      "reason": "Required outlines do not include message_body max length validation."
+    },
+    {
+      "testId": "TC-E2E-05",
+      "ref": "E2E transaction appears on WebSocket feed",
+      "reason": "Required outlines include WebSocket endpoint existence but not E2E correlation of a posted transaction to a WebSocket event."
+    },
+    {
+      "testId": "TC-E2E-06",
+      "ref": "E2E freeze blocks transactions with CARD_INACTIVE",
+      "reason": "Required outlines include individual behaviors for freeze and transaction CARD_INACTIVE but not this combined E2E scenario."
+    },
+    {
+      "testId": "TC-E2E-07",
+      "ref": "E2E blocked card rejects PIN set with CARD_BLOCKED",
+      "reason": "Required outlines include lost/stolen and blocked PIN behavior separately but not this combined E2E scenario."
+    },
+    {
+      "testId": "TC-E2E-08",
+      "ref": "E2E statement fields present and PDF format works",
+      "reason": "Required outlines include statement JSON/PDF support, but not specifically as an E2E test item; this duplicates lower-level statement tests."
+    },
+    {
+      "testId": "TC-E2E-09",
+      "ref": "E2E make payment returns queued response fields",
+      "reason": "Required outlines include payment response fields; this duplicates payment-level tests and does not map uniquely to a required outline."
+    }
+  ],
+  "existingItemsSource": "user-doc",
+  "analyzeBranch": "roost-1778485725",
+  "handoffPath": ".roost/functional-analyze/roost_test_1778485725.json",
+  "generationContext": {
+    "sourceInputType": "user_input",
+    "sourceFiles": [
+      "/Users/iamdm/Downloads/Aegis_WebCC_SRS.pdf"
+    ],
+    "selectedIdsField": "ROOST_FUNCTIONAL_TEST_IDS_TO_GENERATE",
+    "analyzeBranchField": "ROOST_ANALYZE_BRANCH",
+    "handoffPathField": "ROOST_FUNCTIONAL_ANALYZE_REPORT_PATH",
+    "analyzeArtifactPath": ".roost/functional-analyze/roost_test_1778485725.json"
+  }
+}
