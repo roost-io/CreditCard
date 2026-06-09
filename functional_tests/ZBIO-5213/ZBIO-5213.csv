@@ -1,0 +1,46 @@
+Automated Due Reminder Sent to Cardholder with Masked Card Number
+Reminder Not Sent for Paid Accounts
+Due Reminder Sent at Correct Interval Before Due Date
+Due Reminder Content Only Shows Last 4 Digits of Card Number
+Audit Log for Due Reminder Notification
+Overdue Alert Sent After Missed Payment
+Overdue Alert Contains Proper Consequence Warning
+Overdue Alert Contains Only Last 4 Digits of Card Number
+No Overdue Alert Sent for Non-Overdue Accounts
+Audit Log Created on Overdue Alert Delivery
+Collection Notification Triggered for Delinquent Accounts
+Collection Notification Includes Amount Owed and Additional Charges
+Collection Notification Masks Card Number Correctly
+No Collection Notification Sent for Non-Delinquent Accounts
+Payment Plan Proposal Sent to Eligible Accounts
+Payment Plan Proposal Includes Last 4 Digits of Card Number
+Payment Plan Terms Displayed Accurately
+No Payment Plan Proposal Sent Where Ineligible
+Collection Agency Notified for Unresponsive Accounts
+Only Last 4 Digits Sent to Collection Agency
+No Collection Agency Escalation For Responsive Accounts
+Collection Agency Escalation Audit Logging
+Proper Data Masking in Collection Agency File Transfers
+Legal Action Initiated on Extreme Non-Payment
+Legal Documentation Contains Only Last 4 Digits
+No Legal Action for Accounts Without Escalated Delinquency
+Audit Log for Legal Action Initiation
+Full Card Number Never Included in Reminders
+Full Card Number Never Included in Overdue Alerts
+Full Card Number Never Included in Collection Notifications
+Full Card Number Never in Payment Plan Proposals
+Full Card Number Never in Collection Agency Data
+Full Card Number Never in Legal Documentation
+Transition from Due Reminder to Overdue Alert Upon Missed Payment
+Transition from Overdue Alert to Collection Notification for Delinquency
+Transition from Collection to Payment Plan Proposal on Agreement
+Transition from Agency to Legal for Unresolved Accounts
+Notification Delivery to Correct Cardholder Only
+Notification Content Matches Account Data and Event
+Notification Fails Gracefully for Invalid Cardholder Data
+Audit Trail Exists for All Major Notifications
+Audit Trail Logs Masked Card Numbers, Never Full
+System Handles Missing Account Data When Sending Notifications
+System Rejects Notification if Full Card Number is Provided
+Access Control: Unauthorized Users Cannot Trigger or View Collection Actions
+End-to-End Collection Lifecycle: Reminder Through Legal Action
