@@ -1,0 +1,632 @@
+openapi: 3.0.3
+info:
+  title: Credit Card Collections Notification Lifecycle and Masking Compliance API
+  version: 1.0.0
+  description: |
+    API Specification for Credit Card Collections Notification Workflow, Masking Compliance, Audit Logging, Notification Delivery, Account State Transitions, and Security Enforcement.
+    All card references in communications, logs, and documents must be masked to expose only the last 4 digits.
+servers:
+  - url: https://api.example.com/v1
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    NotificationRequest:
+      type: object
+      required:
+        - account_id
+        - last4
+        - due_date
+        - channel
+      properties:
+        account_id:
+          type: string
+          description: Unique identifier for the cardholder's account
+        last4:
+          type: string
+          description: Masked last 4 digits of the card
+        due_date:
+          type: string
+          format: date
+          description: Payment due date
+        channel:
+          type: string
+          enum: [email, SMS, portal]
+          description: Notification delivery channel
+
+    NotificationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Delivery status ("delivered", "failed", "suppressed")
+        channel:
+          type: string
+        delivered_at:
+          type: string
+          format: date-time
+        content:
+          type: string
+          description: Notification content (masked, only last 4 digits shown)
+        masking_compliance:
+          type: boolean
+          description: Masking compliance status
+
+    OverdueAlertRequest:
+      type: object
+      required:
+        - account_id
+        - last4
+        - due_date
+      properties:
+        account_id:
+          type: string
+        last4:
+          type: string
+        due_date:
+          type: string
+          format: date
+
+    OverdueAlertResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        masked_card_reference:
+          type: string
+        content:
+          type: string
+        delivered_at:
+          type: string
+          format: date-time
+
+    CollectionNotificationRequest:
+      type: object
+      required:
+        - account_id
+        - overdue_balance
+        - additional_charges
+        - last4
+      properties:
+        account_id:
+          type: string
+        overdue_balance:
+          type: string
+        additional_charges:
+          type: string
+        last4:
+          type: string
+
+    CollectionNotificationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        masked_card_reference:
+          type: string
+        overdue_balance:
+          type: string
+        additional_charges:
+          type: string
+        total_due:
+          type: string
+        delivered_at:
+          type: string
+          format: date-time
+
+    PaymentPlanProposalRequest:
+      type: object
+      required:
+        - account_id
+        - last4
+        - overdue_balance
+        - eligibility
+      properties:
+        account_id:
+          type: string
+        last4:
+          type: string
+        overdue_balance:
+          type: string
+        eligibility:
+          type: boolean
+
+    PaymentPlanProposalResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        masked_card_reference:
+          type: string
+        proposal_schedule:
+          type: object
+          properties:
+            installments:
+              type: array
+              items:
+                type: object
+                properties:
+                  due_date:
+                    type: string
+                    format: date
+                  amount:
+                    type: string
+            reduced_rate:
+              type: string
+            reduced_fee:
+              type: string
+        delivered_at:
+          type: string
+          format: date-time
+
+    AgencyEscalationRequest:
+      type: object
+      required:
+        - account_id
+        - last4
+        - reminders
+      properties:
+        account_id:
+          type: string
+        last4:
+          type: string
+        reminders:
+          type: integer
+
+    AgencyEscalationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        masked_card_reference:
+          type: string
+        agency_reference:
+          type: string
+        delivered_at:
+          type: string
+          format: date-time
+
+    LegalActionRequest:
+      type: object
+      required:
+        - account_id
+        - last4
+        - overdue_days
+      properties:
+        account_id:
+          type: string
+        last4:
+          type: string
+        overdue_days:
+          type: integer
+
+    LegalActionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        masked_card_reference:
+          type: string
+        legal_document_url:
+          type: string
+        delivered_at:
+          type: string
+          format: date-time
+
+    MaskingPolicyRequest:
+      type: object
+      required:
+        - mask_pattern
+      properties:
+        mask_pattern:
+          type: string
+          description: Requested mask pattern
+
+    MaskingPolicyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Masking enforcement status ("accepted", "rejected", "corrected")
+        applied_mask:
+          type: string
+
+    AuditLogEntry:
+      type: object
+      properties:
+        event_id:
+          type: string
+        account_id:
+          type: string
+        event_type:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        masked_card_reference:
+          type: string
+        detail:
+          type: string
+
+paths:
+
+  /notifications/reminder:
+    post:
+      tags: [Notifications]
+      summary: Trigger credit card payment reminder notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationRequest"
+      responses:
+        "200":
+          description: Reminder notification sent successfully with masking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+        "400":
+          description: Notification not sent (not within due window or invalid input)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+        "401":
+          description: Unauthorized, missing or invalid bearer token
+
+  /notifications/overdue:
+    post:
+      tags: [Notifications]
+      summary: Trigger overdue alert notification and update account state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OverdueAlertRequest"
+      responses:
+        "200":
+          description: Overdue notification sent with masking and state transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverdueAlertResponse"
+        "400":
+          description: No overdue alert if payment received on time or before boundary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverdueAlertResponse"
+        "401":
+          description: Unauthorized
+
+  /notifications/collection:
+    post:
+      tags: [Notifications]
+      summary: Trigger collection notification after overdue threshold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionNotificationRequest"
+      responses:
+        "200":
+          description: Collection notification sent with masking and amount details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionNotificationResponse"
+        "400":
+          description: No collection notification before delinquency threshold or boundary conditions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionNotificationResponse"
+        "401":
+          description: Unauthorized
+
+  /notifications/payment-plan:
+    post:
+      tags: [Notifications]
+      summary: Trigger payment plan proposal notification for eligible accounts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentPlanProposalRequest"
+      responses:
+        "200":
+          description: Payment plan proposal notification sent with masking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentPlanProposalResponse"
+        "400":
+          description: Payment plan proposal not sent due to ineligibility or invalid state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentPlanProposalResponse"
+        "401":
+          description: Unauthorized
+
+  /notifications/agency-escalation:
+    post:
+      tags: [Notifications]
+      summary: Trigger escalation of delinquent account to collection agency, masking enforced
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgencyEscalationRequest"
+      responses:
+        "200":
+          description: Agency escalation sent with only last 4 digits provided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgencyEscalationResponse"
+        "400":
+          description: Agency escalation blocked for insufficient reminders or not at boundary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgencyEscalationResponse"
+        "401":
+          description: Unauthorized
+
+  /notifications/legal-action:
+    post:
+      tags: [Notifications]
+      summary: Trigger legal action initiation and generate legal documentation with masking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LegalActionRequest"
+      responses:
+        "200":
+          description: Legal action workflow initiated, documents masked with last 4 digits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalActionResponse"
+        "400":
+          description: Legal action blocked if payments resolved or not at boundary overdue days
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalActionResponse"
+        "401":
+          description: Unauthorized
+
+  /masking-policy:
+    post:
+      tags: [Security]
+      summary: Set or validate masking policy for notifications and logs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaskingPolicyRequest"
+      responses:
+        "200":
+          description: Masking policy accepted and enforced (last 4 digits only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaskingPolicyResponse"
+        "400":
+          description: Masking deviation rejected, enforcement of last 4 digits policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaskingPolicyResponse"
+        "401":
+          description: Unauthorized
+
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: Retrieve audit log entries related to notifications and masking events
+      parameters:
+        - name: account_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: event_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [reminder, overdue, collection, payment-plan, agency-escalation, legal-action, masking]
+      responses:
+        "200":
+          description: Audit log entries retrieved, all masked with last 4 digits only
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLogEntry"
+        "401":
+          description: Unauthorized
+
+  /notifications/amount-calculation:
+    post:
+      tags: [Notifications]
+      summary: Validate calculated amount in reminders and overdue alerts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - account_id
+                - balance
+                - due_date
+                - last4
+              properties:
+                account_id:
+                  type: string
+                balance:
+                  type: string
+                due_date:
+                  type: string
+                  format: date
+                last4:
+                  type: string
+      responses:
+        "200":
+          description: Amount calculation validated; masking applied in notification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /notifications/overdue-amount-calculation:
+    post:
+      tags: [Notifications]
+      summary: Validate overdue amount calculation post-due date (overdue alerts)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - account_id
+                - balance
+                - due_date
+                - overdue_balance
+                - late_fee
+                - last4
+              properties:
+                account_id:
+                  type: string
+                balance:
+                  type: string
+                due_date:
+                  type: string
+                  format: date
+                overdue_balance:
+                  type: string
+                late_fee:
+                  type: string
+                last4:
+                  type: string
+      responses:
+        "200":
+          description: Overdue amount validated, masking enforced
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /notifications/test-delivery:
+    post:
+      tags: [Notifications]
+      summary: Test notification delivery and masking compliance across channels
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - account_email
+                - last4
+                - channel
+              properties:
+                account_email:
+                  type: string
+                last4:
+                  type: string
+                channel:
+                  type: string
+                  enum: [email, SMS, portal]
+      responses:
+        "200":
+          description: Notification delivered; masking compliance enforced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+        "400":
+          description: Delivery failure triggers retry; masking compliance enforced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+        "401":
+          description: Unauthorized
+
+  /notifications/attribution:
+    post:
+      tags: [Notifications]
+      summary: Send payment-related notification to correct cardholder with proper masking and attribution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cardholder
+                - last4
+                - diff_last4
+              properties:
+                cardholder:
+                  type: string
+                last4:
+                  type: string
+                diff_last4:
+                  type: string
+      responses:
+        "200":
+          description: Notification attributed correctly and masking enforced
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+tags:
+  - name: Notifications
+    description: Operations related to credit card reminder, overdue, collection, payment plan, agency, and legal notifications
+  - name: StateTransition
+    description: Workflow endpoints managing account state transitions
+  - name: Audit
+    description: Retrieve and validate audit logs related to masking compliance and notification lifecycle
+  - name: Security
+    description: Validate masking policies, security enforcement, and breach attempt prevention
