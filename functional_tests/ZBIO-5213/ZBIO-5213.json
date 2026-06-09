@@ -1,0 +1,818 @@
+[
+  {
+    "type": "functional",
+    "title": "Send Due Reminder with Masked Card Digits",
+    "description": "Verifies that the system sends an automated credit card due reminder notification to the cardholder before the payment due date, and the notification includes only the last 4 digits of the credit card number. This test ensures the correct identification of the card and compliance with security masking requirements.",
+    "testId": "TC-REM-01",
+    "testDescription": "As a cardholder with a credit card payment due shortly, I should receive an email/SMS/portal notification reminding me about my upcoming payment. The notification must include only the last 4 digits of my credit card for identification, never the full number, ensuring both usability and PCI DSS compliance.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Cardholder account exists and is active, Payment due date is within notification window, Card is eligible for reminders, Notification system is operational",
+    "stepsToPerform": "1. Login as a valid cardholder using synthetic credentials. 2. Navigate to credit card accounts overview. 3. Select a card scheduled for payment due in 3 days (e.g., due date = today + 3). 4. Confirm card displays last 4 digits as **** **** **** 1234. 5. Wait for the scheduled due reminder window (if needed, trigger batch job or notification poller). 6. Retrieve latest notifications from all channels (email, SMS, portal). 7. Open the due reminder notification message. 8. Verify notification message content includes '**** **** **** 1234' and payment due date. 9. Check that no other/masked/multiple card numbers are present. 10. Assert that the full credit card number does not appear anywhere in the notification. 11. Log out from the portal. 12. Clean up: Restore original due date if it was altered.",
+    "expectedResult": "Automated due reminder notification is sent, includes only last 4 digits (e.g., 1234) of the credit card number, Never includes full card number, Notification is delivered in all configured channels",
+    "sourceCitation": {
+      "location": "Description section, bullet 1",
+      "excerpt": "Credit Card Due Reminder: An automated notification is sent to the cardholder...include the last 4 digits of the credit card number for identification purposes."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "No Notification Sent if Not Due",
+    "description": "Confirms that no credit card due reminder notification is sent to the cardholder if the payment due date is not within the notification window, preventing spurious notifications.",
+    "testId": "TC-REM-02",
+    "testDescription": "As a cardholder whose credit card payment is not imminently due (e.g., more than 7 days away), I should not receive a due reminder notification. This protects users from unnecessary communications and verifies correct scheduling logic.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Cardholder account is active, Credit card due date is outside reminder notification window (e.g., due in 15 days), Notification jobs functioning normally",
+    "stepsToPerform": "1. Login as a valid cardholder. 2. Access the list of active credit cards. 3. Select a card whose due date is more than 7 days in the future (e.g., due date = today + 15). 4. Confirm eligibility in portal or backend. 5. Initiate/remain in idle state, wait for the system run of notification scheduler. 6. Query notification outbox, email inbox, SMS, and portal notifications for tested account. 7. Check for the presence or absence of new due reminders. 8. Validate that no new notification regarding upcoming due appears. 9. Optionally repeat for batch and real-time scheduler cases. 10. Log out.",
+    "expectedResult": "No due reminder notification is sent for cards with payment dates beyond the reminder window, No notification appears in any delivery channel",
+    "sourceCitation": {
+      "location": "Description section, bullet 1",
+      "excerpt": "Credit Card Due Reminder: An automated notification is sent to the cardholder reminding them of their upcoming credit card payment due date"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Reminder Excludes Full Card Number",
+    "description": "Ensures that the automated credit card due reminder notification never exposes the full credit card number in any part of the communication, in compliance with PCI DSS and internal policy. Only the last 4 digits may appear.",
+    "testId": "TC-REM-03",
+    "testDescription": "As any recipient of the due reminder notification (user or internal system recipient), I must never see the complete credit card number in the notification message, logs, or metadata fields. This prevents PII leakage and enforces redaction/masking rules.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Card with a due payment exists, System scheduled to send a due reminder, Notification system logging enabled (with inspectable logs or audit events)",
+    "stepsToPerform": "1. Login as an internal tester or compliance officer. 2. Trigger or wait for credit card due reminder notification for a card due in 1 day. 3. Retrieve the generated notification from each channel (UI, email, SMS). 4. Inspect the notification body for embedded card number fields. 5. Examine all headers, footers, attachments, and links for card number exposure. 6. Review audit/calendar/log messages generated for this notification for card number fields. 7. Search notification delivery logs, backend event logs, and message queues for presence of the full credit card number. 8. Check if any trace, debug, or info logs contain unmasked credit card digits beyond the last 4. 9. Attempt to extract/parse card number from metadata or serialization artifacts. 10. Repeat process for all delivery channels. 11. Log out and record compliance result.",
+    "expectedResult": "At no point does the full credit card number appear in delivered notifications, logs, or system records; only the last 4 digits are visible everywhere; test fails if any full PAN found",
+    "sourceCitation": {
+      "location": "Note section",
+      "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Reminder State to Overdue on Missed Payment",
+    "description": "Validates that when a cardholder misses their payment due date, the system transitions their notification state from 'Due Reminder Sent' to 'Overdue Alert Sent', and the appropriate overdue alert is triggered.",
+    "testId": "TC-REM-04",
+    "testDescription": "After a due reminder was sent but no payment is made by the due date, the system should automatically generate and send an overdue alert. This test ensures correct state transitions and that the overdue workflow triggers only after missed payment.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Active credit card with a scheduled due reminder sent, Payment not received by due date, System state configured to allow alert on overdue",
+    "stepsToPerform": "1. Login as a cardholder. 2. Access account or receive scheduled due reminder notification. 3. Confirm due date is today. 4. Do not make any payment—let due date pass. 5. Wait for system batch or trigger overdue alert job (e.g., schedule = daily at midnight). 6. Retrieve latest notifications. 7. Identify new alert related to overdue balance. 8. Verify that overdue alert is present, contains correct masked card number. 9. Check account state transition logs for movement from 'Reminder Sent' to 'Overdue'. 10. Assert that reminders are not duplicated post-overdue. 11. Optionally, confirm overdue status in customer UI/account. 12. Log out.",
+    "expectedResult": "Account transitions from reminder sent state to overdue state only after missed due date, Overdue alert notification is sent with correct masked card digits, Reminder is not resent after overdue state",
+    "sourceCitation": {
+      "location": "Description section, bullet 2",
+      "excerpt": "If a cardholder misses their payment due date, an alert is sent to notify them of the overdue balance"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Reminder Audit Trail Logging",
+    "description": "Checks that every due reminder notification sent is captured in the system audit trail, and the entry logs only the last 4 digits of the card, never the full credit card number, meeting compliance and non-repudiation requirements.",
+    "testId": "TC-REM-05",
+    "testDescription": "When the credit card due reminder notification is generated and sent, the audit trail entry must include timestamp, notification type, recipient, and masked card number (last 4 digits only), omitting the full card number. This verifies evidence for all reminder events and regulatory requirements.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Audit logging feature enabled and accessible, Cardholder with eligible due date for reminder, Test notification event triggers audit log entry",
+    "stepsToPerform": "1. Login to the admin/audit tool as a compliance user. 2. Trigger a due reminder notification for a card due today. 3. Wait for notification to be sent. 4. Access audit logs for the test time window. 5. Locate entry related to due reminder notification. 6. Check required fields are present: auditTimestamp, notificationType = Due Reminder, recipient = test+reminder01@example.com, maskedCreditCardDigits = 1234. 7. Assert no field contains unmasked/full credit card number. 8. Ensure log fields: full PAN, middle 8 digits, or any extra card data are not present. 9. Verify that the record is immutable (cannot edit/delete via UI/API). 10. Search for cross-reference in message delivery logs (IDs/timestamps match). 11. Repeat for both successful and failed notification events. 12. Log out.",
+    "expectedResult": "Audit trail contains a correct record for reminder notification including only last 4 digits, required fields are present, full card number absent, log entry is immutable and retrievable",
+    "sourceCitation": {
+      "location": "Description section, bullet 1 and Note section",
+      "excerpt": "automated notification is sent...include the last 4 digits...only the last 4 digits...should be included in any communication or documentation"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Overdue Alert Includes Last 4 Digits",
+    "description": "Ensures that the overdue balance alert sent after a missed payment includes only the last 4 digits of the credit card for identification and does not expose the full number, enforcing the masking policy.",
+    "testId": "TC-OVD-02",
+    "testDescription": "After missing a payment due date, the cardholder receives an overdue alert message on all notification channels. The alert must always include the masked last 4 digits (e.g., 4321) only, and never any other part of the card number, maintaining compliance and reducing risk.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Cardholder account is overdue for payment, Overdue alert sending enabled, Notification system connected",
+    "stepsToPerform": "1. Login as a test cardholder. 2. Access overdue card account. 3. Wait for or trigger the overdue alert notification. 4. Fetch alert messages from each channel. 5. Open each alert and visually inspect for cardnumber fields. 6. Verify last 4 digits are present and in standard format (**** **** **** 4321). 7. Ensure no other digits or full number are included. 8. Check attached documents, message headers, and metadata for card numbers. 9. Review audit and delivery logs to confirm masking. 10. Log out.",
+    "expectedResult": "Overdue alert contains only last 4 digits of credit card and no other card number data, Masking is consistent across all channels and logs",
+    "sourceCitation": {
+      "location": "Description section, bullet 2",
+      "excerpt": "This alert should include the last 4 digits of the credit card number."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "No Alert on Payment Received Pre-Due",
+    "description": "Asserts that the system does not generate or send an overdue alert if the cardholder completes the required payment before the due date, ensuring that alerts are not sent in error.",
+    "testId": "TC-OVD-03",
+    "testDescription": "If a cardholder pays their credit card bill before the due date, the system should not send an overdue balance alert. This prevents unnecessary anxiety and communication, and verifies system logic for alert suppression.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Active cardholder, Upcoming due payment, Payment system operational, Alert workflow enabled",
+    "stepsToPerform": "1. Login as the cardholder. 2. Locate a card with an upcoming due date. 3. On the payment portal, make a full payment before the due date. 4. Confirm payment status is successful and posted. 5. Allow due date to pass. 6. Wait for system/batch to process overdue alert trigger. 7. Access notification inboxes and check for new alerts. 8. Verify no overdue alert is present for this card. 9. Cross-check system logs for alert suppression event. 10. Repeat for email, SMS, and portal notifications. 11. Log out.",
+    "expectedResult": "No overdue balance alert is sent for cards with payment made before the due date, Alert suppression can be confirmed in logs",
+    "sourceCitation": {
+      "location": "Description section, bullet 2",
+      "excerpt": "If a cardholder misses their payment due date, an alert is sent"
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Overdue Days Boundary Value Escalation",
+    "description": "Verifies the system triggers overdue alerts correctly at the boundary (immediately on due date lapse and one day after), ensuring no premature or delayed notifications are sent outside the specified condition.",
+    "testId": "TC-OVD-04",
+    "testDescription": "Test overdue alert triggering at exact day of payment due (day 0, no alert), day after due (day 1, alert triggers), and at minimum/maximum supported overdue day boundaries to validate edge-case scheduling.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Cardholder with due date set precisely, Scheduler uses day boundary logic, Overdue workflow enabled",
+    "stepsToPerform": "1. Login as a test cardholder. 2. Prepare a card with due date = today. 3. Wait for daily batch run at midnight. 4. Manually verify time is before midnight (due date not lapsed)—check that no overdue alert is sent (day 0). 5. At exactly midnight plus one minute, confirm system marks account as overdue. 6. Wait for batch job to execute overdue alert. 7. Retrieve alert and audit logs at day +1 (should receive alert). 8. Repeat process for due date = yesterday (alert triggers) and due date = tomorrow (no alert). 9. Test upper escalation boundary (e.g. overdue for 30 days, see if escalation triggers). 10. Log results.",
+    "expectedResult": "Overdue alert is only sent after due date, not before; Alerts are correctly triggered at day 1-overdue, not prematurely or late; Boundary hand-offs are accurate",
+    "sourceCitation": {
+      "location": "Description section, bullet 2",
+      "excerpt": "If a cardholder misses their payment due date, an alert is sent"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Overdue Alert Escalates to Collections After Threshold",
+    "description": "Ensures that when a cardholder’s overdue status reaches the significant delinquency threshold, the system escalates from sending overdue alerts to initiating the collections notification process, as defined in the lifecycle. The test verifies that the escalation triggers only at the defined threshold.",
+    "testId": "TC-OVD-05",
+    "testDescription": "For an account that has not resolved the overdue status past a defined threshold (e.g. 30 days overdue), the system should automatically transition from overdue alerting to sending a formal collection notification, updating the account’s state and including the last 4 digits of the card number in all communications.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Account with overdue status exceeding the significant delinquency threshold (e.g. >30 days), Collection workflow enabled, No payment or promise to pay recorded",
+    "stepsToPerform": "1. Login as admin or system user. 2. Prepare or select an account 31+ days overdue without payment. 3. Confirm overdue alert workflow is exhausted (repeats completed as per policy). 4. Run batch process/escalation trigger for collections. 5. Check that account state moves from 'Overdue' to 'Collections Notification Sent'. 6. Retrieve latest notifications sent to cardholder. 7. Confirm arrival of collections notification referencing overdue balance, potential additional charges, and last 4 digits of card. 8. Validate that overdue alerts are no longer generated post-escalation. 9. Review audit log for escalation event. 10. Optionally verify that account is flagged for collections actions in backend.",
+    "expectedResult": "Account transitions from overdue alert state to collections notification only after reaching delinquency threshold, Notification contains only last 4 digits, Collection notice is sent and recorded",
+    "sourceCitation": {
+      "location": "Description section, bullet 3",
+      "excerpt": "When an account becomes significantly delinquent, the card issuer may escalate the collection process"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Audit Trail for Overdue Alert Notification",
+    "description": "Verifies that every overdue balance alert notification is properly logged in the audit trail. Ensures that only the last 4 digits of the credit card number appear in audit records, preserving sensitive data confidentiality and supporting regulatory compliance. Automation feasibility: HIGH (API/log verification).",
+    "testId": "TC-OVD-06",
+    "testDescription": "When an overdue balance alert is triggered for a cardholder who has missed their payment due date, the system must create an immutable audit entry documenting the sent alert, including the recipient, communication timestamp, notification content, and masked credit card number. The audit record must never contain the full credit card number in any form.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Cardholder record exists with overdue balance, alert workflow enabled, audit logging configured and accessible, valid notification delivery channel (email/SMS/portal)",
+    "stepsToPerform": "1. Log in as a QA tester with audit log access. 2. Identify a test cardholder whose payment due date has passed and balance is unpaid. 3. Ensure the test cardholder has a credit card assigned with number '**** **** **** 4242'. 4. Trigger the overdue balance alert workflow for that cardholder via UI/API. 5. Wait for the overdue alert to be sent (monitor notification channel if required). 6. Access the audit log system for collection/alert events. 7. Locate the latest audit entry for the test cardholder's overdue alert. 8. Inspect all fields to confirm only '4242' (last 4 digits) are present, and that no other portion of the card number appears in any field. 9. Capture a screenshot or export of the audit entry. 10. Attempt a free-text and binary search for the full card number in the audit log for the period covering the event.",
+    "expectedResult": "Audit log shows an entry for the overdue alert with correct recipient, timestamp, and notification details. Only '4242' (last 4 digits) is visible for card identifier. No other digits or the full card number appear anywhere. Audit entry is immutable and retrievable post-event.",
+    "sourceCitation": {
+      "location": "Description section, bullet 2 and Note section",
+      "excerpt": "alert is sent to notify...should include the last 4 digits...only the last 4 digits...should be included in any communication or documentation"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Collection Notification Sent for Significant Delinquency",
+    "description": "Confirms that a formal collection notification is sent to the cardholder when their account is significantly delinquent. Ensures notifications follow escalation business rules for delinquency. Automation: HIGH (API+channel monitoring).",
+    "testId": "TC-COLL-01",
+    "testDescription": "When a cardholder's account meets the criteria for significant delinquency (e.g., 60+ days overdue), the system must escalate and send a formal collection notification to the cardholder. The notification should be delivered to the registered channel and include relevant content indicating collection escalation.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Cardholder account exists in active state, account balance is overdue beyond significant delinquency threshold (e.g., 60 days past due), notification delivery channels are operational, collection escalation feature enabled",
+    "stepsToPerform": "1. Log in as a QA tester with normal user permissions. 2. Identify or create a cardholder account with a credit card assigned. 3. Set the account's payment status to overdue, with due date at least 60 days in the past and balance unpaid. 4. Ensure 'Collection Notification Escalation' is enabled for the test cardholder. 5. Trigger or wait for the batch job/event workflow that processes collection escalation. 6. Check the notification channel(s) (email/SMS/portal) for new collection notification sent to the cardholder's registered contact method. 7. Open the notification. 8. Review the notification content for collection language and escalation warning. 9. Confirm the notification was delivered after the overdue threshold was met.",
+    "expectedResult": "The collection notification is sent to the cardholder after passing the significant delinquency threshold. Notification is present in the selected channel with correct escalation language. No notification is sent before the threshold is reached.",
+    "sourceCitation": {
+      "location": "Description section, bullet 3",
+      "excerpt": "When an account becomes significantly delinquent, the card issuer may escalate the collection process by sending formal collection notifications"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Collection Notification Includes Amount Owed and Charges",
+    "description": "Ensures that every collection notification sent to a delinquent cardholder details both the amount owed and any additional charges, as required by escalation workflow. Automation feasibility: HIGH (verify payload/message content).",
+    "testId": "TC-COLL-02",
+    "testDescription": "When a formal collection notification is sent to a cardholder whose account is significantly delinquent, the notification must include the current overdue amount and a breakdown of any extra charges applied. This ensures transparency and regulatory compliance.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Active cardholder account that is significantly delinquent (e.g., overdue >60 days), system trigger for collection notification pending, additional late payment charges configured for the test account",
+    "stepsToPerform": "1. Log in as QA tester and access cardholder's account management UI or API. 2. Ensure that the account is overdue and late payment charges have applied (e.g., add a $25 fee). 3. Confirm the total amount owed calculation (overdue balance + additional charges). 4. Trigger the manual or automated collection notification event. 5. Retrieve the notification from the cardholder’s registered email/SMS/portal. 6. Open and inspect the notification content. 7. Verify the notification explicitly states the overdue principal and additional charges. 8. Confirm the content matches the test account’s actual amounts. 9. Document any discrepancies for audit.",
+    "expectedResult": "The collection notification includes both the overdue principal and all additional charges (e.g., 'You owe $300.00; late fee applied: $25.00'). Amounts match the actual values in the account at the time notification was sent.",
+    "sourceCitation": {
+      "location": "Description section, bullet 3",
+      "excerpt": "detailing the amount owed and any additional charges"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Collection Notification Includes Only Last 4 Digits",
+    "description": "Checks that collection notifications never display the full credit card number and only display the last 4 digits for cardholder identification, supporting PCI and privacy mandates. Automation: HIGH (payload/presentation verification).",
+    "testId": "TC-COLL-03",
+    "testDescription": "Upon sending a collection notification, the system must ensure that only the last 4 digits of the credit card number appear in the message. The full credit card number or any additional digits must not be present in body, headers, attachments, or metadata.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Delinquent cardholder account with a credit card number (e.g., '1234 5678 9012 4242'), pending collection notification, notifications sent via email/SMS/portal must be monitorable and retrievable for testing.",
+    "stepsToPerform": "1. Log in as QA tester and select test cardholder account in collections. 2. Confirm account is set to overdue and eligible for collection escalation. 3. Trigger the collection notification via API/UI. 4. Retrieve notification message from all configured channels (email, SMS, portal). 5. Open the notification; inspect in both UI and via raw payload (e.g., email source, SMS API log). 6. Search for credit card number values in all notification data: message body, headers, and metadata. 7. Confirm only '4242' (last 4 digits) appears as identifier. 8. Attempt to locate any other part of card number and confirm absence. 9. Document with evidence (screenshots/exports) any deviations.",
+    "expectedResult": "Collection notification only contains '4242' as visible card number identifier. No other digits or the full card number are present anywhere in the notification or its metadata.",
+    "sourceCitation": {
+      "location": "Description section, bullet 3",
+      "excerpt": "These notifications should include the last 4 digits of the credit card number."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "No Collection Notification Before Delinquency Threshold",
+    "description": "Ensures the system does not send a collection notification until the delinquency threshold has been met, preventing premature or unjustified collections activity. Automation: HIGH (event monitoring, negative verification).",
+    "testId": "TC-COLL-04",
+    "testDescription": "Before a cardholder account reaches the defined significant delinquency threshold (e.g., 60 days overdue), no collection notification should be triggered or sent by the system, even if the account is overdue by a lesser period.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Cardholder account exists with credit card, payment overdue by less than 60 days, notification workflow enabled, collection escalation is NOT supposed to trigger at this stage",
+    "stepsToPerform": "1. Log in as QA tester and access test cardholder account. 2. Set payment due date to a date less than 60 days ago (e.g., 30 days overdue). 3. Ensure no previous collection notice has been sent to this account. 4. Confirm notification and escalation workflows are enabled. 5. Wait for or trigger collection notification batch/event workflow. 6. Check all notification channels (email/SMS/portal) for the test cardholder for new messages. 7. Verify that no collection notification is present. 8. Inspect system audit logs for unauthorized triggers. 9. Document and escalate if any unsolicited notification is detected.",
+    "expectedResult": "No collection notification is sent to the cardholder’s contact methods before the significant delinquency threshold is reached. Audit logs confirm no notification event was triggered.",
+    "sourceCitation": {
+      "location": "Description section, bullet 3",
+      "excerpt": "When an account becomes significantly delinquent, the card issuer may escalate the collection process"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Collection Notification State Escalates to Payment Plan",
+    "description": "Verifies that, after formal collection notification, the cardholder receives a payment plan proposal if they are unable to make a full overdue payment, and that the system correctly transitions state from 'Collection' to 'Payment Plan Proposal Sent'. Automation: HIGH (UI/API plus state check).",
+    "testId": "TC-COLL-05",
+    "testDescription": "When a cardholder has received a collection notification but cannot pay the full overdue balance, the system must escalate to offer a payment plan proposal. The state workflow must transition from 'Collection Notified' to 'Payment Plan Proposal Sent', and the cardholder must receive the structured proposal.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Cardholder in 'Collection Notified' state, balance is overdue and unpaid, payment plan program is enabled, cardholder is flagged as unable to pay in full",
+    "stepsToPerform": "1. Log in as QA tester and access the collection system as an admin/test user. 2. Identify a cardholder in 'Collection Notified' state with an outstanding balance. 3. Set flag or field indicating cardholder is unable to pay full overdue amount. 4. Trigger review for payment plan proposal eligibility. 5. Confirm system evaluates and approves cardholder for payment plan proposal. 6. Initiate or wait for automatic sending of payment plan proposal. 7. Check the cardholder's notification channels (email/SMS/portal) for receipt of payment plan proposal. 8. Access the cardholder’s account state in UI or via API. 9. Confirm the state has transitioned to 'Payment Plan Proposal Sent'. 10. Document state change and notification event.",
+    "expectedResult": "Cardholder receives payment plan proposal. Account state transitions to 'Payment Plan Proposal Sent' and is properly reflected in the system. No proposal is sent before collection notification event.",
+    "sourceCitation": {
+      "location": "Description section, bullet 4",
+      "excerpt": "the card issuer may offer a payment plan proposal outlining a structured repayment schedule"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Collection Notification Audit Trail",
+    "description": "Ensures that each collection notification event is logged with all required fields (recipient, channel, timestamp, masked card digits), and that only the last 4 digits of the credit card number are present in audit entries. Automation: HIGH (log inspection).",
+    "testId": "TC-COLL-06",
+    "testDescription": "For every collection notification sent due to delinquency, the system must create a detailed audit trail log that records recipient, time sent, notification channel, and only the last 4 digits of the credit card number for identification. No full card number or extra digits must appear in any audit artifact.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Collection notification triggerable, cardholder with overdue balance, audit logging enabled and accessible",
+    "stepsToPerform": "1. Log in as a tester with audit access. 2. Identify a test cardholder with overdue balance and eligible for collection notification. 3. Trigger the collection notification workflow. 4. Open and retrieve the notification to confirm it was sent. 5. Access audit log for notifications/events post-trigger. 6. Locate the audit log record for the event just completed. 7. Verify the audit entry contains recipient, timestamp, channel, and shows only '4242' as the card reference. 8. Confirm no field (including extended fields or raw event data) contains more than last 4 digits of the card number. 9. Attempt unauthorized query/search for the full card number in logs to verify redaction / absence.",
+    "expectedResult": "Audit trail for the collection notification includes only last 4 digits for card number, and all other required metadata; full card number is not present anywhere. Log entry is retrievable and immutable.",
+    "sourceCitation": {
+      "location": "Description section, bullet 3 and Note section",
+      "excerpt": "collection notifications...include the last 4 digits...only the last 4 digits...should be included in any communication or documentation"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Send Payment Plan Proposal to Eligible Cardholder",
+    "description": "Confirms that the system sends a payment plan proposal to eligible cardholders who cannot pay the full overdue balance, with a structured schedule and reduced rates/fees. Automation: HIGH (UI/API + payload).",
+    "testId": "TC-PLAN-01",
+    "testDescription": "Upon determining that a cardholder with a significant delinquency cannot pay the full overdue balance, the system must issue a payment plan proposal outlining a structured repayment schedule and details of reduced interest/fees. The proposal is sent via the configured notification channel.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Cardholder flagged as unable to pay full balance, overdue balance present and exceeds eligibility threshold, system configured to support payment plan feature",
+    "stepsToPerform": "1. Log in as a QA tester and select a test cardholder account with significant overdue balance. 2. Ensure the account status is set to unable-to-pay, triggering payment plan eligibility. 3. Confirm system eligibility logic recognizes the account for payment plan. 4. Initiate or trigger payment plan proposal event via UI/API. 5. Wait for or check outgoing notification queue. 6. Retrieve the proposal message sent to the cardholder's registered notification channel. 7. Inspect proposal details for presence of structured repayment schedule (dates, amounts, frequency). 8. Check that reduced interest rates/fee reductions are described per the plan. 9. Document the notification with screenshots or exports for regulatory reference.",
+    "expectedResult": "Cardholder receives a payment plan proposal with all required structured schedule details and any referenced reduced rates/fees, via expected notification channel.",
+    "sourceCitation": {
+      "location": "Description section, bullet 4",
+      "excerpt": "offer a payment plan proposal outlining a structured repayment schedule with reduced interest rates or fees"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Proposal Includes Only Last 4 Digits",
+    "description": "Validates that the payment plan proposal notification or document sent to the cardholder includes only the last 4 digits of the credit card number, with no additional or full card number data disclosed. Automation: HIGH (notification content inspection).",
+    "testId": "TC-PLAN-02",
+    "testDescription": "Every payment plan proposal sent to the cardholder must display only the last 4 digits of the card number for identification. Inspect content and verify that no portion except last 4 is present in body, attachment, or metadata, and that full number is absent.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Eligible cardholder, overdue balance, payment plan proposal is ready to be generated and sent, notifications monitorable for test",
+    "stepsToPerform": "1. Log in as QA tester and access a test cardholder eligible for payment plan proposal. 2. Trigger payment plan proposal delivery. 3. Monitor all notification channels for delivery (email/SMS/portal). 4. Retrieve proposal content from channel (message body, PDF attachment if present, metadata headers). 5. Inspect proposal for card identifier; verify presence of only last 4 digits (e.g., 'Card ending 4242'). 6. Search for full credit card number or more than 4 digits in all content formats. 7. Confirm no content in proposal or attached documents contains more than last 4 digits. 8. Document outcome with screenshots or exports, escalate if deviation found.",
+    "expectedResult": "Proposal includes only the last 4 digits of card number as identifier; no other digits or the full card number are displayed anywhere in the proposal message or document.",
+    "sourceCitation": {
+      "location": "Description section, bullet 4",
+      "excerpt": "The proposal should include the last 4 digits of the credit card number."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Negative: No Proposal for Ineligible Cardholder",
+    "description": "Ensures that the system does not generate or send a payment plan proposal to a cardholder who is ineligible (e.g., able to pay overdue amount, or does not meet criteria), preventing unnecessary communications and financial errors. Automation: HIGH (negative event monitoring, eligibility check).",
+    "testId": "TC-PLAN-03",
+    "testDescription": "If a cardholder with an overdue balance is able to pay in full or does not meet eligibility criteria for a payment plan (e.g., not yet at defined hardship threshold), the system must NOT initiate or send a payment plan proposal.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Cardholder with overdue balance, able to pay in full, payment plan eligibility flag is negative, notification sending is enable/monitored",
+    "stepsToPerform": "1. Log in as QA tester and select ineligible cardholder account (e.g., overdue, but able to pay full amount or below hardship threshold). 2. Trigger payment plan review process via UI/API. 3. Inspect system eligibility logic/status for payment plan for this user. 4. Wait for/browse outgoing notification queue. 5. Check all notification channels (email/SMS/portal) for incoming proposal message to ineligible cardholder. 6. Access account history and audit log for any entries related to proposal generation. 7. Confirm absence of proposal event or notification for ineligible cardholder. 8. Document test results for compliance.",
+    "expectedResult": "No payment plan proposal notification is sent to the ineligible cardholder, and audit/event logs show no record of a proposal being generated for this case.",
+    "sourceCitation": {
+      "location": "Description section, bullet 4",
+      "excerpt": "In cases where a cardholder is unable to pay the full overdue balance at once, the card issuer may offer a payment plan proposal"
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Boundary: Payment Plan with Min Required Amount",
+    "description": "Verifies that the payment plan proposal is generated and offered when the cardholder qualifies for the minimum repayment amount, and the proposal includes reduced rates/fees and only the last 4 digits of the card number, never the full card number. This guards against both underqualification and PII exposure. Automation: HIGH — pure API assertions.",
+    "testId": "TC-PLAN-04",
+    "testDescription": "As a cardholder unable to pay the entire overdue balance, I should be offered a payment plan proposal at the minimum eligible amount, with a structured schedule, reduced interest rates or fees, and only the last 4 digits of my credit card displayed. The system must not display or log the full card number.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Delinquent account exists, overdue amount equals minimum threshold for payment plan eligibility as per business config, user is authenticated and can access collections portal.",
+    "stepsToPerform": "1. Log in as the eligible cardholder to the collections web portal. 2. Navigate to the overdue balance section. 3. Confirm the displayed overdue amount matches the system's minimum required threshold (e.g., $500). 4. Choose the option to request a payment plan. 5. System displays the payment plan proposal. 6. Verify that the proposal details a structured repayment schedule and lists reduced interest rates or fees. 7. Check that the only card number shown anywhere is the last 4 digits (e.g., '**** **** **** 1234') and full number is never present. 8. Download/print the proposal if available. 9. Inspect the communication sent to the cardholder (e.g., notification, email, portal message) for correct masking. 10. Review backend logs or audit trail record to confirm no full card number appears in any logged entry during proposal generation.",
+    "expectedResult": "1. Payment plan is offered at the exact minimum eligible amount threshold. 2. Only last 4 digits of the credit card are present in user-facing and backend communication. 3. Full card number is never displayed, stored, or logged. 4. Repayment schedule and reduced rates/fees are detailed as per business rule.",
+    "sourceCitation": {
+      "location": "Description section, bullet 4",
+      "excerpt": "repayment schedule with reduced interest rates or fees"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Accepting/Rejecting Payment Plan Updates State",
+    "description": "Validates that accepting or rejecting a payment plan proposal correctly updates the account state and triggers communications that only show the last 4 digits of the card number, never the full number. Ensures no invalid transitions occur and masks sensitive data. Automation: HIGH.",
+    "testId": "TC-PLAN-05",
+    "testDescription": "When a cardholder receives a payment plan proposal, they can accept or reject it. Upon acceptance, the system must transition the account to ‘In Payment Plan’ state, on rejection it returns to ‘Delinquent’. Each communication and audit log involved must contain only the last 4 card digits.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Delinquent account with valid payment plan proposal in ‘Pending Acceptance’ state, cardholder is authenticated, and no conflicting state transitions are pending.",
+    "stepsToPerform": "1. Log in as the cardholder to the collections portal. 2. Locate the pending payment plan proposal. 3. Choose 'Accept' action for the proposal. 4. Observe confirmation message. 5. Verify that account state transitions to 'In Payment Plan'. 6. Inspect all communications (on-screen, email, logs) for display of only last 4 digits of the card. 7. Log out and log in again to retest state persistence. 8. Repeat steps 2-3, but this time select 'Reject'. 9. Validate rejection reason and notice. 10. Confirm account returns to ‘Delinquent’ state or as per business rule. 11. Check new communications for correct masking.",
+    "expectedResult": "1. Acceptance sets account to ‘In Payment Plan’. 2. Rejection resets state to ‘Delinquent’. 3. All related communications/audit entries display only last 4 digits. 4. No invalid state occurs.",
+    "sourceCitation": {
+      "location": "Description section, bullet 4",
+      "excerpt": "payment plan proposal outlining a structured repayment schedule"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Payment Plan Offer Audit Logging",
+    "description": "Confirms the system creates an immutable audit record when a payment plan offer is made which includes only the last 4 digits of the card number, never the full card number. Checks persistence, retrievability, and compliance with masking. Automation: HIGH.",
+    "testId": "TC-PLAN-06",
+    "testDescription": "When a payment plan proposal is offered, the system must log an audit entry showing the proposal sent and recipient, with only the last 4 digits of the card. The log must not contain the full credit card number in any field.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Audit logging is enabled, delinquent account exists, backend is running and collects event logs, proposal offer feature is enabled.",
+    "stepsToPerform": "1. Log in as a collections admin. 2. Search for a delinquent account. 3. Trigger a payment plan proposal offer for the account. 4. Wait for processing/audit event creation. 5. Access the audit log or relevant event history for this account. 6. Review the created log entry for the proposal issuance. 7. Confirm the log entry contains the last 4 card digits in identification (e.g., '1234'). 8. Confirm the full card number is not present anywhere in the log (in cleartext or masked form). 9. Attempt to search audit logs by full card number to ensure no results are returned. 10. Check audit entry for timestamp, user/account ID, action type.",
+    "expectedResult": "1. Audit record contains proposal offer and last 4 digits only. 2. Full card number is never present. 3. Immutable record is retrievable and matches the correct action trace.",
+    "sourceCitation": {
+      "location": "Description section, bullet 4 and Note section",
+      "excerpt": "The proposal should include the last 4 digits...only the last 4 digits of the credit card number should be included in any communication"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Escalate Delinquent Account to Collection Agency",
+    "description": "Ensures that when a cardholder fails to respond to prior notifications, the system escalates their delinquent account to the external collection agency and only the last 4 digits of the credit card are shared for identification. Automation: HIGH.",
+    "testId": "TC-AGY-01",
+    "testDescription": "When a cardholder has not responded to reminders and collection notifications, the card issuer should trigger escalation of the account to a third-party collection agency, including only masked identification. The process must never expose the full card number.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Delinquent account exists, multiple notifications and reminders have been sent without cardholder response, escalation feature is enabled, integration to agency system is configured.",
+    "stepsToPerform": "1. Log in as collections operations staff. 2. Query the account’s notification and reminder log. 3. Verify all prior reminders have been sent (minimum configured count, e.g. 3). 4. Confirm there have been no responses or payments by the cardholder. 5. Initiate escalation to collection agency workflow. 6. Observe agency handoff event in the system. 7. Inspect the data payload sent to the agency for card identification. 8. Verify the only card information sent is last 4 digits. 9. Confirm UI or email to internal collections logs this transition. 10. Review agency system's incoming queue to confirm correct data.",
+    "expectedResult": "1. Escalation is triggered after non-response. 2. Only last 4 digits sent to agency. 3. Full card number is never exposed. 4. State tracks escalation.",
+    "sourceCitation": {
+      "location": "Description section, bullet 5",
+      "excerpt": "the card issuer may involve a collection agency to recover the overdue balance"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Provide Only Last 4 Digits to Collection Agency",
+    "description": "Verifies the system integration to the collection agency transmits only the last 4 digits of the card for identification, both in payload and any communications, never the full card number. Includes negative assertion for full card number prohibition. Automation: HIGH.",
+    "testId": "TC-AGY-02",
+    "testDescription": "When escalating an account to a collection agency, only the last 4 digits of the credit card must be included in the communication or handoff file. All transmission, UI, and log checks must ensure compliance.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Delinquent account eligible for agency escalation, system is integrated with agency platform, event logging active.",
+    "stepsToPerform": "1. Log in as a system admin. 2. Retrieve the next eligible delinquent account for agency escalation. 3. Trigger or schedule the escalation. 4. Intercept the outgoing data payload (file, API call, message). 5. Inspect all fields for cardholder identification. 6. Validate only last 4 digits (e.g., '5678') appear. 7. Confirm no field in payload contains the full card number. 8. Monitor agency reception (API/FTP/UI) to confirm only masked data is delivered. 9. Check system logs/audit records for absence of full card number in all related logs. 10. Attempt to force system to output full card number and ensure it is blocked/prevented.",
+    "expectedResult": "1. Agency receives only last 4 digits. 2. Full card number is never present in data, logs or comms. 3. Masking is enforced end-to-end.",
+    "sourceCitation": {
+      "location": "Description section, bullet 5",
+      "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Negative: No Escalation if Not Eligible",
+    "description": "Confirms that the system does not escalate a delinquent account to a collection agency unless the cardholder has failed to respond to required reminders/notifications. Guards against premature or improper escalation. Automation: HIGH — pure business logic validation.",
+    "testId": "TC-AGY-03",
+    "testDescription": "If a cardholder has not yet failed to respond to the required number of prior notifications or reminders, the system must not permit escalation of the account to a collection agency. Attempting this transition should result in an error or block.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Delinquent account exists, fewer than required reminders/notifications sent (e.g., just 1 or 2), escalation to agency feature is enabled.",
+    "stepsToPerform": "1. Log in as a collections agent. 2. Select a delinquent account with only 1 prior notification sent. 3. Attempt to access the 'Escalate to Agency' function. 4. Observe for any system error/denial on UI. 5. Attempt escalation via backend API or batch job. 6. Capture reason code or message from system. 7. Review account's state — confirm no escalation event is logged. 8. Inspect notifications log for lack of new agency-related entries. 9. Check audit/event log for error event. 10. Attempt to send another notification and retest to check eligibility.",
+    "expectedResult": "1. System blocks escalation attempt if prior notification threshold not met. 2. Account remains un-escalated. 3. Error code or rejection notice is displayed or logged. 4. No agency receives data.",
+    "sourceCitation": {
+      "location": "Description section, bullet 5",
+      "excerpt": "If the cardholder fails to respond to previous notifications and reminders, the card issuer may involve a collection agency"
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Boundary: Agency Involvement After Multiple Failures",
+    "description": "Verifies that agency escalation only triggers immediately after the exact required count of missed notifications/reminders, but not before. Ensures boundary handling of escalation trigger. Automation: HIGH.",
+    "testId": "TC-AGY-04",
+    "testDescription": "As a collections admin, after the final required notification/reminder is missed (e.g., 3rd notification without response), the system should allow and document escalation to a collection agency using only last 4 digits for card identification.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Delinquent account, exactly threshold number of prior notifications sent without cardholder response, all integrations active.",
+    "stepsToPerform": "1. Log in as a collections admin. 2. Retrieve delinquent account with exactly the configured missed notification count (boundary, e.g., 3). 3. Attempt escalation to agency — confirm it is allowed. 4. Inspect escalation event record in system. 5. Validate that all communications/logs only use last 4 digits. 6. Attempt escalation just before threshold (e.g., after only 2 missed) and confirm system blocks. 7. Trigger one more missed notification, then retry and verify success. 8. Confirm state transition to 'With Agency'. 9. Check agency interface for correct handoff data. 10. Review account’s notification log for new agency escalation entry.",
+    "expectedResult": "1. Escalation possible only at milestone boundary. 2. Last 4 digits masking is enforced. 3. No escalation possible just before threshold is met.",
+    "sourceCitation": {
+      "location": "Description section, bullet 5",
+      "excerpt": "fails to respond to previous notifications and reminders"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Audit Trail: Escalation to Collection Agency",
+    "description": "Ensures every escalation to a collection agency results in a compliant, immutable audit trail. The log must contain last 4 digits only, and never the full card number. Verifies audit record is created, retrievable, and complies with redaction requirement. Automation: HIGH.",
+    "testId": "TC-AGY-05",
+    "testDescription": "When a delinquent account is escalated to a collection agency, the system must create an audit log entry that records the event, shows only the last 4 digits for the credit card, and never contains the full card number anywhere.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Audit logging subsystem enabled, at least one account eligible for escalation, admin access to audit trails.",
+    "stepsToPerform": "1. Log in as internal audit supervisor. 2. Manually or automatically trigger an account escalation to agency. 3. Wait for transaction to finalize. 4. Access audit logs for this event. 5. Review latest audit entry: confirm presence of agency escalation event, timestamp, and account/case ID. 6. Verify only last 4 digits of the card are present. 7. Search log/export for any full card number references. 8. Confirm immutability and retrievability of log entry. 9. Check logs in storage/backups for compliance. 10. Attempt to query logs with full number — result must be negative.",
+    "expectedResult": "1. Agency escalation event is logged with last 4 digits only. 2. Full card number is never logged. 3. Audit entry is immutable and persisted.",
+    "sourceCitation": {
+      "location": "Description section, bullet 5 and Note section",
+      "excerpt": "provided with the last 4 digits...only the last 4 digits of the credit card number should be included in any communication"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "State Transition: Collection Agency to Legal Action",
+    "description": "Validates correct state transition from escalation at collection agency to initiation of legal action for default/non-payment. Ensures legal documentation includes only last 4 digits and all states/logs are properly updated. Automation: HIGH.",
+    "testId": "TC-AGY-06",
+    "testDescription": "When a cardholder continues to default after agency escalation, system should move account to 'Legal Action' state. All legal documentation generated as part of this transition should include only the last 4 digits of the credit card number for identification purposes — full card number must never appear.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Delinquent account in 'With Agency' state, required duration of non-payment/default after agency escalation, legal action workflow enabled.",
+    "stepsToPerform": "1. Log in as collections supervisor. 2. Query for account in 'With Agency' state with required non-payment window. 3. Trigger or schedule legal action initiation. 4. Confirm account transitions to 'Legal Action' state. 5. Generate associated legal documentation. 6. Inspect all documentation for masking — only last 4 digits allowed. 7. Examine logs/audit entries for state change and masking compliance. 8. Attempt to view, download, or transmit legal docs and verify redaction. 9. Try to view older legal docs for historic compliance. 10. Confirm system rejects any attempt to generate docs with full card number.",
+    "expectedResult": "1. State transitions from 'With Agency' to 'Legal Action'. 2. All legal documentation and logs display only last 4 card digits. 3. Account history/audit is consistent with new state.",
+    "sourceCitation": {
+      "location": "Description section, bullet 6",
+      "excerpt": "In extreme cases of non-payment or default, the card issuer may have to take legal action...Any legal documentation should include the last 4 digits"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Generate Legal Documentation for Default",
+    "description": "Tests that, when legal action is initiated for a defaulted account, any generated legal documentation includes only the last 4 digits of the credit card number and never the full number, in compliance with policy. Automation: HIGH.",
+    "testId": "TC-LGAL-01",
+    "testDescription": "Upon legal action being commenced for a defaulted cardholder, required legal documents must be produced. All such documents must include only the last 4 digits of the credit card used for identification, never the full card number in any section, margin, or appendix.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Defaulted account in ‘Legal Action’ state, legal documentation template configured to auto-populate card identification field, compliance redaction rules enforced.",
+    "stepsToPerform": "1. Log in as a legal admin. 2. Search for a defaulted account that reached ‘Legal Action’ state. 3. Initiate document generation process. 4. Review the draft legal document for presence of only last 4 digits. 5. Download/print the document and scan for card number(s). 6. Inspect digital and physical copies for redacted fields. 7. Attempt to retrieve prior versions or historic legal docs for masking. 8. Check the system’s log for the document generation event, verifying only last 4 digits present. 9. Attempt to modify template/configuration to insert full card number and confirm change is blocked. 10. Submit the document to external counsel and verify feedback on compliance.",
+    "expectedResult": "1. Legal document generated contains only last 4 digits. 2. Full card number is absent from all versions/fields/logs. 3. Document passes compliance audit.",
+    "sourceCitation": {
+      "location": "Description section, bullet 6",
+      "excerpt": "the card issuer may have to take legal action against the cardholder. Any legal documentation should include the last 4 digits of the credit card number"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Legal Documents Show Only Last 4 Digits",
+    "description": "This test verifies that all legal documentation generated during legal action in credit card collection includes only the last 4 digits of the credit card number, ensuring no sensitive data leakage and meeting regulatory security standards. Automation: HIGH — document content verification is feasible by script.",
+    "testId": "TC-LGAL-02",
+    "testDescription": "As a bank collections agent, I need to ensure that when legal documentation is generated for credit card default cases, only the last 4 digits of the card number are shown in all legal documents, with no exposure of the full number in any channel or section, to comply with security and regulatory requirements.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "User account exists and is in default status, Collection process has escalated to legal action, Credentials for collections agent, Legal document generation feature enabled, Compliance logging is active",
+    "stepsToPerform": "1. Log in as a collections agent with appropriate permissions. 2. Navigate to the credit card account for a user in severe default (e.g., account ending in 4242). 3. Initiate the process to generate legal documentation for this account. 4. Review the preview of the legal document before sending. 5. Verify in the document body and header that only the last 4 digits (e.g., '**** **** **** 4242') appear wherever the credit card number is mentioned. 6. Check metadata, file name, and document properties for absence of full card number. 7. Trigger sending or downloading the document. 8. Access the audit trail/logs for the event and confirm masking in recorded content. 9. Attempt to view document contents as both sender and recipient to confirm no exposure of full card number. 10. Clean up by deleting generated test document if required.",
+    "expectedResult": "All legal documentation associated with the collection case contains only the last 4 digits of the credit card number (e.g. 4242), with the full card number absent in all document fields, logs, and metadata.",
+    "sourceCitation": {
+      "location": "Description section, bullet 6",
+      "excerpt": "Any legal documentation should include the last 4 digits of the credit card number for identification purposes."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "No Legal Action if Payments Resolved Early",
+    "description": "This test confirms that legal action cannot be initiated if the overdue balance is resolved before reaching the severe default threshold, protecting users from wrongful escalation and ensuring state model compliance. Automation: HIGH — strictly system-state driven.",
+    "testId": "TC-LGAL-03",
+    "testDescription": "As the collections system, ensure that if a user clears their overdue balance after receiving a collection notification but before the legal action criteria is met, the 'Initiate Legal Action' workflow is unavailable, blocking wrongful escalation.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Credit card account is overdue but not in default, Payment plan or direct payment enabled, User login credentials, No legal action previously taken",
+    "stepsToPerform": "1. Log in as the cardholder for an overdue account (e.g. ending 7734). 2. View overdue alert and any subsequent collection notifications. 3. Make a payment to clear all overdue balances. 4. Confirm that the account state changes from 'Overdue' to 'Current'. 5. Log out and log in as collections agent. 6. Navigate to the account that had prior overdue status. 7. Attempt to find or initiate the 'Legal Action' function for this account. 8. Verify that the option to generate legal documentation or trigger legal escalation is not present or is disabled. 9. Check relevant audit logs for any attempt to initiate legal action is rejected. 10. Clean up by resetting account state if required.",
+    "expectedResult": "System blocks initiation of legal action when overdue balance is already resolved, and no legal documentation is generated or sent.",
+    "sourceCitation": {
+      "location": "Description section, bullet 6",
+      "excerpt": "In extreme cases of non-payment or default, the card issuer may have to take legal action"
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Boundary: Legal Action Initiation After Max Overdue",
+    "description": "This test ensures legal action can be initiated only at the explicit default threshold and not before, enforcing regulatory timing boundaries and escalation limits. Automation: HIGH — driven by account overdue days.",
+    "testId": "TC-LGAL-04",
+    "testDescription": "As a collections manager, I want to confirm that legal action initiation is allowed only after an account reaches the maximum overdue days threshold and is blocked if attempted just prior to this threshold, preventing premature escalation.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Test account exists, Overdue days tracking enabled, Default escalation rules configured, Collection state machine operational",
+    "stepsToPerform": "1. Log in as collections agent. 2. Identify a credit card account at (boundary - 1) overdue days (e.g., 29 days if boundary is 30). 3. Attempt to initiate legal action and observe result. 4. System should block initiation and display (if applicable) a notification. 5. Advance the system or simulate passing of 1 day to reach default threshold (e.g. day 30). 6. Refresh the account state. 7. Attempt to initiate legal action again. 8. Observe that initiation is now available and executable. 9. Confirm legal documentation is generated and includes required content (last 4 digits). 10. Clean up: reset account status as necessary.",
+    "expectedResult": "Legal action is blocked prior to threshold (e.g. at 29 days overdue) but available exactly at the defined default day (e.g. 30 days overdue), enforcing correct boundary.",
+    "sourceCitation": {
+      "location": "Description section, bullet 6",
+      "excerpt": "In extreme cases of non-payment or default, the card issuer may have to take legal action"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Audit Trail for Legal Action Communications",
+    "description": "This test checks that every legal action communication or document generation event is logged in the audit trail, with masking applied to sensitive data and no unmasked credit card number, supporting forensic/regulatory traceability. Automation: HIGH — log scraping and verification.",
+    "testId": "TC-LGAL-05",
+    "testDescription": "As a compliance auditor, I want to verify that each time a legal document is generated or sent for a collection case, a complete audit log entry is created, including only the last 4 digits of the credit card number and never the full number, to prove compliance in the event of audit.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Audit trail feature enabled, Legal action workflow accessible, Collection system logging functioning, Test account in default",
+    "stepsToPerform": "1. Log in as collections agent. 2. Locate or prepare a cardholder account in severe default (e.g., ending 9137). 3. Trigger legal document generation for that account. 4. Confirm document delivery/sending completes. 5. Access the audit log or compliance monitoring system. 6. Filter by user account and action 'Legal Documentation Generated'. 7. Review audit entry for: present — time, agent ID, account ID, document action, last 4 digits only; absent — full card number. 8. Attempt to find any occurrences of full, unmasked card number. 9. Repeat step 7-8 for all related legal actions in the workflow. 10. Archive or delete the audit record if required for test data cleanliness.",
+    "expectedResult": "Each legal action event is logged including only masked card reference (last 4 digits), never the full card number, and all audit records are retrievable and immutable.",
+    "sourceCitation": {
+      "location": "Description section, bullet 6 and Note section",
+      "excerpt": "Any legal documentation should include the last 4 digits...only the last 4 digits of the credit card number should be included in any communication"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Mask Only Last 4 Digits in All Communications",
+    "description": "This scenario validates that every customer-facing communication or document related to collection processes displays ONLY the last 4 digits of any credit card number, preventing unintentional data leakage. Automation: HIGH — content parsing is scriptable.",
+    "testId": "TC-MASK-01",
+    "testDescription": "As a compliance officer, I want emails, SMS, portal messages, and documents sent at all phases of collections (overdue, payment plan, collections, legal, agency) to include only the last 4 digits when referencing cards — never the full card — ensuring both regulatory compliance and data minimization.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Outbound communication templates configured, Collections/overdue account state, User contact channels available, Masking feature active, Test accounts with known card numbers",
+    "stepsToPerform": "1. Log in as cardholder. 2. View a due reminder email for upcoming payment. 3. Observe the card reference displays only last 4 digits (e.g., '**** **** **** 6005'). 4. Miss payment; trigger overdue alert email/SMS. 5. Open and check message content for last-4-only display. 6. Advance account through escalation: receive collection notifications, payment plan proposals, and legal action notice. 7. Examine each communication (all channels) for card number display. 8. Review notification logs for each event. 9. Attempt to extract card number from header, footer, body, and metadata; confirm only last 4 visible. 10. Confirm that no full card number appears in any channel.",
+    "expectedResult": "ALL user-facing communications and documentation display only the last four digits of the credit card number, with no channel exposing the full number.",
+    "sourceCitation": {
+      "location": "Note section",
+      "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation related to the collection process."
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Full Card Number Never Logged in Backend",
+    "description": "This test certifies that the full credit card number is never written to any backend log, audit, or monitoring store throughout the collection process, protecting PII and maintaining data minimization. Automation: HIGH — log file/record scanning.",
+    "testId": "TC-MASK-02",
+    "testDescription": "As a system auditor, I need to confirm that under no operational scenario does the backend log or persist the full credit card number (not even obfuscated), but only last 4 digits where needed, securing cardholder data at rest and in transit.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Audit log and backend log access enabled, Test account with synthetic (fake) card number, All collection notification paths available, Logging at INFO/DEBUG levels for test",
+    "stepsToPerform": "1. Log in as user, trigger a due reminder. 2. Conduct overdue payment scenario and trigger overdue alert. 3. Progress account through collection, payment plan, agency, and legal action steps (trigger all types of communication and event logs). 4. Collect and retrieve backend logs and database audit records for these events. 5. Parse through raw log contents for any instances of the full card number (synthetic: e.g., 5100 1234 5678 9101). 6. Check for only last 4 digits (e.g., 9101) in contexts where card reference is required. 7. Ensure that all fields tied to card number are either empty, mask all but last 4, or do not store the value at all. 8. Repeat process at elevated debug log level to test for inadvertent spills. 9. Create and close audit records for test events. 10. Remove or redact test log artifacts as required.",
+    "expectedResult": "No backend log or audit entry at any level exposes the full card number, only the last 4 digits (if card referenced), in line with strict compliance.",
+    "sourceCitation": {
+      "location": "Note section",
+      "excerpt": "The full credit card number should never be shared or displayed in plain text."
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Negative: Breach on Exposing Full Card Digits",
+    "description": "This negative scenario assures that if the system attempts to output the full credit card number in any communication, document, or log, the event is blocked or triggers an error, enforcing strict prevention of security breaches. Automation: HIGH — forced error path is verifiable.",
+    "testId": "TC-MASK-03",
+    "testDescription": "As a security tester, I attempt to cause the backend to include the full card number in an outgoing communication (e.g., by changing email template, bypassing masking logic, or manipulating API payload) to verify that release of such data is prevented and properly alerted/rejected.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "System with masking logic in place, Ability to test with manipulated templates or payloads, Auditable messaging and logging, Synthetic card data",
+    "stepsToPerform": "1. Prepare a card account with known full number (e.g., 4000 9999 8888 7777) for overdue flow. 2. Modify communication template or invoke API bypassing masking function (test hack path). 3. Trigger a reminder, overdue, collection or legal notice using this manipulated setup. 4. Intercept the outgoing communication/email/SMS/log preview. 5. Examine for the appearance of the unmasked/full card number in the message or log. 6. Observe system for error, rejection, or alert event tied to breach attempt. 7. Review audit trail for flagging or escalation of the attempted breach. 8. Clean up by reverting templates/APIs and restoring masking configs. 9. Confirm no full card number was released. 10. Confirm the attempted breach is detectable in records.",
+    "expectedResult": "All attempts to expose full card number are blocked or flagged; full card number is never sent, stored, or displayed, even under forcing conditions.",
+    "sourceCitation": {
+      "location": "Note section",
+      "excerpt": "The full credit card number should never be shared or displayed in plain text."
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Boundary: Masking Other Than Last 4 Digits Fails",
+    "description": "This boundary test validates that any attempt to display anything except the last 4 digits of a credit card (e.g., last 6 or first 4, etc.) in any communication is rejected by the system, enforcing strict masking rules. Automation: HIGH — template validation scripts.",
+    "testId": "TC-MASK-04",
+    "testDescription": "As a message/template administrator, I try to configure a collection notification to display more or fewer than the last 4 digits of a card number, or any non-last 4 character sequence, to ensure that system enforces exact masking and blocks any deviation.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Messaging/template administration tools, Masking configuration access, Test card accounts available, Masking validation/enforcement system active",
+    "stepsToPerform": "1. Log in as template administrator. 2. Access the communication template for collection reminders. 3. Attempt to set card number mask to show only last 3 digits. 4. Attempt to set mask to show last 5, or first 4 digits. 5. Attempt to display middle digits or any pattern other than last-4-only. 6. Save the template and preview the notification output. 7. Trigger notification for selected masking setup. 8. Review resulting communication for proper masking. 9. Observe system response: either revert to last 4, or block/disallow template change. 10. Clean up by restoring default last 4 digit masking.",
+    "expectedResult": "System allows display of only the last 4 digits of the credit card number in all communications; any attempt to deviate is rejected, blocked, or automatically corrected.",
+    "sourceCitation": {
+      "location": "Note section",
+      "excerpt": "only the last 4 digits of the credit card number should be included in any communication"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Audit Logging of Masking Events",
+    "description": "This test ensures that every event where a masked credit card number is displayed or referenced in a collection notification is logged, with the audit record showing only last 4 digits and confirming masking policy is enforced. Automation: HIGH — audit log parsing.",
+    "testId": "TC-MASK-05",
+    "testDescription": "As a compliance analyst, I want each time a masked card number is displayed in any collection communication or document, a corresponding audit event is recorded showing only the last 4 digits used — confirming the masking policy is always enforced and auditable.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Audit logging for communication events enabled, Test accounts with distinct card numbers, Outbound communication system active, Masking logic enforced",
+    "stepsToPerform": "1. Log in as system user/account with audit review rights. 2. Trigger collection messages (reminder, overdue, collection, payment plan, agency, legal) for a test card account (e.g. ending 9567). 3. Wait for each communication to be sent. 4. Access the audit trail for the system. 5. Filter logs for communication events by account reference. 6. Review audit entries for: time, template/message name, recipient, agent/system user, card number (masked as last 4 only). 7. Confirm that no unmasked or full card value is visible. 8. Check all triggered communications are individually logged. 9. Confirm record immutability (not editable post-fact). 10. Archive or clean up test audit entries as applicable.",
+    "expectedResult": "Each masking event associated with communication is logged as an audit record containing only last 4 digits; system prevents any audit entry from showing unmasked card data.",
+    "sourceCitation": {
+      "location": "Note section",
+      "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Valid State Transition: Reminder to Overdue",
+    "description": "This state-transition test ensures that the credit card account transitions from 'Reminder Sent' to 'Overdue Alert Sent' state only when payment due date is missed, reflecting correct process flow per source design. Automation: HIGH — API/state observable.",
+    "testId": "TC-STATE-01",
+    "testDescription": "As a cardholder, I should first receive a due reminder notification before the due date, and if no payment is made, the system should automatically escalate the account to 'Overdue' and send an overdue alert on missing the payment deadline.",
+    "severity": "High",
+    "priority": "P0",
+    "prerequisites": "Test account with open credit card, Upcoming payment due date set, Reminder workflow enabled, Overdue state transition logic active",
+    "stepsToPerform": "1. Log in as cardholder. 2. Confirm credit card account listed with upcoming due date. 3. Wait for scheduled due reminder notification to be sent. 4. Confirm 'Reminder Sent' status in system for this account. 5. Do NOT make payment; allow due date to pass. 6. Wait for system to process overnight batch/cron. 7. Observe that account transitions to 'Overdue' state in backend/account portal. 8. Confirm overdue alert is triggered and received via configured channel (email/SMS/in-app). 9. Verify alert content includes only last 4 digits of card number (e.g. 1234). 10. Inspect account state and communication log for corresponding transition and message record.",
+    "expectedResult": "Account state moves from 'Reminder Sent' to 'Overdue' only after due date is missed, overdue alert is generated and sent, and communications reference only last 4 digits.",
+    "sourceCitation": {
+      "location": "Description section, bullet 1/2",
+      "excerpt": "Credit Card Due Reminder:...If a cardholder misses their payment due date, an alert is sent to notify them"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Valid State Transition: Overdue to Collections",
+    "description": "Verifies that when a cardholder has missed a payment and the account becomes significantly delinquent, the system escalates from the Overdue Balance Alert to the Collection Notification state, ensuring business rules and data masking are enforced. Automation: HIGH — stateful engine, API assertions.",
+    "testId": "TC-STATE-02",
+    "testDescription": "As a card issuer, I want overdue accounts to transition to collections escalation only after an Overdue Balance Alert is sent, ensuring compliance and regulatory audit. The transition must include both notification and correct masking of credit card digits.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Cardholder record with missed payment due date, system Clock advancing beyond configured overdue threshold, Overdue Balance Alert status recorded in audit log",
+    "stepsToPerform": "1. Log in as issuer with collections privileges. 2. Locate account for cardholder 'testuser@example.com' with payment overdue by 15 days. 3. Confirm Overdue Balance Alert notification was previously sent and logged. 4. Initiate escalation workflow for overdue account. 5. System evaluates account's delinquency threshold met for collections. 6. Trigger Collection Notification workflow via API/UI/command. 7. Send formal Collection Notification to cardholder via supported channels. 8. Validate Collection Notification message includes only last 4 digits ('4242') of cardholder's credit card. 9. Assert update of account state: Overdue → Collections in backend. 10. Query audit logs for presence of new collection event, only last 4 digits present.",
+    "expectedResult": "Collection Notification sent to cardholder with only last 4 digits ('4242'). Account state updated to 'Collections'. Audit log records the event; no full credit card number exposed.",
+    "sourceCitation": {
+      "location": "Description section, bullet 2/3",
+      "excerpt": "an alert is sent to notify them...issuer may escalate the collection process"
+    }
+  },
+  {
+    "type": "state-transition",
+    "title": "Valid State Transition: Collections to Payment Plan",
+    "description": "Ensures that a delinquent account can correctly move from Collections to Payment Plan proposal, with accurate eligibility checks and regulatory masking of identification fields. Automation: HIGH.",
+    "testId": "TC-STATE-03",
+    "testDescription": "When a cardholder cannot pay the overdue balance in full, the issuer creates a Payment Plan proposal from the Collections state. The proposal outlines a structured repayment schedule and ensures correct masking of credit card digits.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Account in 'Collections' state with Collection Notification sent and logged, cardholder unable to pay overdue balance, eligibility for Payment Plan confirmed",
+    "stepsToPerform": "1. Log in as issuer with collections/payment privileges. 2. Search for account in 'Collections' state owed $700. 3. Verify cardholder's inability to pay overdue balance in full (via payment rejection or user statement). 4. Initiate Payment Plan evaluation workflow. 5. Confirm eligibility rules for Payment Plan are satisfied. 6. Generate Payment Plan proposal with reduced rate/fees. 7. Send Payment Plan proposal to cardholder via supported channels. 8. Validate proposal content includes only last 4 digits ('4242') of credit card. 9. Update account state from 'Collections' to 'Payment Plan' in backend. 10. Assert audit log entry of Payment Plan proposal event with masked digits.",
+    "expectedResult": "Payment Plan proposal delivered to cardholder; proposal includes only last 4 digits ('4242'); state changes to Payment Plan; audit log records event, no full card number visible.",
+    "sourceCitation": {
+      "location": "Description section, bullet 3/4",
+      "excerpt": "collection notifications...the card issuer may offer a payment plan proposal"
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Invalid State: Skip Overdue Alert Step",
+    "description": "Verifies that it is impossible to escalate an account directly from Credit Card Due Reminder to Collection Notification without first sending an Overdue Balance Alert. Automation: HIGH — negative API assertion.",
+    "testId": "TC-STATE-04",
+    "testDescription": "As a QA reviewer, I validate that collection escalation cannot occur unless an Overdue Balance Alert is recorded; skipping the overdue alert triggers a business logic rejection.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Account in 'Credit Card Due Reminder' state, missed payment not yet marked overdue, no Overdue Balance Alert sent, collections system running",
+    "stepsToPerform": "1. Log in as issuer with escalation privileges. 2. Locate account in 'Credit Card Due Reminder' state with payment just missed (e.g., 1 day overdue). 3. Attempt to escalate account directly to Collections without sending Overdue Balance Alert. 4. System processes escalation request. 5. Assert rejection or business error returned (e.g., 'Missing prerequisite: Overdue Balance Alert'). 6. Confirm account state remains 'Credit Card Due Reminder', not changed. 7. Check audit/event log for error event, confirm no Collection Notification sent. 8. Validate no communication to cardholder sent regarding collections. 9. Assert full credit card number never exposed in error/logs.",
+    "expectedResult": "Escalation request rejected. Account not moved to Collections. Audit log records error; no Collection Notification sent; last 4 digits only appear in events, full card number never exposed.",
+    "sourceCitation": {
+      "location": "Description section, process order",
+      "excerpt": "Credit Card Due Reminder...Overdue Balance Alert...Collection Notification...Payment Plan Proposal...Collection Agency Involvement...Legal Action Initiation"
+    }
+  },
+  {
+    "type": "e2e",
+    "title": "End-to-End State Movement through All Escalations",
+    "description": "Validates complete lifecycle from reminder to overdue alert, collections, payment plan, agency, and legal action, ensuring every step enforces masking and follows business process sequence. Automation: HIGH.",
+    "testId": "TC-STATE-05",
+    "testDescription": "As a compliance auditor, I verify that an account can progress from Credit Card Due Reminder through all escalation states, with every notification containing only last 4 digits and all audit logs faithfully reflect transitions.",
+    "severity": "Critical",
+    "priority": "P0",
+    "prerequisites": "Active account with upcoming due date, issuer and agency roles enabled, legal action workflow available, initial reminder sent",
+    "stepsToPerform": "1. Log in as issuer. 2. Send Credit Card Due Reminder for account '**** **** **** 4242'. 3. Account misses payment; Overdue Balance Alert sent. 4. Account becomes significantly delinquent; Collection Notification sent and state updated to Collections. 5. Cardholder unable to pay; Payment Plan Proposal generated and delivered. 6. Payment not made; escalate to Collection Agency, provide identification (last 4 digits) to agency. 7. Cardholder unresponsive; legal action triggered, legal docs generated. 8. At each state, verify only last 4 digits included in communication and audit logs. 9. Query audit logs for each state transition; assert sequential, no skipped steps, no full card number exposure. 10. Validate account ends in 'Legal Action Initiation' state.",
+    "expectedResult": "Each notification contains only last 4 digits. Account state progresses through Reminder, Overdue Alert, Collections, Payment Plan, Agency, Legal Action. Audit logs sequential and masked.",
+    "sourceCitation": {
+      "location": "Description section, process sequence",
+      "excerpt": "Credit Card Due Reminder...Overdue Balance Alert...Collection Notification...Payment Plan Proposal...Collection Agency Involvement...Legal Action Initiation"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Notification Sent via All Supported Channels",
+    "description": "Ensures that credit card payment reminders and alerts are sent via all configured channels (email, SMS, portal), consistently including last 4 digits of the credit card number for identification. Automation: HIGH.",
+    "testId": "TC-NTF-01",
+    "testDescription": "As a cardholder, I want to receive reminders through email, SMS, and portal notifications, each containing only the last 4 digits of my card so I can identify messages securely and reliably.",
+    "severity": "High",
+    "priority": "P1",
+    "prerequisites": "Active account with upcoming payment due, issuer notification channel configuration includes email, SMS, portal, valid contact details",
+    "stepsToPerform": "1. Log in as issuer. 2. Trigger Credit Card Due Reminder workflow for cardholder 'testuser@example.com'. 3. System prepares notification payload with masked digits '4242'. 4. Send email notification, verify receipt and masked digits. 5. Send SMS notification, verify receipt and masking. 6. Post portal notification, verify display and masking. 7. Confirm all notifications received in relevant inboxes/portals. 8. Query audit logs for each notification sent. 9. Assert no full credit card number appears in channel messages or logs.",
+    "expectedResult": "Credit Card Due Reminder sent via all channels; each contains only last 4 digits. Audit logs confirm delivery; no full credit card number exposure.",
+    "sourceCitation": {
+      "location": "Description section, applies to all notification workflows",
+      "excerpt": "An automated notification is sent to the cardholder reminding them"
+    }
+  },
+  {
+    "type": "negative",
+    "title": "Negative: Notification Delivery Failure Triggers Retry",
+    "description": "Validates that failed notification delivery (e.g., email server down) auto-triggers a retry as required, and logs the failure event without exposing full credit card details. Automation: HIGH.",
+    "testId": "TC-NTF-02",
+    "testDescription": "When a notification (reminder/alert) delivery fails on first attempt due to transient error, system must trigger a retry, log the failed and retried delivery, and ensure all masked identification fields enforced.",
+    "severity": "High",
+    "priority": "P1",
+    "prerequisites": "Active account with valid contact, communication channel enabled, email/SMS server failure injected",
+    "stepsToPerform": "1. Log in as issuer. 2. Trigger Credit Card Due Reminder for cardholder 'testuser@example.com'. 3. Simulate email delivery failure (server timeout or 5xx error). 4. System detects failure, logs failed attempt. 5. Automated retry process triggers. 6. Repeat send; on success, log successful delivery. 7. Validate both failure and retry attempt in audit logs. 8. Review sent message for only last 4 digits; no full card number anywhere. 9. Confirm notification reaches cardholder after retry. 10. Assert no sensitive data leakage in logs/errors.",
+    "expectedResult": "Notification retry upon failure; audit log includes failure and retry events; only last 4 digits present; cardholder receives reminder after retry.",
+    "sourceCitation": {
+      "location": "Description section, applies to all notification workflows",
+      "excerpt": "An automated notification is sent to the cardholder reminding them"
+    }
+  },
+  {
+    "type": "security",
+    "title": "Notification Content Validates Masking Across Channels",
+    "description": "Verifies that the content of all notifications only includes the last 4 digits of the credit card number as specified, never the full number, ensuring regulatory compliance and data protection.",
+    "testId": "TC-NTF-03",
+    "testDescription": "Whenever a notification is delivered — via email, SMS, or portal — its content includes only the last 4 digits ('4242') of the credit card number. Full number must never be revealed.",
+    "severity": "Critical",
+    "priority": "P1",
+    "prerequisites": "Credit card account exists, reminder/alert/collection workflows enabled, notification channel is enabled",
+    "stepsToPerform": "1. Log in as issuer. 2. Trigger Credit Card Due Reminder for account '**** **** **** 4242'. 3. Collect delivered notification (email/SMS/portal). 4. Inspect message content for credit card identifier. 5. Assert only last 4 digits appear (e.g., '4242'), never any other digits or full card number. 6. Repeat for Overdue Balance Alert, Collection Notification, Payment Plan Proposal. 7. Review backend logs for communication events. 8. Assert full card number never appears in logs, DB, or notifications. 9. If message or log contains any additional digits, fail test.",
+    "expectedResult": "Notification content and logs contain only last 4 digits ('4242'); full card number never present in any channel or communication.",
+    "sourceCitation": {
+      "location": "Note section",
+      "excerpt": "only the last 4 digits of the credit card number should be included in any communication"
+    }
+  },
+  {
+    "type": "audit",
+    "title": "Audit Log for All Notification Deliveries",
+    "description": "Ensures that every notification sent is recorded in the audit trail with only last 4 digits of the credit card number present, and full number is never logged. Automation: HIGH.",
+    "testId": "TC-NTF-04",
+    "testDescription": "As a compliance analyst, I review audit logs to confirm that each notification (reminder, alert, collection, payment plan, agency, legal action) is recorded with only the last 4 digits. No full card number exposure.",
+    "severity": "High",
+    "priority": "P1",
+    "prerequisites": "Active account, all notification workflows enabled, audit log system accessible, initial notifications sent",
+    "stepsToPerform": "1. Log in as issuer. 2. Trigger notification workflow (Credit Card Due Reminder). 3. Send notification to cardholder. 4. Access audit log system. 5. Review log entry for notification event. 6. Assert log contains cardholder ID and only last 4 digits. 7. Repeat for Overdue Alert, Collection Notification, Payment Plan, Agency, Legal Action. 8. Verify no log entry contains full card number. 9. Try log export/download, check masking. 10. Attempt audit log retrieval by compliance role and validate masking.",
+    "expectedResult": "All audit log entries contain only last 4 digits ('4242'); no full card number is present in logs, exports, or retrievals.",
+    "sourceCitation": {
+      "location": "Note section, for all communications",
+      "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Validate Amount Due Calculation on Reminders",
+    "description": "Verifies that the Credit Card Due Reminder accurately displays the calculated amount due, based on statement balance and due date. Automation: HIGH — formula assertion, boundary checks.",
+    "testId": "TC-VAL-01",
+    "testDescription": "A cardholder receives a reminder stating the upcoming payment due date and amount due. The test checks amount calculation (statement balance) for accuracy at due date and edge cases (e.g., $0, max limit).",
+    "severity": "High",
+    "priority": "P1",
+    "prerequisites": "Account exists with statement balance ($350), upcoming due date, reminder workflow enabled",
+    "stepsToPerform": "1. Log in as issuer. 2. Set statement balance to $350. 3. Set payment due date to tomorrow. 4. Trigger Credit Card Due Reminder workflow. 5. System generates notification with 'Amount Due: $350'. 6. Send notification and receive as cardholder. 7. Inspect notification content for correct amount due and last 4 digits. 8. Assert amount matches backend statement data. 9. Repeat with amount due $0 and max credit limit ($8,000) for boundary checks. 10. Validate backend log and masking rules.",
+    "expectedResult": "Amount due in reminder matches account statement; boundary values ($0, max limit) handled correctly; notification includes only last 4 digits.",
+    "sourceCitation": {
+      "location": "Description section, bullet 1",
+      "excerpt": "reminding them of their upcoming credit card payment due date"
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Validate Overdue Amount Calculation Post Due Date",
+    "description": "Ensures that overdue alerts calculate overdue balance, additional charges, and consequences accurately once payment is missed, enforcing masking. Automation: HIGH.",
+    "testId": "TC-VAL-02",
+    "testDescription": "When the payment due date is missed, the cardholder receives an Overdue Balance Alert showing the overdue balance (statement amount plus late fees). The test verifies calculation for overdue amount, edge cases, and masking.",
+    "severity": "High",
+    "priority": "P1",
+    "prerequisites": "Account exists, payment due date passed, overdue workflow enabled, overdue balance calculated ($350 + $25 late fee)",
+    "stepsToPerform": "1. Log in as issuer. 2. Set account statement balance to $350. 3. Advance payment due date to yesterday; payment not made. 4. System calculates overdue balance ($375). 5. Trigger Overdue Balance Alert notification workflow. 6. Send notification and receive as cardholder. 7. Inspect notification for overdue balance, late fees, and masking (last 4 digits only). 8. Validate backend calculation matches notification content. 9. Repeat test with maximum overdue amount, minimum overdue (boundary values). 10. Confirm audit logs for event, masked digits only.",
+    "expectedResult": "Overdue balance displayed equals backend calculation; late fee correctly included; only last 4 digits of card shown; boundary values handled.",
+    "sourceCitation": {
+      "location": "Description section, bullet 2",
+      "excerpt": "overdue balance and the potential consequences of not making the payment promptly"
+    }
+  },
+  {
+    "type": "boundary",
+    "title": "Boundary: Additional Charges in Collections Notification",
+    "description": "This test verifies that the formal collections notification explicitly details the amount owed and any additional charges at the boundaries (minimum, typical, maximum), and that the information is correctly presented to the right cardholder. It ensures that financial calculation logic at the escalation step into collections is robust and compliant, preventing misstatement of dues that could cause regulatory or financial harm. Automation feasibility: HIGH — assertions based solely on notification payload and system data.",
+    "testId": "TC-VAL-03",
+    "testDescription": "As a cardholder whose account is escalated to collections, I expect to receive a formal collection notification that always details the exact amount owed and any additional charges applied, even at boundary cases (e.g. when additional charges are 0, when they are at maximum allowed, or first nonzero value). This ensures I am aware of all debt items and can validate against my records.",
+    "severity": "Critical",
+    "priority": "P1",
+    "prerequisites": "Customer account exists and is delinquent; overdue balance meets escalation threshold for collections; additional charges table configured for collection events; notification templates set up in system; test credit card profile present with masked number.",
+    "stepsToPerform": "1. Log into the issuer portal as an authorized collections operator. 2. Locate test cardholder account with last 4 digits '2876' that has just transitioned into collections (boundary: overdue = min escalation). 3. Verify amount owed is exactly $100.00 and no additional charges have been applied (additional charges = $0). 4. Trigger formal collection notification dispatch to the cardholder using system workflow. 5. Open the sent notification email/message for review. 6. Assert notification explicitly details 'amount owed: $100.00' and states 'additional charges: $0.00' or field is present with 0 value. 7. Adjust test data: apply a $15.00 late fee as first nonzero additional charge to the same cardholder. 8. Retrigger collection notification dispatch. 9. Open new notification; confirm it now details 'amount owed: $100.00' and 'additional charges: $15.00' and calculation matches ($115.00 total). 10. Repeat: Set additional charges to the allowed maximum for collections (e.g. $999.99), update account, and retrigger notification. 11. Review resulting notification and confirm 'amount owed: $100.00', 'additional charges: $999.99', all amounts clearly presented, calculation is correct ($1099.99 total). 12. For each variant, verify field names/labels are consistent, amounts are not omitted, and amounts match backend/accounting entries. 13. Ensure each notification contains the cardholder's last 4 digits only and no other digits are exposed.",
+    "expectedResult": "1. Notification always includes 'amount owed' and 'additional charges' fields for all tested boundary values (0, min >0, max allowed). 2. All monetary values are accurate and visible to the recipient. 3. Cardholder identity is only by last 4 digits. 4. No notification omits or misstates these amounts at any boundary. 5. Full credit card number is never exposed.",
+    "sourceCitation": {
+      "location": "Description section, bullet 3",
+      "excerpt": "Collection Notification: When an account becomes significantly delinquent...detailing the amount owed and any additional charges."
+    }
+  },
+  {
+    "type": "functional",
+    "title": "Attribute Notification to Correct Cardholder Only",
+    "description": "This test verifies that every automated notification (reminder, overdue, collections, payment plan, agency, legal) is only sent to the intended cardholder and that identification within the message is performed exclusively by including the last 4 digits of the cardholder’s credit card number. It ensures compliance with data privacy/regulatory requirements by confirming that the correct cardholder receives notifications referencing only the permitted masked identifier. Automation feasibility: HIGH — assertions on notification payload and recipient logs.",
+    "testId": "TC-VAL-04",
+    "testDescription": "As a cardholder with a credit card due, I expect to receive payment-related notifications that are addressed to me and include only the last 4 digits of my credit card number for identification, ensuring the information is not mistakenly delivered to another customer or exposed with full credit card details. This protects privacy and assures correct communication delivery.",
+    "severity": "Critical",
+    "priority": "P1",
+    "prerequisites": "Test account for cardholder 'John Test' with credit card ending in 4242 exists and is active; at least one other cardholder profile present with different last 4 digits; notification templates configured to include last 4 digits for identification.",
+    "stepsToPerform": "1. Log into the issuer portal as the notification system admin/test user. 2. Select cardholder profile 'John Test' with card ending '4242'. 3. Simulate payment due date approaching (set due date to now + 1 day). 4. Trigger automated due reminder notification run. 5. Retrieve output notification sent to 'John Test'. 6. Confirm message is delivered only to the email/phone/contact profile of 'John Test'. 7. Open contents and verify the notification states 'Your credit card ending 4242...' and does NOT include the full credit card number or other PII. 8. Cross-check that the other cardholder profile with, e.g., card ending '9831', does NOT receive a notification meant for 'John Test'. 9. Repeat for each other notification type: overdue alert (simulate missed payment), collections escalation (artificially increase delinquency), payment plan proposal, collection agency handoff, and legal action trigger. 10. For each type, trigger event, retrieve notification, and verify correct last 4 digits present, delivered only to associated cardholder email/phone, and all other recipient records do NOT contain this message. 11. Review system backend logs and confirm that internal logging also redacts or excludes all but the last 4 digits. 12. Attempt (negative test) to alter a notification template to include the full card number and trigger — confirm that the system blocks the attempt or message is redacted before delivery.",
+    "expectedResult": "1. Every notification is delivered only to the correct cardholder’s contact channel, never to another account. 2. All notifications contain only the last 4 digits for identification. 3. No notification or log contains the full credit card number. 4. Misrouted, misattributed, or unmasked messages are never sent.",
+    "sourceCitation": {
+      "location": "Description section, masking for identification",
+      "excerpt": "include the last 4 digits of the credit card number for identification purposes"
+    }
+  }
+]
