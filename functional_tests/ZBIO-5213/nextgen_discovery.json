@@ -1,0 +1,106 @@
+{
+  "summary": "The source outlines the end-to-end lifecycle for credit card due collection in a consumer banking context, detailing automated notifications, escalation steps, integrations with external agencies, regulatory compliance for data privacy, and audit requirements. Each stage from due reminder through legal action is described, with critical requirements around credit card number masking, audit-logging, and role-based access controls. The document calls out integration, error handling, data validation, and escalation logic across all phases. Given the regulatory, data privacy, and financial sensitivities, the requirements warrant exhaustive, multi-faceted test coverage.",
+  "domain": "fintech / consumer banking / payments",
+  "riskLevel": "high",
+  "totalRecommendedTestCount": 48,
+  "workflows": [
+    {
+      "name": "Credit Card Due Reminder Notification",
+      "description": "Automated notification issued to cardholder prior to the credit card payment due date, including card identification.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Covers standard issue, timing, content validation, masking, and positive/negative delivery outcomes."
+    },
+    {
+      "name": "Overdue Balance Alert",
+      "description": "Alert to cardholder upon missed due date, includes overdue balance and identification information.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Encompasses transition from reminder to alert, content, masking, correct timing, and alert delivery/handling errors."
+    },
+    {
+      "name": "Collection Notification (Delinquency Escalation)",
+      "description": "Formal notification with details of owed amount and additional charges when account is significantly delinquent.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Tests escalation trigger, notification content (charges present), entity masking, delivery, and state preconditions."
+    },
+    {
+      "name": "Payment Plan Proposal",
+      "description": "Offer of structured repayment (with reduced interest or fees) to cardholders unable to pay the full overdue balance.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Covers eligibility, correct plan calculation, masking, plan detail accuracy, and failure to generate proposal."
+    },
+    {
+      "name": "Collection Agency Involvement",
+      "description": "Hand-off of delinquent account to an external collection agency, ensuring secure data transfer and identification.",
+      "priority": "P0",
+      "testPointCount": 5,
+      "rationale": "Verifies agency trigger, compliance of shared data (masking, limited info), data exchange/integration, and failure modes."
+    },
+    {
+      "name": "Legal Action Initiation",
+      "description": "Issuance of legal documentation and workflow for accounts with extreme non-payment, enforcing privacy rules.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Encompasses prerequisite validation, document content (masking), timing, hand-off from agency step, and audit logging."
+    },
+    {
+      "name": "Credit Card Number Masking Enforcement",
+      "description": "Validation that all communications/documents display only the last 4 digits of the card number, per compliance.",
+      "priority": "P0",
+      "testPointCount": 5,
+      "rationale": "PCI-DSS/high risk: checks across all comm types, channel, third-party integration, negative test for full number leak, and audit."
+    },
+    {
+      "name": "Notification and Escalation Lifecycle (State Transitions)",
+      "description": "Verification of all valid and invalid transitions between lifecycle stages from reminder through legal action.",
+      "priority": "P0",
+      "testPointCount": 4,
+      "rationale": "Decision-table and state transition coverage (reminder → overdue → collection → agency → legal), forbidden/invalid transitions."
+    },
+    {
+      "name": "Error Handling (Notification Failures, Invalid States)",
+      "description": "Correct handling and reporting of errors, including notification delivery failures and invalid lifecycle states.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "One error scenario for delivery, one for data/requisite violation, one for prohibited state transition."
+    },
+    {
+      "name": "Authorization and Role-Based Access Control",
+      "description": "Verification that only authorized roles (issuer, agency, legal) access data and communications as allowed.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "Covers each principal role, negative test for unauthorized access, and validation during data sharing with agency."
+    },
+    {
+      "name": "Integration with External Collection Agency",
+      "description": "Exchange or transfer of collection data with agency, with data integrity and compliance verification.",
+      "priority": "P1",
+      "testPointCount": 2,
+      "rationale": "Agency integration success path and negative scenario (e.g., data transfer failure), including masking."
+    },
+    {
+      "name": "Data Validation (Amounts, Overdue Calculation, Plan Parameters)",
+      "description": "Checks on accuracy and integrity of balances, amounts due, plan values, and overdue calculations.",
+      "priority": "P1",
+      "testPointCount": 2,
+      "rationale": "Boundary value for minimum/maximum overdue amounts, and plan parameter validation."
+    },
+    {
+      "name": "Audit Trail and Compliance Logging",
+      "description": "Audit record creation for all notifications, escalations, and external communications, covering regulatory traceability.",
+      "priority": "P0",
+      "testPointCount": 3,
+      "rationale": "Covers audit logging at all major state changes, integration or communication events; one negative for missing log."
+    },
+    {
+      "name": "End-to-End Lifecycle Journey",
+      "description": "Scenarios that traverse multiple stages, validating correct sequencing, data propagation, masking, and compliance.",
+      "priority": "P0",
+      "testPointCount": 1,
+      "rationale": "Multi-stage journey (reminder to legal), one for standard, one for mid-stage recovery, and one negative/exception sequence."
+    }
+  ]
+}

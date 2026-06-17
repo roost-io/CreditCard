@@ -1,0 +1,1504 @@
+{
+  "triggerId": "aff04fc7-b420-4547-a6cb-ae911b71406b",
+  "ticketId": "ZBIO-5213",
+  "mode": "outline-only",
+  "generatedAt": "2026-06-17T04:10:36.271Z",
+  "source": {
+    "type": "jira_ticket",
+    "filePaths": [],
+    "hasInlineData": true
+  },
+  "discovery": {
+    "summary": "The source outlines the end-to-end lifecycle for credit card due collection in a consumer banking context, detailing automated notifications, escalation steps, integrations with external agencies, regulatory compliance for data privacy, and audit requirements. Each stage from due reminder through legal action is described, with critical requirements around credit card number masking, audit-logging, and role-based access controls. The document calls out integration, error handling, data validation, and escalation logic across all phases. Given the regulatory, data privacy, and financial sensitivities, the requirements warrant exhaustive, multi-faceted test coverage.",
+    "domain": "fintech / consumer banking / payments",
+    "riskLevel": "high",
+    "totalRecommendedTestCount": 48,
+    "workflows": [
+      {
+        "name": "Credit Card Due Reminder Notification",
+        "description": "Automated notification issued to cardholder prior to the credit card payment due date, including card identification.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Covers standard issue, timing, content validation, masking, and positive/negative delivery outcomes."
+      },
+      {
+        "name": "Overdue Balance Alert",
+        "description": "Alert to cardholder upon missed due date, includes overdue balance and identification information.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Encompasses transition from reminder to alert, content, masking, correct timing, and alert delivery/handling errors."
+      },
+      {
+        "name": "Collection Notification (Delinquency Escalation)",
+        "description": "Formal notification with details of owed amount and additional charges when account is significantly delinquent.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Tests escalation trigger, notification content (charges present), entity masking, delivery, and state preconditions."
+      },
+      {
+        "name": "Payment Plan Proposal",
+        "description": "Offer of structured repayment (with reduced interest or fees) to cardholders unable to pay the full overdue balance.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Covers eligibility, correct plan calculation, masking, plan detail accuracy, and failure to generate proposal."
+      },
+      {
+        "name": "Collection Agency Involvement",
+        "description": "Hand-off of delinquent account to an external collection agency, ensuring secure data transfer and identification.",
+        "priority": "P0",
+        "testPointCount": 5,
+        "rationale": "Verifies agency trigger, compliance of shared data (masking, limited info), data exchange/integration, and failure modes."
+      },
+      {
+        "name": "Legal Action Initiation",
+        "description": "Issuance of legal documentation and workflow for accounts with extreme non-payment, enforcing privacy rules.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Encompasses prerequisite validation, document content (masking), timing, hand-off from agency step, and audit logging."
+      },
+      {
+        "name": "Credit Card Number Masking Enforcement",
+        "description": "Validation that all communications/documents display only the last 4 digits of the card number, per compliance.",
+        "priority": "P0",
+        "testPointCount": 5,
+        "rationale": "PCI-DSS/high risk: checks across all comm types, channel, third-party integration, negative test for full number leak, and audit."
+      },
+      {
+        "name": "Notification and Escalation Lifecycle (State Transitions)",
+        "description": "Verification of all valid and invalid transitions between lifecycle stages from reminder through legal action.",
+        "priority": "P0",
+        "testPointCount": 4,
+        "rationale": "Decision-table and state transition coverage (reminder → overdue → collection → agency → legal), forbidden/invalid transitions."
+      },
+      {
+        "name": "Error Handling (Notification Failures, Invalid States)",
+        "description": "Correct handling and reporting of errors, including notification delivery failures and invalid lifecycle states.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "One error scenario for delivery, one for data/requisite violation, one for prohibited state transition."
+      },
+      {
+        "name": "Authorization and Role-Based Access Control",
+        "description": "Verification that only authorized roles (issuer, agency, legal) access data and communications as allowed.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Covers each principal role, negative test for unauthorized access, and validation during data sharing with agency."
+      },
+      {
+        "name": "Integration with External Collection Agency",
+        "description": "Exchange or transfer of collection data with agency, with data integrity and compliance verification.",
+        "priority": "P1",
+        "testPointCount": 2,
+        "rationale": "Agency integration success path and negative scenario (e.g., data transfer failure), including masking."
+      },
+      {
+        "name": "Data Validation (Amounts, Overdue Calculation, Plan Parameters)",
+        "description": "Checks on accuracy and integrity of balances, amounts due, plan values, and overdue calculations.",
+        "priority": "P1",
+        "testPointCount": 2,
+        "rationale": "Boundary value for minimum/maximum overdue amounts, and plan parameter validation."
+      },
+      {
+        "name": "Audit Trail and Compliance Logging",
+        "description": "Audit record creation for all notifications, escalations, and external communications, covering regulatory traceability.",
+        "priority": "P0",
+        "testPointCount": 3,
+        "rationale": "Covers audit logging at all major state changes, integration or communication events; one negative for missing log."
+      },
+      {
+        "name": "End-to-End Lifecycle Journey",
+        "description": "Scenarios that traverse multiple stages, validating correct sequencing, data propagation, masking, and compliance.",
+        "priority": "P0",
+        "testPointCount": 1,
+        "rationale": "Multi-stage journey (reminder to legal), one for standard, one for mid-stage recovery, and one negative/exception sequence."
+      }
+    ]
+  },
+  "outlines": [
+    {
+      "testId": "TC-DUEREM-01",
+      "title": "Credit Card Due Reminder Notification Generation",
+      "workflow": "Credit Card Due Reminder Notification",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent to the cardholder reminding them of their upcoming credit card payment due date"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-DUEREM-02",
+      "title": "Due Reminder Includes Last 4 Digits Only",
+      "workflow": "Credit Card Due Reminder Notification",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 8, Description",
+        "excerpt": "This notification should include the last 4 digits of the credit card number for identification purposes."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-DUEREM-03",
+      "title": "Boundary Reminder Notification Delivery",
+      "workflow": "Credit Card Due Reminder Notification",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent to the cardholder..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-DUEREM-04",
+      "title": "Failed Reminder Notification Handling",
+      "workflow": "Credit Card Due Reminder Notification",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ODBALERT-01",
+      "title": "Overdue Balance Alert Generation",
+      "workflow": "Overdue Balance Alert",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "If a cardholder misses their payment due date, an alert is sent to notify them of the overdue balance"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ODBALERT-02",
+      "title": "Overdue Alert Includes Last 4 Digits of Card",
+      "workflow": "Overdue Balance Alert",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "This alert should include the last 4 digits of the credit card number."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ODBALERT-03",
+      "title": "Boundary Testing for Overdue Amounts",
+      "workflow": "Overdue Balance Alert",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "an alert is sent to notify them of the overdue balance and the potential consequences of not making the payment promptly."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ODBALERT-04",
+      "title": "Overdue Alert Failure Handling",
+      "workflow": "Overdue Balance Alert",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "If a cardholder misses their payment due date, an alert is sent..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-COLLECT-01",
+      "title": "Collection Notification Trigger on Delinquency",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 12-13, Description",
+        "excerpt": "When an account becomes significantly delinquent, the card issuer may escalate the collection process by sending formal collection notifications"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-COLLECT-02",
+      "title": "Collection Notification Includes Last 4 Digits Only",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 13, Description",
+        "excerpt": "These notifications should include the last 4 digits of the credit card number."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-COLLECT-03",
+      "title": "Boundary Testing Collection Amount Owed",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 13, Description",
+        "excerpt": "detailing the amount owed and any additional charges"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-COLLECT-04",
+      "title": "Notification Failure in Collection Escalation",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 12-13, Description",
+        "excerpt": "the card issuer may escalate the collection process by sending formal collection notifications"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAYPLAN-01",
+      "title": "Payment Plan Proposal Triggered for Unpaid Balance",
+      "workflow": "Payment Plan Proposal",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 14-15, Description",
+        "excerpt": "the card issuer may offer a payment plan proposal outlining a structured repayment schedule"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAYPLAN-02",
+      "title": "Payment Plan Proposal Includes Last 4 Digits Only",
+      "workflow": "Payment Plan Proposal",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "The proposal should include the last 4 digits of the credit card number."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAYPLAN-03",
+      "title": "Boundary Testing Payment Plan Terms",
+      "workflow": "Payment Plan Proposal",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 14, Description",
+        "excerpt": "outlining a structured repayment schedule with reduced interest rates or fees"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-PAYPLAN-04",
+      "title": "Payment Plan Notification Failure Handling",
+      "workflow": "Payment Plan Proposal",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 14-15, Description",
+        "excerpt": "the card issuer may offer a payment plan proposal..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CAGENCY-01",
+      "title": "Collection Agency Involvement for Unresponsive Accounts",
+      "workflow": "Collection Agency Involvement",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 15-16, Description",
+        "excerpt": "If the cardholder fails to respond to previous notifications and reminders, the card issuer may involve a collection agency"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CAGENCY-02",
+      "title": "Only Last 4 Digits Sent to Collection Agency",
+      "workflow": "Collection Agency Involvement",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CAGENCY-03",
+      "title": "Boundary Testing Amount Sent to Collection Agency",
+      "workflow": "Collection Agency Involvement",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "leading to increased collection efforts"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CAGENCY-04",
+      "title": "Collection Agency Notification Failure Handling",
+      "workflow": "Collection Agency Involvement",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 15-16, Description",
+        "excerpt": "the card issuer may involve a collection agency to recover the overdue balance"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-CAGENCY-05",
+      "title": "Boundary Maximum Collection Effort Transfer",
+      "workflow": "Collection Agency Involvement",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "leading to increased collection efforts"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LEGAL-01",
+      "title": "Legal Action Initiation After Collection Failure",
+      "workflow": "Legal Action Initiation",
+      "type": "functional",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 18-19, Description",
+        "excerpt": "In extreme cases of non-payment or default, the card issuer may have to take legal action against the cardholder."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LEGAL-02",
+      "title": "Legal Documentation Includes Last 4 Digits Only",
+      "workflow": "Legal Action Initiation",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 19, Description",
+        "excerpt": "Any legal documentation should include the last 4 digits of the credit card number for identification purposes."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LEGAL-03",
+      "title": "Legal Action Notification Failure Handling",
+      "workflow": "Legal Action Initiation",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 18-19, Description",
+        "excerpt": "the card issuer may have to take legal action against the cardholder"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LEGAL-04",
+      "title": "Boundary Testing Legal Action for Extreme Non-Payment",
+      "workflow": "Legal Action Initiation",
+      "type": "boundary",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 18, Description",
+        "excerpt": "In extreme cases of non-payment or default..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-MASKING-01",
+      "title": "Masking Enforcement in Due Reminder Communication",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-MASKING-02",
+      "title": "Masking Enforcement in Collection Notification",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-MASKING-03",
+      "title": "Detection of Full Card Number Exposure",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 21, Description",
+        "excerpt": "The full credit card number should never be shared or displayed in plain text."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-MASKING-04",
+      "title": "Masking in Payment Plan Proposal Communication",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-MASKING-05",
+      "title": "Masking in Legal Documentation",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LIFECYCLE-01",
+      "title": "State Transition Reminder to Overdue",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-11, Description",
+        "excerpt": "Credit Card Due Reminder...If a cardholder misses their payment due date, an alert is sent..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LIFECYCLE-02",
+      "title": "State Transition Overdue to Collection",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 11-13, Description",
+        "excerpt": "If a cardholder misses...collection notifications"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LIFECYCLE-03",
+      "title": "Invalid State Transition Prevention",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-19, Description",
+        "excerpt": "collection process by sending formal collection notifications...legal action against the cardholder"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-LIFECYCLE-04",
+      "title": "State Transition Collection to Agency to Legal",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "type": "state-transition",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 13-19, Description",
+        "excerpt": "the card issuer may escalate...legal action"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ERROR-01",
+      "title": "Handling Notification Delivery Failure",
+      "workflow": "Error Handling (Notification Failures, Invalid States)",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 24, Comments",
+        "excerpt": "Failed to generate functional test case for JIRA-ID: ZBIO-5213: Error: This is an error message"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ERROR-02",
+      "title": "Invalid Lifecycle State Error Detection",
+      "workflow": "Error Handling (Notification Failures, Invalid States)",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-19, Description",
+        "excerpt": "If the cardholder fails to respond to previous notifications...legal action against the cardholder"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-ERROR-03",
+      "title": "Recovery from Failed Payment Plan Proposal Delivery",
+      "workflow": "Error Handling (Notification Failures, Invalid States)",
+      "type": "negative",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 24, Comments",
+        "excerpt": "Failed to generate functional test case for JIRA-ID: ZBIO-5213: Error: This is an error message"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUTH-01",
+      "title": "Issuer Role Access Enforcement",
+      "workflow": "Authorization and Role-Based Access Control",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUTH-02",
+      "title": "Collection Agency Role Access Enforcement",
+      "workflow": "Authorization and Role-Based Access Control",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUTH-03",
+      "title": "Legal Team Role Access Enforcement",
+      "workflow": "Authorization and Role-Based Access Control",
+      "type": "security",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 19, Description",
+        "excerpt": "Any legal documentation should include the last 4 digits of the credit card number for identification purposes."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-INTAGENCY-01",
+      "title": "Secure Data Transfer to Collection Agency",
+      "workflow": "Integration with External Collection Agency",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-INTAGENCY-02",
+      "title": "Boundary Testing Data Integrity in Agency Integration",
+      "workflow": "Integration with External Collection Agency",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "the card issuer may involve a collection agency to recover the overdue balance"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-DATAVAL-01",
+      "title": "Validation of Overdue Calculation",
+      "workflow": "Data Validation (Amounts, Overdue Calculation, Plan Parameters)",
+      "type": "functional",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "an alert is sent to notify them of the overdue balance"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-DATAVAL-02",
+      "title": "Boundary Testing Payment Plan Parameters",
+      "workflow": "Data Validation (Amounts, Overdue Calculation, Plan Parameters)",
+      "type": "boundary",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 14, Description",
+        "excerpt": "outlining a structured repayment schedule with reduced interest rates or fees"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUDIT-01",
+      "title": "Audit Logging of Due Reminder Notification",
+      "workflow": "Audit Trail and Compliance Logging",
+      "type": "audit",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent..."
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUDIT-02",
+      "title": "Audit Logging of Collection Agency Transfer",
+      "workflow": "Audit Trail and Compliance Logging",
+      "type": "audit",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "the card issuer may involve a collection agency to recover the overdue balance"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-AUDIT-03",
+      "title": "Audit Logging of Legal Action Initiation",
+      "workflow": "Audit Trail and Compliance Logging",
+      "type": "audit",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 18, Description",
+        "excerpt": "the card issuer may have to take legal action against the cardholder"
+      },
+      "sourceRefs": []
+    },
+    {
+      "testId": "TC-E2E-01",
+      "title": "End-to-End Collection Lifecycle Journey",
+      "workflow": "End-to-End Lifecycle Journey",
+      "type": "e2e",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-19, Description",
+        "excerpt": "Credit Card Due Reminder...Overdue Balance Alert...Collection Notification...Payment Plan Proposal...Collection Agency Involvement...Legal Action Initiation..."
+      },
+      "sourceRefs": []
+    }
+  ],
+  "coverageSummary": {
+    "total": 48,
+    "covered": 0,
+    "partial": 0,
+    "uncovered": 48,
+    "overallPct": 0
+  },
+  "workflowCoverage": [
+    {
+      "name": "Credit Card Due Reminder Notification",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4,
+      "pct": 0
+    },
+    {
+      "name": "Overdue Balance Alert",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4,
+      "pct": 0
+    },
+    {
+      "name": "Collection Notification (Delinquency Escalation)",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4,
+      "pct": 0
+    },
+    {
+      "name": "Payment Plan Proposal",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4,
+      "pct": 0
+    },
+    {
+      "name": "Collection Agency Involvement",
+      "planned": 5,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 5,
+      "pct": 0
+    },
+    {
+      "name": "Legal Action Initiation",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4,
+      "pct": 0
+    },
+    {
+      "name": "Credit Card Number Masking Enforcement",
+      "planned": 5,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 5,
+      "pct": 0
+    },
+    {
+      "name": "Notification and Escalation Lifecycle (State Transitions)",
+      "planned": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4,
+      "pct": 0
+    },
+    {
+      "name": "Error Handling (Notification Failures, Invalid States)",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3,
+      "pct": 0
+    },
+    {
+      "name": "Authorization and Role-Based Access Control",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3,
+      "pct": 0
+    },
+    {
+      "name": "Integration with External Collection Agency",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2,
+      "pct": 0
+    },
+    {
+      "name": "Data Validation (Amounts, Overdue Calculation, Plan Parameters)",
+      "planned": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2,
+      "pct": 0
+    },
+    {
+      "name": "Audit Trail and Compliance Logging",
+      "planned": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3,
+      "pct": 0
+    },
+    {
+      "name": "End-to-End Lifecycle Journey",
+      "planned": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 1,
+      "pct": 0
+    }
+  ],
+  "coveredItems": [],
+  "partialItems": [],
+  "uncoveredItems": [
+    {
+      "id": "TC-DUEREM-01",
+      "testId": "TC-DUEREM-01",
+      "title": "Credit Card Due Reminder Notification Generation",
+      "workflow": "Credit Card Due Reminder Notification",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent to the cardholder reminding them of their upcoming credit card payment due date"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-DUEREM-02",
+      "testId": "TC-DUEREM-02",
+      "title": "Due Reminder Includes Last 4 Digits Only",
+      "workflow": "Credit Card Due Reminder Notification",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 8, Description",
+        "excerpt": "This notification should include the last 4 digits of the credit card number for identification purposes."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-DUEREM-03",
+      "testId": "TC-DUEREM-03",
+      "title": "Boundary Reminder Notification Delivery",
+      "workflow": "Credit Card Due Reminder Notification",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent to the cardholder..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-DUEREM-04",
+      "testId": "TC-DUEREM-04",
+      "title": "Failed Reminder Notification Handling",
+      "workflow": "Credit Card Due Reminder Notification",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-ODBALERT-01",
+      "testId": "TC-ODBALERT-01",
+      "title": "Overdue Balance Alert Generation",
+      "workflow": "Overdue Balance Alert",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "If a cardholder misses their payment due date, an alert is sent to notify them of the overdue balance"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-ODBALERT-02",
+      "testId": "TC-ODBALERT-02",
+      "title": "Overdue Alert Includes Last 4 Digits of Card",
+      "workflow": "Overdue Balance Alert",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "This alert should include the last 4 digits of the credit card number."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-ODBALERT-03",
+      "testId": "TC-ODBALERT-03",
+      "title": "Boundary Testing for Overdue Amounts",
+      "workflow": "Overdue Balance Alert",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "an alert is sent to notify them of the overdue balance and the potential consequences of not making the payment promptly."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-ODBALERT-04",
+      "testId": "TC-ODBALERT-04",
+      "title": "Overdue Alert Failure Handling",
+      "workflow": "Overdue Balance Alert",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "If a cardholder misses their payment due date, an alert is sent..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-COLLECT-01",
+      "testId": "TC-COLLECT-01",
+      "title": "Collection Notification Trigger on Delinquency",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 12-13, Description",
+        "excerpt": "When an account becomes significantly delinquent, the card issuer may escalate the collection process by sending formal collection notifications"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-COLLECT-02",
+      "testId": "TC-COLLECT-02",
+      "title": "Collection Notification Includes Last 4 Digits Only",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 13, Description",
+        "excerpt": "These notifications should include the last 4 digits of the credit card number."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-COLLECT-03",
+      "testId": "TC-COLLECT-03",
+      "title": "Boundary Testing Collection Amount Owed",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 13, Description",
+        "excerpt": "detailing the amount owed and any additional charges"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-COLLECT-04",
+      "testId": "TC-COLLECT-04",
+      "title": "Notification Failure in Collection Escalation",
+      "workflow": "Collection Notification (Delinquency Escalation)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 12-13, Description",
+        "excerpt": "the card issuer may escalate the collection process by sending formal collection notifications"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-PAYPLAN-01",
+      "testId": "TC-PAYPLAN-01",
+      "title": "Payment Plan Proposal Triggered for Unpaid Balance",
+      "workflow": "Payment Plan Proposal",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 14-15, Description",
+        "excerpt": "the card issuer may offer a payment plan proposal outlining a structured repayment schedule"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-PAYPLAN-02",
+      "testId": "TC-PAYPLAN-02",
+      "title": "Payment Plan Proposal Includes Last 4 Digits Only",
+      "workflow": "Payment Plan Proposal",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "The proposal should include the last 4 digits of the credit card number."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-PAYPLAN-03",
+      "testId": "TC-PAYPLAN-03",
+      "title": "Boundary Testing Payment Plan Terms",
+      "workflow": "Payment Plan Proposal",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 14, Description",
+        "excerpt": "outlining a structured repayment schedule with reduced interest rates or fees"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-PAYPLAN-04",
+      "testId": "TC-PAYPLAN-04",
+      "title": "Payment Plan Notification Failure Handling",
+      "workflow": "Payment Plan Proposal",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 14-15, Description",
+        "excerpt": "the card issuer may offer a payment plan proposal..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-CAGENCY-01",
+      "testId": "TC-CAGENCY-01",
+      "title": "Collection Agency Involvement for Unresponsive Accounts",
+      "workflow": "Collection Agency Involvement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 15-16, Description",
+        "excerpt": "If the cardholder fails to respond to previous notifications and reminders, the card issuer may involve a collection agency"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-CAGENCY-02",
+      "testId": "TC-CAGENCY-02",
+      "title": "Only Last 4 Digits Sent to Collection Agency",
+      "workflow": "Collection Agency Involvement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-CAGENCY-03",
+      "testId": "TC-CAGENCY-03",
+      "title": "Boundary Testing Amount Sent to Collection Agency",
+      "workflow": "Collection Agency Involvement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "leading to increased collection efforts"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-CAGENCY-04",
+      "testId": "TC-CAGENCY-04",
+      "title": "Collection Agency Notification Failure Handling",
+      "workflow": "Collection Agency Involvement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 15-16, Description",
+        "excerpt": "the card issuer may involve a collection agency to recover the overdue balance"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-CAGENCY-05",
+      "testId": "TC-CAGENCY-05",
+      "title": "Boundary Maximum Collection Effort Transfer",
+      "workflow": "Collection Agency Involvement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "leading to increased collection efforts"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LEGAL-01",
+      "testId": "TC-LEGAL-01",
+      "title": "Legal Action Initiation After Collection Failure",
+      "workflow": "Legal Action Initiation",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 18-19, Description",
+        "excerpt": "In extreme cases of non-payment or default, the card issuer may have to take legal action against the cardholder."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LEGAL-02",
+      "testId": "TC-LEGAL-02",
+      "title": "Legal Documentation Includes Last 4 Digits Only",
+      "workflow": "Legal Action Initiation",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 19, Description",
+        "excerpt": "Any legal documentation should include the last 4 digits of the credit card number for identification purposes."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LEGAL-03",
+      "testId": "TC-LEGAL-03",
+      "title": "Legal Action Notification Failure Handling",
+      "workflow": "Legal Action Initiation",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 18-19, Description",
+        "excerpt": "the card issuer may have to take legal action against the cardholder"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LEGAL-04",
+      "testId": "TC-LEGAL-04",
+      "title": "Boundary Testing Legal Action for Extreme Non-Payment",
+      "workflow": "Legal Action Initiation",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 18, Description",
+        "excerpt": "In extreme cases of non-payment or default..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-MASKING-01",
+      "testId": "TC-MASKING-01",
+      "title": "Masking Enforcement in Due Reminder Communication",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-MASKING-02",
+      "testId": "TC-MASKING-02",
+      "title": "Masking Enforcement in Collection Notification",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-MASKING-03",
+      "testId": "TC-MASKING-03",
+      "title": "Detection of Full Card Number Exposure",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 21, Description",
+        "excerpt": "The full credit card number should never be shared or displayed in plain text."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-MASKING-04",
+      "testId": "TC-MASKING-04",
+      "title": "Masking in Payment Plan Proposal Communication",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-MASKING-05",
+      "testId": "TC-MASKING-05",
+      "title": "Masking in Legal Documentation",
+      "workflow": "Credit Card Number Masking Enforcement",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 20, Description",
+        "excerpt": "only the last 4 digits of the credit card number should be included in any communication or documentation..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LIFECYCLE-01",
+      "testId": "TC-LIFECYCLE-01",
+      "title": "State Transition Reminder to Overdue",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-11, Description",
+        "excerpt": "Credit Card Due Reminder...If a cardholder misses their payment due date, an alert is sent..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LIFECYCLE-02",
+      "testId": "TC-LIFECYCLE-02",
+      "title": "State Transition Overdue to Collection",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 11-13, Description",
+        "excerpt": "If a cardholder misses...collection notifications"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LIFECYCLE-03",
+      "testId": "TC-LIFECYCLE-03",
+      "title": "Invalid State Transition Prevention",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-19, Description",
+        "excerpt": "collection process by sending formal collection notifications...legal action against the cardholder"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-LIFECYCLE-04",
+      "testId": "TC-LIFECYCLE-04",
+      "title": "State Transition Collection to Agency to Legal",
+      "workflow": "Notification and Escalation Lifecycle (State Transitions)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 13-19, Description",
+        "excerpt": "the card issuer may escalate...legal action"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-ERROR-01",
+      "testId": "TC-ERROR-01",
+      "title": "Handling Notification Delivery Failure",
+      "workflow": "Error Handling (Notification Failures, Invalid States)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 24, Comments",
+        "excerpt": "Failed to generate functional test case for JIRA-ID: ZBIO-5213: Error: This is an error message"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-ERROR-02",
+      "testId": "TC-ERROR-02",
+      "title": "Invalid Lifecycle State Error Detection",
+      "workflow": "Error Handling (Notification Failures, Invalid States)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-19, Description",
+        "excerpt": "If the cardholder fails to respond to previous notifications...legal action against the cardholder"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-ERROR-03",
+      "testId": "TC-ERROR-03",
+      "title": "Recovery from Failed Payment Plan Proposal Delivery",
+      "workflow": "Error Handling (Notification Failures, Invalid States)",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 24, Comments",
+        "excerpt": "Failed to generate functional test case for JIRA-ID: ZBIO-5213: Error: This is an error message"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-AUTH-01",
+      "testId": "TC-AUTH-01",
+      "title": "Issuer Role Access Enforcement",
+      "workflow": "Authorization and Role-Based Access Control",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-AUTH-02",
+      "testId": "TC-AUTH-02",
+      "title": "Collection Agency Role Access Enforcement",
+      "workflow": "Authorization and Role-Based Access Control",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-AUTH-03",
+      "testId": "TC-AUTH-03",
+      "title": "Legal Team Role Access Enforcement",
+      "workflow": "Authorization and Role-Based Access Control",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 19, Description",
+        "excerpt": "Any legal documentation should include the last 4 digits of the credit card number for identification purposes."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-INTAGENCY-01",
+      "testId": "TC-INTAGENCY-01",
+      "title": "Secure Data Transfer to Collection Agency",
+      "workflow": "Integration with External Collection Agency",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 17, Description",
+        "excerpt": "The collection agency should be provided with the last 4 digits of the credit card number for identification purposes."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-INTAGENCY-02",
+      "testId": "TC-INTAGENCY-02",
+      "title": "Boundary Testing Data Integrity in Agency Integration",
+      "workflow": "Integration with External Collection Agency",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "the card issuer may involve a collection agency to recover the overdue balance"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-DATAVAL-01",
+      "testId": "TC-DATAVAL-01",
+      "title": "Validation of Overdue Calculation",
+      "workflow": "Data Validation (Amounts, Overdue Calculation, Plan Parameters)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 11, Description",
+        "excerpt": "an alert is sent to notify them of the overdue balance"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-DATAVAL-02",
+      "testId": "TC-DATAVAL-02",
+      "title": "Boundary Testing Payment Plan Parameters",
+      "workflow": "Data Validation (Amounts, Overdue Calculation, Plan Parameters)",
+      "priority": "P1",
+      "sourceCitation": {
+        "location": "Line 14, Description",
+        "excerpt": "outlining a structured repayment schedule with reduced interest rates or fees"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-AUDIT-01",
+      "testId": "TC-AUDIT-01",
+      "title": "Audit Logging of Due Reminder Notification",
+      "workflow": "Audit Trail and Compliance Logging",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-7, Description",
+        "excerpt": "Credit Card Due Reminder: An automated notification is sent..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-AUDIT-02",
+      "testId": "TC-AUDIT-02",
+      "title": "Audit Logging of Collection Agency Transfer",
+      "workflow": "Audit Trail and Compliance Logging",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 15, Description",
+        "excerpt": "the card issuer may involve a collection agency to recover the overdue balance"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-AUDIT-03",
+      "testId": "TC-AUDIT-03",
+      "title": "Audit Logging of Legal Action Initiation",
+      "workflow": "Audit Trail and Compliance Logging",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Line 18, Description",
+        "excerpt": "the card issuer may have to take legal action against the cardholder"
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    },
+    {
+      "id": "TC-E2E-01",
+      "testId": "TC-E2E-01",
+      "title": "End-to-End Collection Lifecycle Journey",
+      "workflow": "End-to-End Lifecycle Journey",
+      "priority": "P0",
+      "sourceCitation": {
+        "location": "Lines 6-19, Description",
+        "excerpt": "Credit Card Due Reminder...Overdue Balance Alert...Collection Notification...Payment Plan Proposal...Collection Agency Involvement...Legal Action Initiation..."
+      },
+      "status": "uncovered",
+      "coveredBy": [],
+      "gap": ""
+    }
+  ],
+  "orphans": [],
+  "existingItemsSource": null,
+  "analyzeBranch": "roost-aff04fc7-b420-4547-a6cb-ae911b71406b",
+  "handoffPath": ".roost/functional-analyze/ZBIO-5213.json",
+  "generationContext": {
+    "sourceInputType": "jira_ticket",
+    "sourceFiles": [],
+    "selectedIdsField": "ROOST_FUNCTIONAL_TEST_IDS_TO_GENERATE",
+    "analyzeBranchField": "ROOST_ANALYZE_BRANCH",
+    "handoffPathField": "ROOST_FUNCTIONAL_ANALYZE_REPORT_PATH",
+    "analyzeArtifactPath": ".roost/functional-analyze/ZBIO-5213.json"
+  }
+}
