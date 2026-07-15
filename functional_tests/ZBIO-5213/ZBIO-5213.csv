@@ -1,0 +1,25 @@
+Communications include exact last 4 digits and contain no 5+ digit runs
+Leading zeros in last4 are preserved in communications/documents
+Reject generation when last4 length is not exactly 4
+Reject generation when last4 is missing (empty or null)
+Block Overdue Alert when body contains a 5+ digit sequence
+Collection Notification includes amount owed, additional charges, and last4
+Reject Collection Notification when required monetary fields are omitted
+Collection Notification content and persisted copy never expose full PAN
+Missed due date generates Overdue Balance Alert with last4 only
+Significantly delinquent generates a Collection Notification with required sections
+Non-response escalates to Collection Agency involvement with last4-only payload
+Persistent default escalates to Legal Action with last4-only legal document
+Agency handoff payload includes only last4 for identification
+Agency handoff is blocked when payload contains more than last 4 digits
+Agency handoff rejects non-numeric last4
+Do not involve agency when customer responded to previous notifications
+Legal documentation includes only last4 and never full PAN
+Extreme non-payment/default initiates Legal Action and produces documentation
+Payment Plan Proposal contains structured schedule, reduced interest/fees, and last4
+Payment Plan Proposal is rejected when required section is missing
+Overdue Alert references the correct card for multi-card holder
+Block communication when provided last4 does not match the targeted card
+Cross-artifact scan enforces last-4-only across all stages
+End-to-end non-responder escalation to legal with last-4-only at every stage
+End-to-end hardship path to Payment Plan Proposal with last-4-only
