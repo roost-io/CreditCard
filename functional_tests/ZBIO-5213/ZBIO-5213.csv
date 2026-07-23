@@ -1,0 +1,30 @@
+Generate Due Reminder for upcoming due date with last-4-only masking
+Suppress Due Reminder when due date is not upcoming
+Generate Overdue Balance Alert after due date is missed with last-4-only masking
+Suppress Overdue Balance Alert before the due date is missed
+Generate Collection Notification for significantly delinquent accounts with last-4-only masking
+Collection Notification includes amount owed and additional charges
+Suppress Collection Notification when account is not significantly delinquent
+Generate Payment Plan Proposal when unable to pay full overdue balance with required content
+Do not offer Payment Plan Proposal after full overdue payment
+Initiate Collection Agency involvement only after no response; payload contains last4 only
+Suppress Collection Agency involvement when a prior response exists
+Agency handoff payload includes only last4 and not full PAN
+Generate Legal Documentation for extreme non-payment with last-4-only masking
+Suppress Legal Action Initiation when case is not extreme
+Legal documentation never displays full PAN in plain text
+End-to-end masking across all lifecycle artifacts (Due → Overdue → Collection → Proposal → Agency → Legal)
+Agency handoff identifier validation accepts exactly 4 digits and rejects 3 or 5
+Boundary validation of last-4-only in notifications (reject 3- or 5-digit identifiers)
+Due Reminder shows the correct account’s last 4 digits and not another account’s
+Overdue Balance Alert shows the correct account’s last 4 digits only
+Collection Notification shows only the intended card’s last 4 digits
+Legal documentation shows only the intended card’s last 4 digits
+Upcoming due date generates Due Reminder and suppresses Overdue Alert
+Significant delinquency generates Collection Notification and does not involve agency yet
+Unable-to-pay branch generates Payment Plan Proposal and does not re-trigger Collection Notification
+Failing to respond triggers agency involvement, not legal action
+Extreme default triggers Legal Action Initiation without earlier-stage notifications
+End-to-end path to agency: Due → Overdue → Collection → Agency, with last-4-only at each step
+Branch to Payment Plan Proposal after Overdue when unable to pay full overdue, with last-4-only
+Escalation directly to Legal Action for extreme default with last-4-only in documentation
