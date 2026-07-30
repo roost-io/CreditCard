@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "dmtest",
+    "created_at": "2026-07-30T12:31:59.577Z",
+    "updated_at": "2026-07-30T12:31:59.577Z"
+  },
+  "files": {
+    "input_files": [
+      {
+        "fileName": "dmtest.txt",
+        "fileURI": "/var/tmp/Roost/RoostGPT/dmtest/c4f4c309-ddcf-48f5-a248-805854e6594b/functional_tests/dmtest/dmtest.txt",
+        "fileSha": "cf83e1357e"
+      },
+      {
+        "fileName": "prepaid-card-requirement.docx",
+        "fileURI": "/var/tmp/Roost/RoostGPT/dmtest/c4f4c309-ddcf-48f5-a248-805854e6594b/functional_tests/dmtest/prepaid-card-requirement.docx",
+        "fileSha": "a2bd318cb4"
+      }
+    ]
+  },
+  "api_files": {
+    "input_files": []
+  }
+}

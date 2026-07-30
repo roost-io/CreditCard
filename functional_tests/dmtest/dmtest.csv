@@ -1,0 +1,37 @@
+Registration outcomes and immediate Tier 1 status
+Secure login and profile access by tier
+KYC submission validation for Tier 1 user (Passport/Driver's License and selfie)
+Tier 2 (Verified) user sees Tier 2 status and can access Tier 2-only areas
+Apply for a virtual prepaid card and verify immediate provisioning (Tier 1 and Tier 2)
+Physical card ordering gating (Tier 2 allowed, Tier 1 blocked)
+Top-up completes successfully and balance reflects increase
+View current balance and at least 3 recent transactions (seeded)
+Transaction history pagination boundary counts
+Transaction type filter returns only matching results
+Date range filter includes only in-range transactions and can yield empty results
+Combined date range and type filters can produce an empty result set
+Block card takes effect immediately and persists across navigation
+Blocked state persists after logout and re-login
+Block Card action is available to users with a card regardless of tier (cancel to avoid state change)
+Card details show balance, daily load limit, and remaining/used allowance in example format
+Used amount increases on card details after a $100 load within the daily limit
+Remaining allowance shows correctly when no loads have been made today
+Tier 2 user can send money to an international recipient
+Tier 1 user is blocked from initiating an international remittance
+Newly sent transfer appears in remittance history with a valid status
+Add and save a beneficiary with required fields
+Beneficiary save is blocked when required fields are missing
+Edit and delete a saved beneficiary
+Selecting a saved beneficiary pre-populates the send money form
+Pre-confirmation review shows exchange rate and any fees before confirming
+Remittance history pagination presence and status visibility
+Remittance history displays Completed entries and persists across refresh
+Remittance history supports pagination navigation across pages without duplication
+Remittance history empty state for users with no transfers
+End-to-end journey: register → KYC → Tier 2 → virtual card → top-up → preview FX/fees → send → Completed in history
+API registration validation (success and missing email)
+API login and profile tier verification
+API KYC submission acceptance and validation
+API card issuance and gating (virtual allowed, physical Tier 2 only)
+API transaction history returns 25 items per page and next page indicator
+API remittance creation and history status enumeration
