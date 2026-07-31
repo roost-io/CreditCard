@@ -1,0 +1,40 @@
+New user registration and immediate login shows Tier 1 status
+Registration requires both email and password
+Existing registered user can log in, maintain session, and sign out
+Unregistered users cannot log in
+KYC submission validation for passport/selfie, unsupported types, and selfie required
+Tier 2 status after completing full KYC with government ID
+Profile shows only allowed verification status values
+Virtual prepaid card application access by user state/tier
+Physical prepaid card ordering is allowed only for Tier 2
+Tier 1 blocked from physical card order until KYC completes, then access enabled
+Top-up behavior with and without a linked bank account
+User can check current balance and view a non-empty recent transactions list
+A top-up transaction appears in recent transactions and increments count by one
+Transaction history pagination boundaries at various total counts
+Transaction history filtering by date range, type, and combined
+Invalid transaction type filter value is rejected
+Pagination remains 25 per page after applying filters with >25 matches
+Block card from the app and verify immediate and persistent Blocked state
+Card details view shows current balance equals seeded amount
+Card details view shows daily load limit and remaining allowance
+Usage display exact formatting across typical and boundary states
+Tier 2 user can send money to an international recipient
+Tier 1 user is prevented from sending international remittances
+Sending money debits the user's account balance
+Send flow supports selecting an international recipient country and shows it on review
+Add beneficiary requires Full Name, Country, and Bank Account/Mobile Money and persists
+Saved beneficiary persists across logout/login
+A saved beneficiary can be deleted and remains deleted
+Saving a beneficiary is prevented when required fields are missing
+Exchange rate and any transaction fees are visible together on review before confirmation
+Remittance history is paginated and navigable
+A Pending remittance appears in history with correct status label
+Remittance history shows additional records across multiple pages (>=26 total)
+Tier 2 users unlock all platform features
+Auth service registration and login validations
+KYC submission API accepts only supported doc types and requires selfie
+Blocking a card via API updates status to Blocked
+Transaction history API supports pagination (25/page) and filtering
+Remittance send API authorization by tier
+Beneficiaries API create and validation

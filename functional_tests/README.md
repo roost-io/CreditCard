@@ -65,3 +65,20 @@
 
 ---
 
+**Execution Date:** 7/31/2026, 4:44:54 AM
+
+**Test Unique Identifier:** "dmtest"
+
+**Input(s):**
+   1. prepaid-card-requirement.docx
+      Path: /var/tmp/Roost/RoostGPT/dmtest/865893d4-4c4a-4878-a1d0-ad69f211d99d/prepaid-card-requirement.docx
+
+**Test Output Folder:**
+   1. [dmtest.json](dmtest/dmtest.json)
+   2. [dmtest.feature](dmtest/dmtest.feature)
+   3. [dmtest.csv](dmtest/dmtest.csv)
+   4. [dmtest.xlsx](dmtest/dmtest.xlsx)
+   5. [dmtest.docx](dmtest/dmtest.docx)
+
+---
+
